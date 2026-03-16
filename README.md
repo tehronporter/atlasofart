@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Atlas of Art
+
+A beautiful, interactive map exploring art history across time and space.
+
+## Features
+
+- **Interactive Map**: Dark-themed world map with artwork markers
+- **Timeline Filtering**: Filter artworks by time period (2500 BCE - 1832 CE)
+- **Search & Filter**: Search by title, culture, region, medium, or tags
+- **Artwork Details**: Click markers to view detailed information
+- **Related Works**: Discover connected artworks based on culture, region, medium, and more
+- **Responsive Design**: Works beautifully on desktop and mobile
+
+## Tech Stack
+
+- **Framework**: Next.js 16 with App Router
+- **Map**: Mapbox GL via react-map-gl
+- **Styling**: Tailwind CSS v4
+- **Language**: TypeScript
+- **Deployment**: Vercel-ready
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- npm or pnpm
+- Mapbox access token (included in `.env.local.example`)
+
+### Installation
+
+```bash
+npm install
+```
+
+### Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## Environment Variables
 
-To learn more about Next.js, take a look at the following resources:
+Create a `.env.local` file with:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=your_token_here
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+```
+atlasofart-app/
+├── app/                    # Next.js app directory
+│   ├── page.tsx           # Main homepage
+│   ├── layout.tsx         # Root layout
+│   └── globals.css        # Global styles
+├── components/
+│   ├── map/
+│   │   ├── MapShell.tsx   # Map container
+│   │   └── ArtworkMarker.tsx # Marker component
+│   ├── drawer/
+│   │   └── ArtworkDrawerShell.tsx # Detail panel
+│   ├── controls/
+│   │   └── TimelineShell.tsx # Timeline filter
+│   └── search/
+│       └── SearchBar.tsx  # Search & filters
+├── data/
+│   └── artworks.ts        # Seeded artwork data (25 items)
+├── types/
+│   └── artwork.ts         # TypeScript types
+├── lib/
+│   ├── utils.ts           # Utility functions
+│   └── related-works.ts   # Related artworks logic
+└── hooks/
+    └── useFilteredArtworks.ts # Filtering hook
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## MVP Scope
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This is Phase 1-10 of the Atlas of Art MVP:
+
+- ✅ Phase 1: App Shell
+- ✅ Phase 2: Data Model + Seed Data
+- ✅ Phase 3: Live Mapbox
+- ✅ Phase 4: Artwork Markers
+- ✅ Phase 5: Timeline Filtering
+- ✅ Phase 6: Related Works Logic
+- ✅ Phase 7: Responsive Polish
+- ✅ Phase 8: Search & Filter UI
+- ✅ Phase 9: Performance Optimization
+- ✅ Phase 10: Vercel Deployment Prep
+
+## License
+
+MIT

@@ -1,65 +1,120 @@
-import Image from "next/image";
+// app/page.tsx - Supabase homepage (Phase 13)
+
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import MapShell from '@/components/map/MapShell';
+import TimelineShell from '@/components/controls/TimelineShell';
+import ArtworkDrawerShell from '@/components/drawer/ArtworkDrawerShell';
+import SearchBar from '@/components/search/SearchBar';
+import { supabase } from '@/lib/supabase';
 
 export default function Home() {
+  const [selectedArtworkId, setSelectedArtworkId] = useState<string | null>(null);
+  const [timelineMaxYear, setTimelineMaxYear] = useState(2000);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [selectedMedium, setSelectedMedium] = useState<string | null>(null);
+  const [allArtworks, setAllArtworks] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchArtworks() {
+      try {
+        const { data, error: fetchError } = await supabase
+          .from('artworks')
+          .select('*')
+          .order('date_start', { ascending: true });
+
+        if (fetchError) throw fetchError;
+
+        const transformed = (data || []).map((row: any) => ({
+          id: row.id,
+          title: row.title || 'Untitled',
+          year: row.date || `${row.date_start || '?'}`,
+          year_start: row.date_start || -3000,
+          year_end: row.date_end || 2000,
+          region: row.region || 'Unknown',
+          culture: row.culture || 'Unknown',
+          medium: row.medium || 'Unknown',
+          latitude: Number(row.latitude) || 0,
+          longitude: Number(row.longitude) || 0,
+          image_url: row.image_url_primary || row.image_url_thumbnail || '/placeholder.jpg',
+          description: row.description || 'No description available',
+          current_museum: row.repository || 'Unknown',
+          place_created: row.place_created || 'Unknown',
+          tags: row.tags || [],
+        }));
+
+        setAllArtworks(transformed);
+        setIsLoading(false);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load');
+        setIsLoading(false);
+      }
+    }
+
+    fetchArtworks();
+  }, []);
+
+  const filteredArtworks = useMemo(() => {
+    let result = allArtworks;
+    if (timelineMaxYear < 2000) result = result.filter((a: any) => a.year_end <= timelineMaxYear);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter((a: any) => 
+        a.title.toLowerCase().includes(q) ||
+        a.culture.toLowerCase().includes(q) ||
+        a.region.toLowerCase().includes(q) ||
+        a.medium.toLowerCase().includes(q) ||
+        (a.tags || []).some((t: string) => t.toLowerCase().includes(q)) ||
+        a.description.toLowerCase().includes(q)
+      );
+    }
+    if (selectedRegion) result = result.filter((a: any) => a.region === selectedRegion);
+    if (selectedMedium) result = result.filter((a: any) => a.medium === selectedMedium);
+    return result;
+  }, [allArtworks, timelineMaxYear, searchQuery, selectedRegion, selectedMedium]);
+
+  const selectedArtwork = useMemo(() => 
+    allArtworks.find(a => a.id === selectedArtworkId) || null,
+  [allArtworks, selectedArtworkId]);
+
+  const handleArtworkClick = (artwork: any) => {
+    setSelectedArtworkId(artwork?.id || null);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="h-screen w-full bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-neutral-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-screen w-full bg-black flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-400 mb-4">{error}</p>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 bg-amber-500 text-neutral-900 rounded">Retry</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="flex flex-col h-screen w-full bg-black overflow-hidden">
+      <div className="flex-1 relative">
+        <SearchBar artworks={allArtworks} onSearchChange={setSearchQuery} onRegionFilter={setSelectedRegion} onMediumFilter={setSelectedMedium} />
+        <MapShell artworks={filteredArtworks} selectedArtworkId={selectedArtworkId} onArtworkClick={handleArtworkClick} />
+        <ArtworkDrawerShell artwork={selectedArtwork} isOpen={!!selectedArtworkId} onClose={() => setSelectedArtworkId(null)} onArtworkSelect={handleArtworkClick} allArtworks={filteredArtworks} />
+      </div>
+      <TimelineShell artworks={allArtworks} maxYear={timelineMaxYear} onMaxYearChange={setTimelineMaxYear} />
     </div>
   );
 }
