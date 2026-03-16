@@ -349,7 +349,7 @@ export default function Home() {
     <div className="flex h-screen w-full bg-[#0a0a0f] overflow-hidden select-none">
 
       {/* ── LEFT PANEL ─────────────────────────────────────────────────────── */}
-      <aside className="hidden lg:flex w-[290px] shrink-0 flex-col bg-gradient-to-b from-[#111215] to-[#0d0d11] border-r border-white/[0.08] overflow-hidden z-20">
+      <aside className="hidden lg:flex w-[220px] shrink-0 flex-col bg-gradient-to-b from-[#111215] to-[#0d0d11] border-r border-white/[0.08] overflow-hidden z-20">
 
         {/* Brand */}
         <div className="px-5 pt-6 pb-5">

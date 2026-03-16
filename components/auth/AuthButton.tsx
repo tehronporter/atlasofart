@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getUser, signOut } from '@/lib/auth';
+import { getUser } from '@/lib/auth';
 import Link from 'next/link';
 
 export default function AuthButton() {
@@ -24,16 +24,6 @@ export default function AuthButton() {
     checkUser();
   }, []);
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      setUser(null);
-      window.location.reload();
-    } catch (err) {
-      console.error('Sign out failed:', err);
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="flex gap-2">
@@ -43,19 +33,7 @@ export default function AuthButton() {
   }
 
   if (user) {
-    return (
-      <div className="space-y-2">
-        <p className="text-[10px] text-neutral-600 px-2">
-          Signed in as <span className="text-neutral-400">{user.email}</span>
-        </p>
-        <button
-          onClick={handleSignOut}
-          className="w-full px-3 py-2 text-[11px] rounded-lg bg-neutral-800/50 border border-neutral-700/50 text-neutral-300 hover:bg-neutral-700 hover:text-white transition-all"
-        >
-          Sign Out
-        </button>
-      </div>
-    );
+    return null;
   }
 
   return (

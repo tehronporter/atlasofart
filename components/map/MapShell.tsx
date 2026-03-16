@@ -243,6 +243,26 @@ export default function MapShell({
           clusterMaxZoom={10}
           clusterRadius={40}
         >
+          {/* Cluster glow — subtle outer ring */}
+          <Layer
+            id="cluster-glow"
+            type="circle"
+            filter={['has', 'point_count']}
+            paint={{
+              'circle-color': [
+                'step', ['get', 'point_count'],
+                '#f59e0b',
+                10,  '#f97316',
+                100, '#ef4444',
+              ],
+              'circle-radius': [
+                'step', ['get', 'point_count'],
+                26, 10, 36, 100, 46,
+              ],
+              'circle-opacity': 0.15,
+            }}
+          />
+
           {/* Cluster circles — size + colour scale with count */}
           <Layer
             id="clusters"
@@ -261,9 +281,9 @@ export default function MapShell({
                 10,  26,
                 100, 34,
               ],
-              'circle-stroke-width': 2,
-              'circle-stroke-color': 'rgba(255,255,255,0.15)',
-              'circle-opacity': 0.88,
+              'circle-stroke-width': 2.5,
+              'circle-stroke-color': 'rgba(255,255,255,0.35)',
+              'circle-opacity': 0.95,
             }}
           />
 
@@ -278,6 +298,22 @@ export default function MapShell({
               'text-size': 13,
             }}
             paint={{ 'text-color': '#ffffff' }}
+          />
+
+          {/* Individual artwork glow — subtle outer ring */}
+          <Layer
+            id="artwork-glow"
+            type="circle"
+            filter={['!', ['has', 'point_count']]}
+            paint={{
+              'circle-color': '#f59e0b',
+              'circle-radius': [
+                'case',
+                ['==', ['get', 'id'], selectedArtworkId ?? ''],
+                14, 10,
+              ],
+              'circle-opacity': 0.12,
+            }}
           />
 
           {/* Individual artwork dots — highlight when selected */}
@@ -300,14 +336,15 @@ export default function MapShell({
               'circle-stroke-width': [
                 'case',
                 ['==', ['get', 'id'], selectedArtworkId ?? ''],
-                2.5, 1.5,
+                3, 2,
               ],
               'circle-stroke-color': [
                 'case',
                 ['==', ['get', 'id'], selectedArtworkId ?? ''],
-                'rgba(253,230,138,0.7)',
-                'rgba(255,255,255,0.25)',
+                'rgba(255,255,255,0.8)',
+                'rgba(255,255,255,0.4)',
               ],
+              'circle-opacity': 0.98,
             }}
           />
         </Source>
