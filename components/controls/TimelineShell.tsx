@@ -48,9 +48,9 @@ export default function TimelineShell({
     : `Up to ${formatYear(currentMax)}`;
 
   return (
-    <div className="h-[60px] shrink-0 bg-[#0e0f12]/95 backdrop-blur-sm border-t border-white/[0.05] flex items-center px-5 gap-5">
+    <div className="h-[60px] shrink-0 bg-[#0e0f12]/95 backdrop-blur-sm border-t border-white/[0.05] flex items-center px-3 md:px-5 gap-2 md:gap-5 overflow-x-auto">
       {/* Min year */}
-      <span className="text-[11px] text-neutral-600 font-mono whitespace-nowrap shrink-0 tabular-nums">
+      <span className="text-[10px] md:text-[11px] text-neutral-600 font-mono whitespace-nowrap shrink-0 tabular-nums">
         {formatYear(minYear)}
       </span>
 
@@ -92,21 +92,21 @@ export default function TimelineShell({
       </div>
 
       {/* Max year */}
-      <span className="text-[11px] text-neutral-600 font-mono whitespace-nowrap shrink-0 tabular-nums">
+      <span className="hidden sm:inline text-[10px] md:text-[11px] text-neutral-600 font-mono whitespace-nowrap shrink-0 tabular-nums">
         {formatYear(absoluteMaxYear)}
       </span>
 
-      <div className="w-px h-5 bg-white/[0.07] shrink-0" />
+      <div className="hidden md:block w-px h-5 bg-white/[0.07] shrink-0" />
 
-      {/* Viewing display */}
-      <div className="shrink-0 text-right">
+      {/* Viewing display — hidden on small screens */}
+      <div className="hidden md:block shrink-0 text-right">
         <p className="text-[10px] text-neutral-600 leading-none mb-0.5">Viewing</p>
         <p className="text-[12px] text-neutral-300 font-medium leading-none tabular-nums whitespace-nowrap">
           {viewingLabel}
         </p>
       </div>
 
-      <div className="w-px h-5 bg-white/[0.07] shrink-0" />
+      <div className="hidden md:block w-px h-5 bg-white/[0.07] shrink-0" />
 
       {/* Artwork count */}
       <div className="shrink-0 text-right min-w-[36px]">

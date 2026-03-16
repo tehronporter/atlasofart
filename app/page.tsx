@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import TimelineShell from '@/components/controls/TimelineShell';
 import ExpandedArtworkDetail from '@/components/map/ExpandedArtworkDetail';
@@ -100,7 +100,8 @@ function NavItem({ icon, label, active, href }: { icon: React.ReactNode; label: 
   return (
     <a
       href={href || '#'}
-      className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+      aria-current={active ? 'page' : undefined}
+      className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-2 focus:ring-offset-[#0d0d11] ${
         active
           ? 'bg-gradient-to-r from-amber-500/15 to-amber-500/5 border border-amber-500/20 text-white'
           : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.05] border border-transparent'
@@ -132,6 +133,8 @@ function transformRow(row: any) {
     place_created: row.place_created || null,
     tags: row.tags || [],
     artist_display: row.artist_display || null,
+    image_width: row.image_width || null,
+    image_height: row.image_height || null,
   };
 }
 
@@ -147,9 +150,11 @@ export default function Home() {
   const [isExpandedDetailOpen, setIsExpandedDetailOpen] = useState(false);
   const [timelineMaxYear, setTimelineMaxYear] = useState(2000);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [selectedMedium, setSelectedMedium] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch from Supabase — no seed fallback
   useEffect(() => {
@@ -183,6 +188,17 @@ export default function Home() {
     return () => { cancelled = true; };
   }, []);
 
+  // Debounce search query — avoid excessive filtering on large datasets
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [searchQuery]);
+
   const filteredArtworks = useMemo(() => {
     let result = allArtworks;
 
@@ -190,8 +206,8 @@ export default function Home() {
       result = result.filter(a => (a.year_start ?? -9999) <= timelineMaxYear);
     }
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
+    if (debouncedSearchQuery.trim()) {
+      const q = debouncedSearchQuery.toLowerCase();
       result = result.filter(a =>
         a.title?.toLowerCase().includes(q) ||
         a.culture?.toLowerCase().includes(q) ||
@@ -208,7 +224,7 @@ export default function Home() {
 
     // Only pass artworks with valid coordinates to the map
     return result.filter(a => a.lat !== 0 || a.lng !== 0);
-  }, [allArtworks, timelineMaxYear, searchQuery, selectedRegion, selectedMedium]);
+  }, [allArtworks, timelineMaxYear, debouncedSearchQuery, selectedRegion, selectedMedium]);
 
   const selectedArtwork = useMemo(
     () => allArtworks.find(a => a.id === selectedArtworkId) || null,
@@ -319,7 +335,7 @@ export default function Home() {
     <div className="flex h-screen w-full bg-[#0a0a0f] overflow-hidden select-none">
 
       {/* ── LEFT PANEL ─────────────────────────────────────────────────────── */}
-      <aside className="w-[290px] shrink-0 flex flex-col bg-gradient-to-b from-[#111215] to-[#0d0d11] border-r border-white/[0.08] overflow-hidden z-20">
+      <aside className="hidden lg:flex w-[290px] shrink-0 flex-col bg-gradient-to-b from-[#111215] to-[#0d0d11] border-r border-white/[0.08] overflow-hidden z-20">
 
         {/* Brand */}
         <div className="px-5 pt-6 pb-5">
@@ -359,7 +375,9 @@ export default function Home() {
               placeholder="Search artworks…"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg pl-9 pr-3 py-2.5 text-[12px] text-neutral-200 placeholder-neutral-700 focus:outline-none focus:bg-white/[0.06] focus:border-amber-500/50 transition-all duration-200"
+              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg pl-9 pr-3 py-2.5 text-[12px] text-neutral-200 placeholder-neutral-700 focus:outline-none focus:bg-white/[0.06] focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/30 transition-all duration-200"
+              aria-label="Search artworks"
+              aria-describedby="search-help"
             />
             {searchQuery && (
               <button
@@ -400,7 +418,8 @@ export default function Home() {
                       <button
                         key={r}
                         onClick={() => setSelectedRegion(prev => prev === r ? null : r)}
-                        className={`px-2 py-1 text-[10px] rounded-full transition-colors border ${
+                        aria-pressed={selectedRegion === r}
+                        className={`px-2 py-1 text-[10px] rounded-full transition-all border focus:outline-none focus:ring-1 focus:ring-amber-500/50 active:scale-95 ${
                           selectedRegion === r
                             ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
                             : 'border-white/[0.06] text-neutral-500 hover:text-neutral-300 hover:border-white/[0.12]'
@@ -420,7 +439,8 @@ export default function Home() {
                       <button
                         key={m}
                         onClick={() => setSelectedMedium(prev => prev === m ? null : m)}
-                        className={`px-2 py-1 text-[10px] rounded-full transition-colors border ${
+                        aria-pressed={selectedMedium === m}
+                        className={`px-2 py-1 text-[10px] rounded-full transition-all border focus:outline-none focus:ring-1 focus:ring-amber-500/50 active:scale-95 ${
                           selectedMedium === m
                             ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
                             : 'border-white/[0.06] text-neutral-500 hover:text-neutral-300 hover:border-white/[0.12]'
@@ -446,12 +466,33 @@ export default function Home() {
         {/* Hint / Empty state */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden flex items-center justify-center px-4 py-8">
           <div className="text-center">
-            <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/[0.08] flex items-center justify-center mx-auto mb-4">
-              <MapIcon />
-            </div>
-            <p className="text-[11px] text-neutral-600 leading-relaxed font-light">
-              Click a marker on the map to explore artwork details
-            </p>
+            {filteredArtworks.length === 0 && hasFilters ? (
+              <>
+                <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-amber-400/60">
+                    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                </div>
+                <p className="text-[11px] text-neutral-600 leading-relaxed font-light mb-2">
+                  No artworks match your filters
+                </p>
+                <button
+                  onClick={clearFilters}
+                  className="text-[10px] text-amber-400 hover:text-amber-300 transition-colors font-medium"
+                >
+                  Clear filters to see all
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/[0.08] flex items-center justify-center mx-auto mb-4">
+                  <MapIcon />
+                </div>
+                <p className="text-[11px] text-neutral-600 leading-relaxed font-light">
+                  Click a marker on the map to explore artwork details
+                </p>
+              </>
+            )}
           </div>
         </div>
 

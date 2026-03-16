@@ -1,9 +1,10 @@
 // components/map/ExpandedArtworkDetail.tsx
 // Premium museum object detail view — expanded artwork exhibition panel
+// Dynamic aspect ratio for artwork images (object-fit: contain, no cropping)
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface ArtworkData {
   id: string;
@@ -11,6 +12,8 @@ interface ArtworkData {
   lng: number;
   title: string;
   image_url: string | null;
+  image_width?: number | null;
+  image_height?: number | null;
   artist_display: string | null;
   year: string;
   place_created: string | null;
@@ -19,6 +22,15 @@ interface ArtworkData {
   tags: string[];
   description: string | null;
   getty_url?: string;
+}
+
+// Calculate hero image height based on aspect ratio
+function getHeroImageHeight(imageWidth: number | null | undefined, imageHeight: number | null | undefined): number {
+  if (!imageWidth || !imageHeight) return 420; // default
+  const aspectRatio = imageWidth / imageHeight;
+  const maxWidth = 900; // max-w-3xl
+  const calculatedHeight = maxWidth / aspectRatio;
+  return Math.min(Math.max(calculatedHeight, 300), 500); // min 300px, max 500px
 }
 
 interface ExpandedArtworkDetailProps {
@@ -30,6 +42,10 @@ export default function ExpandedArtworkDetail({
   artwork,
   onClose,
 }: ExpandedArtworkDetailProps) {
+  const [isImageLoading, setIsImageLoading] = useState(!!artwork.image_url);
+  const [imageLoadError, setImageLoadError] = useState(false);
+  const heroImageHeight = getHeroImageHeight(artwork.image_width, artwork.image_height);
+
   // Prevent scroll on body when overlay is open
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -64,37 +80,46 @@ export default function ExpandedArtworkDetail({
             </svg>
           </button>
 
-          {/* ── Image section — hero ─────────────────────────────────────────────── */}
-          <div className="relative w-full bg-neutral-950/90 overflow-hidden shrink-0 flex items-center justify-center" style={{ height: '420px' }}>
-            {artwork.image_url ? (
+          {/* ── Image section — hero with dynamic aspect ratio ─────────────────── */}
+          <div
+            className="relative w-full bg-neutral-950/90 overflow-hidden shrink-0 flex items-center justify-center"
+            style={{ height: `${heroImageHeight}px` }}
+          >
+            {/* Loading skeleton */}
+            {isImageLoading && !imageLoadError && (
+              <div className="absolute inset-0 bg-neutral-800/50 animate-pulse" />
+            )}
+
+            {artwork.image_url && !imageLoadError ? (
               <>
                 <img
                   src={artwork.image_url}
                   alt={artwork.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                   crossOrigin="anonymous"
-                  onError={e => {
-                    const el = e.target as HTMLImageElement;
-                    el.style.display = 'none';
-                    el.nextElementSibling?.classList.remove('hidden');
+                  onLoad={() => setIsImageLoading(false)}
+                  onError={() => {
+                    setIsImageLoading(false);
+                    setImageLoadError(true);
                   }}
                 />
                 {/* Subtle overlay gradient */}
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 pointer-events-none" />
               </>
             ) : null}
-            <div
-              className={`absolute inset-0 flex flex-col items-center justify-center text-neutral-700 ${
-                artwork.image_url ? 'hidden' : ''
-              }`}
-            >
-              <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.8">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <polyline points="21 15 16 10 5 21" />
-              </svg>
-              <span className="text-sm mt-4 text-neutral-600">No image available</span>
-            </div>
+
+            {/* No image or failed to load */}
+            {!artwork.image_url || imageLoadError ? (
+              <div className="flex flex-col items-center justify-center text-neutral-700 gap-3">
+                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.8">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <polyline points="21 15 16 10 5 21" />
+                </svg>
+                {imageLoadError && <span className="text-sm text-neutral-600">Image unavailable</span>}
+                {!artwork.image_url && !imageLoadError && <span className="text-sm text-neutral-600">No image available</span>}
+              </div>
+            ) : null}
           </div>
 
           {/* ── Metadata section — editorial layout ────────────────────────────────── */}

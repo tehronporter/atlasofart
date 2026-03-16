@@ -1,9 +1,10 @@
 // components/map/FloatingArtworkCard.tsx
 // Premium compact floating preview card — elegant artwork preview anchored to marker
+// Responsive widths + dynamic aspect ratio for artwork images (object-fit: contain)
 
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 export interface ArtworkCardData {
   id: string;
@@ -11,6 +12,8 @@ export interface ArtworkCardData {
   lng: number;
   title: string;
   image_url: string | null;
+  image_width?: number | null;
+  image_height?: number | null;
   artist_display: string | null;
   year: string;
   place_created: string | null;
@@ -31,8 +34,24 @@ interface FloatingArtworkCardProps {
   onClose?: () => void;
 }
 
-const CARD_W = 320;
-const CARD_H = 380;
+// Responsive card width based on screen size
+function getCardWidth(): number {
+  if (typeof window === 'undefined') return 320;
+  const w = window.innerWidth;
+  if (w < 640) return Math.min(w - 24, 320); // mobile: 90vw minus padding
+  if (w < 1024) return 280; // tablet
+  return 320; // desktop
+}
+
+// Calculate image height based on aspect ratio to fit within card
+function getImageHeight(imageWidth: number | null | undefined, imageHeight: number | null | undefined, cardWidth: number): number {
+  if (!imageWidth || !imageHeight) return 140; // default height if no dimensions
+  const aspectRatio = imageWidth / imageHeight;
+  const maxWidth = cardWidth - 0; // no padding in image container
+  const calculatedHeight = maxWidth / aspectRatio;
+  return Math.min(Math.max(calculatedHeight, 100), 280); // min 100px, max 280px
+}
+
 const GAP = 16;
 
 export default function FloatingArtworkCard({
@@ -45,6 +64,12 @@ export default function FloatingArtworkCard({
   onClose,
 }: FloatingArtworkCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const [isImageLoading, setIsImageLoading] = useState(!!artwork.image_url);
+  const [imageLoadError, setImageLoadError] = useState(false);
+
+  const CARD_W = getCardWidth();
+  const imageHeight = getImageHeight(artwork.image_width, artwork.image_height, CARD_W);
+  const CARD_H = 380; // base height, but can vary with image
 
   const rawLeft = markerX - CARD_W / 2;
   const rawTop = markerY - CARD_H - GAP;
@@ -76,33 +101,44 @@ export default function FloatingArtworkCard({
 
       {/* Card surface */}
       <div className="rounded-xl overflow-hidden border border-white/[0.12] bg-gradient-to-b from-[#16161c]/96 to-[#0f0f14]/96 backdrop-blur-md shadow-2xl hover:border-white/[0.18] transition-all duration-300 hover:shadow-2xl">
-        {/* Image container */}
-        <div className="relative h-[130px] bg-neutral-950/80 overflow-hidden group">
-          {artwork.image_url ? (
+        {/* Image container — dynamic height with object-fit contain */}
+        <div
+          className="relative bg-neutral-950/80 overflow-hidden group flex items-center justify-center"
+          style={{ height: `${imageHeight}px` }}
+        >
+          {/* Loading skeleton */}
+          {isImageLoading && !imageLoadError && (
+            <div className="absolute inset-0 bg-neutral-800/50 animate-pulse" />
+          )}
+
+          {artwork.image_url && !imageLoadError ? (
             <>
               <img
                 src={artwork.image_url}
                 alt={artwork.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                 crossOrigin="anonymous"
-                onError={e => {
-                  const el = e.target as HTMLImageElement;
-                  el.style.display = 'none';
-                  el.nextElementSibling?.classList.remove('hidden');
+                onLoad={() => setIsImageLoading(false)}
+                onError={() => {
+                  setIsImageLoading(false);
+                  setImageLoadError(true);
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
             </>
           ) : null}
-          <div
-            className={`absolute inset-0 flex flex-col items-center justify-center text-neutral-700 ${artwork.image_url ? 'hidden' : ''}`}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <polyline points="21 15 16 10 5 21" />
-            </svg>
-          </div>
+
+          {/* No image or failed to load */}
+          {!artwork.image_url || imageLoadError ? (
+            <div className="flex flex-col items-center justify-center text-neutral-700 gap-2">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
+              {imageLoadError && <span className="text-[9px] text-neutral-600">Image unavailable</span>}
+            </div>
+          ) : null}
 
           {/* Close button */}
           <button
