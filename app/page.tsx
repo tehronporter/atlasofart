@@ -157,7 +157,7 @@ export default function Home() {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [selectedMedium, setSelectedMedium] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [currentView, setCurrentView] = useState<'map' | 'timeline' | 'artworks'>('map');
+  const [currentView, setCurrentView] = useState<'map' | 'artworks'>('map');
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch all artworks from paginated API (5,000 per page) — handles 10,000+ collections
@@ -377,12 +377,6 @@ export default function Home() {
             onClick={() => setCurrentView('map')}
           />
           <NavItem
-            icon={<TimelineIcon />}
-            label="Timeline"
-            active={currentView === 'timeline'}
-            onClick={() => setCurrentView('timeline')}
-          />
-          <NavItem
             icon={<GridIcon />}
             label="Artworks"
             active={currentView === 'artworks'}
@@ -552,70 +546,66 @@ export default function Home() {
 
         {/* Map View */}
         {currentView === 'map' && (
-          <div className="flex-1 relative min-h-0">
-            <MapShell
-              artworks={filteredArtworks}
-              selectedArtworkId={selectedArtworkId}
-              selectedArtwork={!isExpandedDetailOpen ? selectedArtwork : null}
-              onArtworkClick={handleArtworkClick}
-              onDoubleClick={() => setIsExpandedDetailOpen(true)}
-              onArtworkClose={() => setSelectedArtworkId(null)}
+          <>
+            <div className="flex-1 relative min-h-0">
+              <MapShell
+                artworks={filteredArtworks}
+                selectedArtworkId={selectedArtworkId}
+                selectedArtwork={!isExpandedDetailOpen ? selectedArtwork : null}
+                onArtworkClick={handleArtworkClick}
+                onDoubleClick={() => setIsExpandedDetailOpen(true)}
+                onArtworkClose={() => setSelectedArtworkId(null)}
+              />
+
+              {/* Expanded artwork detail overlay */}
+              {selectedArtwork && isExpandedDetailOpen && (
+                <ExpandedArtworkDetail
+                  artwork={selectedArtwork}
+                  onClose={() => setIsExpandedDetailOpen(false)}
+                />
+              )}
+
+              {/* Top-right: count badge */}
+              <div className="absolute top-4 right-4 z-10 pointer-events-none">
+                <div className="bg-black/50 backdrop-blur-md border border-white/[0.08] rounded-lg px-3 py-1.5">
+                  <p className="text-[11px] text-neutral-400">
+                    <span className="text-amber-400 font-semibold">{filteredArtworks.length}</span>
+                    {' '}artworks mapped
+                  </p>
+                </div>
+              </div>
+
+              {/* Active filter chips */}
+              {(selectedRegion || selectedMedium) && (
+                <div className="absolute top-12 right-4 z-10 flex flex-col gap-1.5">
+                  {selectedRegion && (
+                    <button
+                      onClick={() => setSelectedRegion(null)}
+                      className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md border border-amber-500/30 rounded-lg px-2.5 py-1.5 text-[11px] text-amber-400 hover:bg-amber-500/10 transition-colors"
+                    >
+                      {selectedRegion} <XIcon />
+                    </button>
+                  )}
+                  {selectedMedium && (
+                    <button
+                      onClick={() => setSelectedMedium(null)}
+                      className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md border border-amber-500/30 rounded-lg px-2.5 py-1.5 text-[11px] text-amber-400 hover:bg-amber-500/10 transition-colors"
+                    >
+                      {selectedMedium.length > 22 ? selectedMedium.slice(0, 20) + '…' : selectedMedium}
+                      <XIcon />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Timeline at bottom */}
+            <TimelineShell
+              artworks={allArtworks}
+              maxYear={timelineMaxYear}
+              onMaxYearChange={setTimelineMaxYear}
             />
-
-            {/* Expanded artwork detail overlay */}
-            {selectedArtwork && isExpandedDetailOpen && (
-              <ExpandedArtworkDetail
-                artwork={selectedArtwork}
-                onClose={() => setIsExpandedDetailOpen(false)}
-              />
-            )}
-
-            {/* Top-right: count badge */}
-            <div className="absolute top-4 right-4 z-10 pointer-events-none">
-              <div className="bg-black/50 backdrop-blur-md border border-white/[0.08] rounded-lg px-3 py-1.5">
-                <p className="text-[11px] text-neutral-400">
-                  <span className="text-amber-400 font-semibold">{filteredArtworks.length}</span>
-                  {' '}artworks mapped
-                </p>
-              </div>
-            </div>
-
-            {/* Active filter chips */}
-            {(selectedRegion || selectedMedium) && (
-              <div className="absolute top-12 right-4 z-10 flex flex-col gap-1.5">
-                {selectedRegion && (
-                  <button
-                    onClick={() => setSelectedRegion(null)}
-                    className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md border border-amber-500/30 rounded-lg px-2.5 py-1.5 text-[11px] text-amber-400 hover:bg-amber-500/10 transition-colors"
-                  >
-                    {selectedRegion} <XIcon />
-                  </button>
-                )}
-                {selectedMedium && (
-                  <button
-                    onClick={() => setSelectedMedium(null)}
-                    className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md border border-amber-500/30 rounded-lg px-2.5 py-1.5 text-[11px] text-amber-400 hover:bg-amber-500/10 transition-colors"
-                  >
-                    {selectedMedium.length > 22 ? selectedMedium.slice(0, 20) + '…' : selectedMedium}
-                    <XIcon />
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Timeline View */}
-        {currentView === 'timeline' && (
-          <div className="flex-1 relative min-h-0 flex items-center justify-center">
-            <div className="w-full h-full">
-              <TimelineShell
-                artworks={allArtworks}
-                maxYear={timelineMaxYear}
-                onMaxYearChange={setTimelineMaxYear}
-              />
-            </div>
-          </div>
+          </>
         )}
 
         {/* Artworks Grid View */}
