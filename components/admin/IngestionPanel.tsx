@@ -72,11 +72,11 @@ interface IngestionPanelProps {
 export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefreshStats }: IngestionPanelProps) {
   const [isIngesting, setIsIngesting] = useState(false);
   const [ingestResult, setIngestResult] = useState<IngestResult | null>(null);
-  const [startPage, setStartPage] = useState(35000);
-  const [pagesPerRun, setPagesPerRun] = useState(3);
+  const [startPage, setStartPage] = useState(1);
+  const [pagesPerRun, setPagesPerRun] = useState(10);
   const [onlyWithImages, setOnlyWithImages] = useState(true);
 
-  const [autoBatches, setAutoBatches] = useState(10);
+  const [autoBatches, setAutoBatches] = useState(25);
   const [autoRunning, setAutoRunning] = useState(false);
   const [autoProgress, setAutoProgress] = useState({ current: 0, total: 0, totalAdded: 0, totalUpdated: 0 });
   const stopAutoRef = useRef(false);
@@ -231,7 +231,7 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
           <p className="text-xs text-neutral-500 mt-1.5 leading-relaxed">
             Fetches artworks from the Getty Linked Art API activity stream at{' '}
             <code className="bg-neutral-800 px-1 rounded text-neutral-400">data.getty.edu</code>.
-            HumanMadeObject entries concentrate around pages 35,000+. Each page contains ~100 activity items.
+            Artworks (HumanMadeObject) are scattered across ~42,500 pages. Each page contains ~100 activity items.
             Coordinates are geocoded from provenance metadata. Duplicates are automatically skipped via upsert.
           </p>
         </div>
@@ -251,9 +251,9 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                   disabled={isIngesting}
                   className="w-28 bg-neutral-800 border border-neutral-700 text-sm text-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500/50 tabular-nums"
                 />
-                {startPage !== 35000 && (
+                {startPage !== 1 && (
                   <button
-                    onClick={() => setStartPage(35000)}
+                    onClick={() => setStartPage(1)}
                     className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors"
                   >
                     Reset
@@ -270,11 +270,11 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                 disabled={isIngesting}
                 className="bg-neutral-800 border border-neutral-700 text-sm text-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500/50 cursor-pointer"
               >
-                <option value={1}>1</option>
                 <option value={3}>3</option>
                 <option value={5}>5</option>
                 <option value={10}>10</option>
                 <option value={20}>20</option>
+                <option value={50}>50</option>
               </select>
             </div>
 
@@ -365,7 +365,7 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                   disabled={autoRunning || isIngesting}
                   className="bg-neutral-800 border border-neutral-700 text-sm text-neutral-300 rounded-lg px-3 py-1.5 focus:outline-none focus:border-amber-500/50 cursor-pointer"
                 >
-                  {[5, 10, 20, 50, 100].map(n => (
+                  {[10, 25, 50, 100, 200].map(n => (
                     <option key={n} value={n}>{n}</option>
                   ))}
                 </select>

@@ -206,8 +206,8 @@ function parseLinkedArtObject(obj: any): Record<string, any> | null {
     }
   }
 
-  // Skip objects with no image — images are required for the map detail view
-  if (!imagePrimary) return null;
+  // Note: image filtering is handled by the onlyWithImages flag in the POST handler.
+  // We still parse image-less objects so they can be stored for metadata/moderation.
 
   // ── Medium ────────────────────────────────────────────────────────────────
   const matEntry = obj.referred_to_by?.find(
@@ -307,8 +307,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const {
-      startPage = 35000,  // Early pages are mostly People/Groups; artworks cluster here
-      pagesPerRun = 3,    // Each page ~100 items, filter to HumanMadeObject
+      startPage = 1,       // Scan from the beginning — artworks are scattered across all pages
+      pagesPerRun = 10,    // Each page ~100 items, filter to HumanMadeObject
       onlyWithImages = true,
     } = body;
 
@@ -389,9 +389,18 @@ export async function POST(request: NextRequest) {
       }
 
       const items: any[] = pageData.orderedItems ?? [];
-      const artworkItems = items.filter(
-        (item: any) => item?.object?.type === 'HumanMadeObject'
-      );
+      // Match artworks by type OR by object URL pattern (some pages omit type)
+      const artworkItems = items.filter((item: any) => {
+        if (!item?.object) return false;
+        // Explicit type match
+        const objType = item.object.type;
+        if (objType === 'HumanMadeObject') return true;
+        if (Array.isArray(objType) && objType.includes('HumanMadeObject')) return true;
+        // URL pattern match — Getty object URLs contain /object/ for artworks
+        const objId = item.object.id || item.object['@id'] || '';
+        if (typeof objId === 'string' && objId.includes('/collection/object/')) return true;
+        return false;
+      });
 
       console.log(
         `[Getty] Page ${run + 1}/${pagesPerRun}: ${items.length} items, ` +
@@ -430,15 +439,16 @@ export async function POST(request: NextRequest) {
             continue;
           }
 
-          if (onlyWithImages && !obj.representation?.[0]?.id) {
-            noImage++;
-            continue;
-          }
-
           const parsed = parseLinkedArtObject(obj);
 
           if (!parsed) {
             skipped++;
+            continue;
+          }
+
+          // Skip image-less artworks if toggle is on
+          if (onlyWithImages && !parsed.image_url_primary) {
+            noImage++;
             continue;
           }
 
@@ -470,8 +480,8 @@ export async function POST(request: NextRequest) {
             added++;
           }
 
-          // Rate limit — Getty's servers appreciate breathing room (500ms between requests)
-          await new Promise(r => setTimeout(r, 500));
+          // Rate limit — Getty's servers appreciate breathing room (300ms between requests)
+          await new Promise(r => setTimeout(r, 300));
         } catch (e: any) {
           errors.push(`Object fetch error: ${e.message}`);
         }
