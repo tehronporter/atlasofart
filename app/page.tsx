@@ -546,7 +546,7 @@ export default function Home() {
 
         {/* Map View */}
         {currentView === 'map' && (
-          <>
+          <div className="flex-1 flex flex-col min-w-0 relative">
             <div className="flex-1 relative min-h-0">
               <MapShell
                 artworks={filteredArtworks}
@@ -600,12 +600,14 @@ export default function Home() {
             </div>
 
             {/* Timeline at bottom */}
-            <TimelineShell
-              artworks={allArtworks}
-              maxYear={timelineMaxYear}
-              onMaxYearChange={setTimelineMaxYear}
-            />
-          </>
+            <div className="shrink-0 h-32 md:h-40 overflow-hidden">
+              <TimelineShell
+                artworks={allArtworks}
+                maxYear={timelineMaxYear}
+                onMaxYearChange={setTimelineMaxYear}
+              />
+            </div>
+          </div>
         )}
 
         {/* Artworks Grid View */}
