@@ -100,14 +100,14 @@ function NavItem({ icon, label, active, href }: { icon: React.ReactNode; label: 
   return (
     <a
       href={href || '#'}
-      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+      className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm transition-all duration-200 ${
         active
-          ? 'bg-white/8 text-white'
-          : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/4'
+          ? 'bg-gradient-to-r from-amber-500/15 to-amber-500/5 border border-amber-500/20 text-white'
+          : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.05] border border-transparent'
       }`}
     >
-      <span className={active ? 'text-amber-400' : 'text-neutral-600'}>{icon}</span>
-      <span className={active ? 'font-medium' : 'font-normal'}>{label}</span>
+      <span className={`transition-colors ${active ? 'text-amber-400' : 'text-neutral-600'}`}>{icon}</span>
+      <span className={active ? 'font-medium text-white' : 'font-normal'}>{label}</span>
     </a>
   );
 }
@@ -319,24 +319,24 @@ export default function Home() {
     <div className="flex h-screen w-full bg-[#0a0a0f] overflow-hidden select-none">
 
       {/* ── LEFT PANEL ─────────────────────────────────────────────────────── */}
-      <aside className="w-[290px] shrink-0 flex flex-col bg-[#111215]/95 border-r border-white/[0.06] overflow-hidden z-20">
+      <aside className="w-[290px] shrink-0 flex flex-col bg-gradient-to-b from-[#111215] to-[#0d0d11] border-r border-white/[0.08] overflow-hidden z-20">
 
         {/* Brand */}
-        <div className="px-5 pt-5 pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full border border-white/15 flex items-center justify-center bg-white/4 shrink-0">
+        <div className="px-5 pt-6 pb-5">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg border border-white/15 flex items-center justify-center bg-gradient-to-br from-white/8 to-white/4 shrink-0">
               <GlobeIcon />
             </div>
-            <h1 className="text-[15px] font-semibold text-white tracking-tight leading-none">
-              Atlas <em className="font-light text-neutral-400 not-italic">of</em> Art
+            <h1 className="text-[14px] font-light text-white tracking-tight leading-none">
+              Atlas <span className="font-extralight text-neutral-500">of Art</span>
             </h1>
           </div>
-          <p className="mt-2.5 text-[11px] text-neutral-500 leading-relaxed pl-[2px]">
-            Explore art by place and time.
+          <p className="mt-3 text-[11px] text-neutral-600 leading-relaxed">
+            Explore global artworks by place and era.
           </p>
         </div>
 
-        <div className="border-t border-white/[0.05] mx-4" />
+        <div className="border-t border-white/[0.04] mx-4" />
 
         {/* Navigation */}
         <nav className="px-2.5 py-2.5 space-y-0.5">
@@ -349,17 +349,17 @@ export default function Home() {
         <div className="border-t border-white/[0.05] mx-4 my-1" />
 
         {/* Search + Filters */}
-        <div className="px-3 py-2.5">
+        <div className="px-3.5 py-3">
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600 pointer-events-none">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-600 pointer-events-none">
               <SearchIcon />
             </span>
             <input
               type="text"
-              placeholder="Search artworks, artists…"
+              placeholder="Search artworks…"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg pl-8 pr-3 py-2 text-[12.5px] text-neutral-300 placeholder-neutral-600 focus:outline-none focus:border-amber-500/40 transition-colors"
+              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg pl-9 pr-3 py-2.5 text-[12px] text-neutral-200 placeholder-neutral-700 focus:outline-none focus:bg-white/[0.06] focus:border-amber-500/50 transition-all duration-200"
             />
             {searchQuery && (
               <button
@@ -373,18 +373,18 @@ export default function Home() {
 
           <button
             onClick={() => setShowFilters(f => !f)}
-            className={`mt-2 flex items-center gap-1.5 text-[11px] transition-colors ${
+            className={`mt-3 flex items-center gap-1.5 text-[11px] font-medium transition-all duration-200 px-2 py-1.5 rounded-lg ${
               showFilters || selectedRegion || selectedMedium
-                ? 'text-amber-400'
-                : 'text-neutral-600 hover:text-neutral-400'
+                ? 'text-amber-400 bg-amber-500/10'
+                : 'text-neutral-500 hover:text-neutral-300'
             }`}
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
             </svg>
-            Filters
+            <span>Filters</span>
             {(selectedRegion || selectedMedium) && (
-              <span className="ml-1 bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded text-[10px]">
+              <span className="ml-auto bg-amber-500/30 text-amber-300 px-2 py-0.5 rounded text-[9px] font-semibold">
                 {[selectedRegion, selectedMedium].filter(Boolean).length}
               </span>
             )}
@@ -444,26 +444,25 @@ export default function Home() {
         <div className="border-t border-white/[0.05] mx-4 my-1" />
 
         {/* Hint / Empty state */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden flex items-center justify-center px-4 py-6">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden flex items-center justify-center px-4 py-8">
           <div className="text-center">
-            <div className="w-12 h-12 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto mb-3">
+            <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/[0.08] flex items-center justify-center mx-auto mb-4">
               <MapIcon />
             </div>
-            <p className="text-[11px] text-neutral-600 leading-relaxed">
-              Click a marker to view artwork details
+            <p className="text-[11px] text-neutral-600 leading-relaxed font-light">
+              Click a marker on the map to explore artwork details
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="border-t border-white/[0.05] px-4 py-3 flex items-center justify-between">
-          <span className="text-[11px] text-neutral-600">
-            <span className="text-amber-400 font-medium">{filteredArtworks.length}</span>
-            {' '}of{' '}
-            <span className="text-neutral-500">{allArtworks.length}</span>
-            {' '}artworks
+        <div className="border-t border-white/[0.04] bg-gradient-to-b from-transparent to-black/10 px-4 py-3.5 flex items-center justify-between">
+          <span className="text-[10px] text-neutral-600">
+            <span className="text-amber-400 font-semibold">{filteredArtworks.length}</span>
+            <span className="text-neutral-700"> of </span>
+            <span className="text-neutral-600">{allArtworks.length}</span>
           </span>
-          <a href="/admin" className="text-[10px] text-neutral-700 hover:text-neutral-400 transition-colors">
+          <a href="/admin" className="text-[10px] text-neutral-700 hover:text-amber-400 transition-colors font-light">
             Admin
           </a>
         </div>
