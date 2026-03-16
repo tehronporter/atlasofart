@@ -7,7 +7,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import TimelineShell from '@/components/controls/TimelineShell';
-import FloatingArtworkCard from '@/components/map/FloatingArtworkCard';
 import ExpandedArtworkDetail from '@/components/map/ExpandedArtworkDetail';
 import { supabase } from '@/lib/supabase';
 import { trackArtworkView } from '@/lib/auth';
@@ -228,7 +227,11 @@ export default function Home() {
 
   const handleArtworkClick = useCallback((artwork: any) => {
     const id = artwork?.id || null;
-    setSelectedArtworkId(prev => prev === id ? null : id);
+    setSelectedArtworkId(prev => {
+      // Switching to a different artwork — collapse any expanded view
+      if (id && prev !== id) setIsExpandedDetailOpen(false);
+      return prev === id ? null : id;
+    });
     if (id) trackArtworkView(id).catch(() => {});
   }, []);
 
@@ -473,17 +476,11 @@ export default function Home() {
           <MapShell
             artworks={filteredArtworks}
             selectedArtworkId={selectedArtworkId}
+            selectedArtwork={!isExpandedDetailOpen ? selectedArtwork : null}
             onArtworkClick={handleArtworkClick}
+            onDoubleClick={() => setIsExpandedDetailOpen(true)}
+            onArtworkClose={() => setSelectedArtworkId(null)}
           />
-
-          {/* Floating artwork preview card (anchored to marker) */}
-          {selectedArtwork && !isExpandedDetailOpen && (
-            <FloatingArtworkCard
-              artwork={selectedArtwork}
-              onDoubleClick={() => setIsExpandedDetailOpen(true)}
-              onClose={() => setSelectedArtworkId(null)}
-            />
-          )}
 
           {/* Expanded artwork detail overlay */}
           {selectedArtwork && isExpandedDetailOpen && (
