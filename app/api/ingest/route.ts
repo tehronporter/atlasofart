@@ -1,31 +1,42 @@
 // app/api/ingest/route.ts
-// Getty Museum Linked Art API ingestion
-// Source: https://data.getty.edu/museum/collection/
-// Activity Stream: https://data.getty.edu/museum/collection/activity-stream/page/{N}
-// Individual objects: https://data.getty.edu/museum/collection/object/{UUID}
-// Images: https://media.getty.edu/iiif/image/{UUID}/full/400,/0/default.jpg
+// Getty Museum Linked Art API ingestion via SPARQL
 //
-// IMPORTANT: The activity stream is a CHANGELOG — the same object appears on many
-// pages (Create + multiple Updates). Pages 1-34999 are Person/Group records only.
-// HumanMadeObject entries start around page 35000 and run through ~42500.
-// We skip already-ingested objects (by object_id) BEFORE the expensive Getty fetch.
+// Uses Getty's SPARQL endpoint to discover all HumanMadeObject URIs with images,
+// then fetches each new object's JSON-LD for parsing. This replaces the old
+// activity-stream approach which was a changelog full of duplicate entries.
+//
+// SPARQL endpoint: https://data.getty.edu/museum/collection/sparql
+// Total objects with images: ~123,500 (of ~168,000 total)
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
-// Extend Vercel serverless function timeout (default is 10s on hobby, 60s on pro)
-export const maxDuration = 300; // 5 minutes max
+// Extend Vercel serverless function timeout
+export const maxDuration = 300; // 5 minutes
 
-const GETTY_STREAM = 'https://data.getty.edu/museum/collection/activity-stream/page';
+const SPARQL_ENDPOINT = 'https://data.getty.edu/museum/collection/sparql';
+
+// SPARQL query to get HumanMadeObject URIs that have at least one image representation
+const SPARQL_QUERY_OBJECTS = `
+SELECT ?obj WHERE {
+  ?obj a <http://www.cidoc-crm.org/cidoc-crm/E22_Human-Made_Object> .
+  ?obj <http://www.cidoc-crm.org/cidoc-crm/P138i_has_representation> ?img .
+}
+LIMIT {LIMIT} OFFSET {OFFSET}
+`;
+
+const SPARQL_QUERY_COUNT = `
+SELECT (COUNT(DISTINCT ?obj) AS ?count) WHERE {
+  ?obj a <http://www.cidoc-crm.org/cidoc-crm/E22_Human-Made_Object> .
+  ?obj <http://www.cidoc-crm.org/cidoc-crm/P138i_has_representation> ?img .
+}
+`;
 
 // ── Geocoding lookup ──────────────────────────────────────────────────────────
-// Getty objects don't have coordinates; geocode from place_created text.
-
 function geocodeFromPlace(text: string | null): [number | null, number | null] {
   if (!text) return [null, null];
   const t = text.toLowerCase();
 
-  // Cities — checked before countries so "Rome, Italy" hits Rome not Italy
   const cities: [string, number, number][] = [
     ['florence', 43.7696, 11.2558], ['firenze', 43.7696, 11.2558],
     ['rome', 41.9028, 12.4964], ['roma', 41.9028, 12.4964],
@@ -69,7 +80,6 @@ function geocodeFromPlace(text: string | null): [number | null, number | null] {
     if (t.includes(name)) return [lat, lng];
   }
 
-  // Countries
   const countries: [string, number, number][] = [
     ['italy', 41.9028, 12.4964], ['italian', 41.9028, 12.4964],
     ['france', 48.8566, 2.3522], ['french', 48.8566, 2.3522],
@@ -109,8 +119,6 @@ function geocodeFromPlace(text: string | null): [number | null, number | null] {
 
 // ── Linked Art parser ─────────────────────────────────────────────────────────
 
-// Getty's Linked Art API returns `type` as either a string "HumanMadeObject"
-// or an array ["HumanMadeObject", ...]. Handle both.
 function isHumanMadeObject(obj: any): boolean {
   if (!obj) return false;
   const t = obj.type;
@@ -118,14 +126,10 @@ function isHumanMadeObject(obj: any): boolean {
   return t === 'HumanMadeObject';
 }
 
-// Fetch the natural image dimensions from a Getty IIIF info.json endpoint
-// to preserve aspect ratios in the UI (no cropping needed)
 async function fetchIIIFDimensions(
   imageUrl: string
 ): Promise<{ width: number; height: number } | null> {
   try {
-    // IIIF image URL pattern: .../iiif/image/{UUID}/full/{size}/0/default.jpg
-    // Info URL pattern: .../iiif/image/{UUID}/info.json
     const infoUrl = imageUrl.replace(/\/full\/[^/]+\/0\/default\.jpg$/, '/info.json');
     const res = await fetch(infoUrl, {
       headers: { Accept: 'application/json', 'User-Agent': 'Atlas of Art (Educational Collection Explorer)' },
@@ -159,7 +163,6 @@ function parseLinkedArtObject(obj: any): Record<string, any> | null {
     );
     const anyName = obj.identified_by.find((i: any) => i.type === 'Name');
     const raw = preferred?.content || anyName?.content || obj._label || 'Untitled';
-    // Strip trailing accession number like "(84.PA.723)"
     title = raw.replace(/\s*\([A-Z0-9.]+\)\s*$/, '').trim() || 'Untitled';
   } else if (obj._label) {
     title = obj._label.replace(/\s*\([A-Z0-9.]+\)\s*$/, '').trim() || 'Untitled';
@@ -169,14 +172,10 @@ function parseLinkedArtObject(obj: any): Record<string, any> | null {
   const producer = obj.produced_by;
   let artistDisplay: string | null = null;
   if (producer?.carried_out_by?.[0]) {
-    // Prefer long description "Giambono (Italian, active 1420–1462)"
     const descEntry = producer.referred_to_by?.find(
       (r: any) => r._label === 'Artist/Maker (Producer) Description'
     );
-    artistDisplay =
-      descEntry?.content ||
-      producer.carried_out_by[0]._label ||
-      null;
+    artistDisplay = descEntry?.content || producer.carried_out_by[0]._label || null;
   }
 
   // ── Dates ─────────────────────────────────────────────────────────────────
@@ -187,19 +186,16 @@ function parseLinkedArtObject(obj: any): Record<string, any> | null {
 
   if (timespan) {
     dateLabel = timespan.identified_by?.[0]?.content || null;
-
     const parseYear = (isoStr: string): number => {
       const isBce = isoStr.startsWith('-');
       const absYear = parseInt(isoStr.replace(/^-/, '').substring(0, 4), 10);
       return isNaN(absYear) ? 0 : isBce ? -absYear : absYear;
     };
-
     if (timespan.begin_of_the_begin) dateStart = parseYear(timespan.begin_of_the_begin);
     if (timespan.end_of_the_end) dateEnd = parseYear(timespan.end_of_the_end);
   }
 
   // ── Image URL ─────────────────────────────────────────────────────────────
-  // representation[0].id is a direct IIIF image URL ending in /full/full/0/default.jpg
   let imagePrimary: string | null = null;
   let imageThumbnail: string | null = null;
 
@@ -207,7 +203,6 @@ function parseLinkedArtObject(obj: any): Record<string, any> | null {
     const raw = obj.representation[0].id as string;
     if (raw.startsWith('http')) {
       imagePrimary = raw;
-      // Swap /full/full/ → /full/800,/ for primary; /full/400,/ for thumbnail
       imageThumbnail = raw.replace(/\/full\/[^/]+\/0\/default\.jpg$/, '/full/400,/0/default.jpg');
       imagePrimary = raw.replace(/\/full\/[^/]+\/0\/default\.jpg$/, '/full/800,/0/default.jpg');
     }
@@ -217,25 +212,19 @@ function parseLinkedArtObject(obj: any): Record<string, any> | null {
   const matEntry = obj.referred_to_by?.find(
     (r: any) =>
       r._label === 'Materials Description' ||
-      r.classified_as?.some(
-        (c: any) => c.id === 'http://vocab.getty.edu/aat/300435429'
-      )
+      r.classified_as?.some((c: any) => c.id === 'http://vocab.getty.edu/aat/300435429')
   );
   const medium = matEntry?.content || null;
 
   // ── Place created ─────────────────────────────────────────────────────────
   const placeEntry = obj.referred_to_by?.find((r: any) =>
-    r.classified_as?.some(
-      (c: any) => c.id === 'http://vocab.getty.edu/aat/300435448'
-    )
+    r.classified_as?.some((c: any) => c.id === 'http://vocab.getty.edu/aat/300435448')
   );
   const placeCreated = placeEntry?.content || null;
 
   // ── Dimensions ───────────────────────────────────────────────────────────
   const dimsEntry = obj.referred_to_by?.find((r: any) =>
-    r.classified_as?.some(
-      (c: any) => c.id === 'http://vocab.getty.edu/aat/300435430'
-    )
+    r.classified_as?.some((c: any) => c.id === 'http://vocab.getty.edu/aat/300435430')
   );
   const dimensions = dimsEntry?.content || null;
 
@@ -248,11 +237,9 @@ function parseLinkedArtObject(obj: any): Record<string, any> | null {
   const tags: string[] = [];
   if (typeEntry?._label) tags.push(typeEntry._label);
   if (obj.made_of) {
-    obj.made_of
-      .slice(0, 3)
-      .forEach((m: any) => {
-        if (m._label && !tags.includes(m._label)) tags.push(m._label);
-      });
+    obj.made_of.slice(0, 3).forEach((m: any) => {
+      if (m._label && !tags.includes(m._label)) tags.push(m._label);
+    });
   }
 
   // ── Description ───────────────────────────────────────────────────────────
@@ -267,11 +254,9 @@ function parseLinkedArtObject(obj: any): Record<string, any> | null {
   const webEntry = obj.subject_of?.find((s: any) =>
     s.classified_as?.some((c: any) => c._label === 'Web Page')
   );
-  const gettyUrl =
-    webEntry?.id ||
-    `https://www.getty.edu/art/collection/objects/${objectId}`;
+  const gettyUrl = webEntry?.id || `https://www.getty.edu/art/collection/objects/${objectId}`;
 
-  // ── Region (last segment of place text) ───────────────────────────────────
+  // ── Region ────────────────────────────────────────────────────────────────
   let region: string | null = null;
   if (placeCreated) {
     const parts = placeCreated.split(',');
@@ -305,24 +290,47 @@ function parseLinkedArtObject(obj: any): Record<string, any> | null {
   };
 }
 
+// ── SPARQL helpers ────────────────────────────────────────────────────────────
+
+async function sparqlQuery(query: string): Promise<any> {
+  const url = `${SPARQL_ENDPOINT}?query=${encodeURIComponent(query)}&output=json`;
+  const res = await fetch(url, {
+    headers: {
+      Accept: 'application/sparql-results+json',
+      'User-Agent': 'Atlas of Art (Educational Collection Explorer)',
+    },
+    cache: 'no-store',
+  });
+  if (!res.ok) throw new Error(`SPARQL query failed: ${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+async function getTotalObjectsWithImages(): Promise<number> {
+  const data = await sparqlQuery(SPARQL_QUERY_COUNT);
+  return parseInt(data.results.bindings[0]?.count?.value || '0', 10);
+}
+
+async function getObjectURIs(limit: number, offset: number): Promise<string[]> {
+  const query = SPARQL_QUERY_OBJECTS
+    .replace('{LIMIT}', String(limit))
+    .replace('{OFFSET}', String(offset));
+  const data = await sparqlQuery(query);
+  return (data.results.bindings || []).map((b: any) => b.obj.value);
+}
+
 // ── Route handlers ────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const {
-      startPage = 35000,  // HumanMadeObject entries are on pages 35000-42500
-      pagesPerRun = 5,    // Each page ~100 HumanMadeObject items
-      onlyWithImages = true,
+      offset = 0,          // SPARQL offset — position in the full list of ~123k objects
+      batchSize = 50,      // How many object URIs to process per run
     } = body;
 
     if (!supabaseAdmin) {
       return NextResponse.json(
-        {
-          success: false,
-          error:
-            'Supabase admin client not configured. Add SUPABASE_SERVICE_ROLE_KEY to .env.local',
-        },
+        { success: false, error: 'Supabase admin client not configured. Add SUPABASE_SERVICE_ROLE_KEY to .env.local' },
         { status: 500 }
       );
     }
@@ -335,30 +343,75 @@ export async function POST(request: NextRequest) {
       .insert({
         batch_id: batchId,
         status: 'processing',
-        metadata: { startPage, pagesPerRun, source: 'getty-linked-art' },
+        metadata: { offset, batchSize, source: 'getty-sparql' },
       })
-      .then(() => {}, () => {}); // fire-and-forget
+      .then(() => {}, () => {});
 
-    console.log(
-      `[Getty] Starting ingestion: startPage=${startPage}, pagesPerRun=${pagesPerRun}`
-    );
+    console.log(`[Getty SPARQL] Starting: offset=${offset}, batchSize=${batchSize}`);
 
+    // 1. Get object URIs from SPARQL
+    let objectURIs: string[];
+    try {
+      objectURIs = await getObjectURIs(batchSize, offset);
+    } catch (e: any) {
+      return NextResponse.json({
+        success: false,
+        error: `SPARQL query failed: ${e.message}`,
+      }, { status: 500 });
+    }
+
+    if (objectURIs.length === 0) {
+      return NextResponse.json({
+        success: true,
+        batchId,
+        added: 0,
+        alreadyExists: 0,
+        noImage: 0,
+        fetchFailed: 0,
+        errors: [],
+        nextOffset: offset,
+        finished: true,
+        message: `No more objects at offset ${offset}. Ingestion complete!`,
+      });
+    }
+
+    // 2. Extract UUIDs and batch-check which already exist in DB
+    const objectIds = objectURIs.map(uri => {
+      const uuid = uri.split('/').pop();
+      return uuid ? `getty-${uuid}` : null;
+    }).filter(Boolean) as string[];
+
+    const existingSet = new Set<string>();
+    if (objectIds.length > 0) {
+      const { data: existingRows } = await supabaseAdmin
+        .from('artworks')
+        .select('object_id')
+        .in('object_id', objectIds);
+      if (existingRows) {
+        for (const row of existingRows) {
+          existingSet.add(row.object_id);
+        }
+      }
+    }
+
+    // 3. Fetch & upsert only NEW objects
     let added = 0;
-    let updated = 0;
-    let skipped = 0;
-    let alreadyExists = 0; // object already in DB — skip expensive fetch
+    let alreadyExists = 0;
     let noImage = 0;
-    let noType = 0;
     let fetchFailed = 0;
     const errors: string[] = [];
-    let nextPageUrl: string | null =
-      `${GETTY_STREAM}/${startPage}`;
 
-    for (let run = 0; run < pagesPerRun && nextPageUrl; run++) {
-      let pageData: any;
+    for (const uri of objectURIs) {
+      const uuid = uri.split('/').pop();
+      const objectId = uuid ? `getty-${uuid}` : null;
+
+      if (objectId && existingSet.has(objectId)) {
+        alreadyExists++;
+        continue;
+      }
 
       try {
-        const pageRes = await fetch(nextPageUrl, {
+        const objRes = await fetch(uri, {
           headers: {
             Accept: 'application/json',
             'User-Agent': 'Atlas of Art (Educational Collection Explorer)',
@@ -366,194 +419,80 @@ export async function POST(request: NextRequest) {
           cache: 'no-store',
         });
 
-        if (!pageRes.ok) {
-          errors.push(`Page fetch failed: ${pageRes.status} ${pageRes.statusText} (${nextPageUrl})`);
-          break;
+        if (!objRes.ok) { fetchFailed++; continue; }
+
+        const contentType = objRes.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) { fetchFailed++; continue; }
+
+        const obj = await objRes.json();
+        const parsed = parseLinkedArtObject(obj);
+        if (!parsed) { fetchFailed++; continue; }
+
+        // Must have an image to display on the map
+        if (!parsed.image_url_primary) {
+          noImage++;
+          continue;
         }
 
-        // Check content type before parsing JSON
-        const contentType = pageRes.headers.get('content-type') || '';
-        if (!contentType.includes('application/json')) {
-          const text = await pageRes.text();
-          const preview = text.substring(0, 80);
-          console.error(`[Getty] Invalid content type: ${contentType}`);
-          console.error(`[Getty] Response preview: ${preview}`);
-          errors.push(`Getty API returned invalid content type: ${contentType}. Page ${startPage + run} may not exist. Try a lower page number.`);
-          break;
+        // Fetch IIIF dimensions for aspect ratio
+        if (parsed.image_url_primary) {
+          const dims = await fetchIIIFDimensions(parsed.image_url_primary);
+          if (dims) {
+            parsed.image_width = dims.width;
+            parsed.image_height = dims.height;
+          }
         }
 
-        pageData = await pageRes.json();
-
-        if (!pageData?.orderedItems) {
-          errors.push(`Invalid page structure: missing orderedItems`);
-          break;
-        }
-      } catch (e: any) {
-        errors.push(`Page fetch error: ${e.message}`);
-        break;
-      }
-
-      const items: any[] = pageData.orderedItems ?? [];
-      // Match artworks by type OR by object URL pattern (some pages omit type)
-      const artworkItems = items.filter((item: any) => {
-        if (!item?.object) return false;
-        const objType = item.object.type;
-        if (objType === 'HumanMadeObject') return true;
-        if (Array.isArray(objType) && objType.includes('HumanMadeObject')) return true;
-        // URL pattern fallback — Getty object URLs contain /object/ for artworks
-        const objId = item.object.id || item.object['@id'] || '';
-        if (typeof objId === 'string' && objId.includes('/collection/object/')) return true;
-        return false;
-      });
-
-      console.log(
-        `[Getty] Page ${run + 1}/${pagesPerRun}: ${items.length} items, ` +
-          `${artworkItems.length} HumanMadeObject`
-      );
-
-      // ── Batch check: which objects already exist in our DB? ─────────────
-      // Extract UUIDs from activity stream items and check DB in one query.
-      // This avoids the expensive per-item Getty API fetch for duplicates.
-      const objectIds = artworkItems
-        .map((item: any) => {
-          const url: string = item.object?.id || '';
-          const uuid = url.split('/').pop();
-          return uuid ? `getty-${uuid}` : null;
-        })
-        .filter(Boolean) as string[];
-
-      // Batch lookup: fetch all existing object_ids in one query
-      const existingSet = new Set<string>();
-      if (objectIds.length > 0) {
-        const { data: existingRows } = await supabaseAdmin
+        const { error: upsertError } = await supabaseAdmin
           .from('artworks')
-          .select('object_id')
-          .in('object_id', objectIds);
-        if (existingRows) {
-          for (const row of existingRows) {
-            existingSet.add(row.object_id);
-          }
+          .upsert(parsed, { onConflict: 'object_id', ignoreDuplicates: false });
+
+        if (upsertError) {
+          errors.push(`${parsed.object_id}: ${upsertError.message}`);
+        } else {
+          added++;
         }
+
+        // Rate limit — 200ms between Getty API calls
+        await new Promise(r => setTimeout(r, 200));
+      } catch (e: any) {
+        errors.push(`Fetch error: ${e.message}`);
       }
-
-      // Fetch & upsert each NEW artwork object (skip already-ingested ones)
-      for (const item of artworkItems) {
-        const objectUrl = item.object?.id;
-        if (!objectUrl) { skipped++; continue; }
-
-        // Extract object_id and skip if already in DB
-        const uuid = objectUrl.split('/').pop();
-        const objectId = uuid ? `getty-${uuid}` : null;
-        if (objectId && existingSet.has(objectId)) {
-          alreadyExists++;
-          continue; // Skip — no need to re-fetch from Getty
-        }
-
-        try {
-          const objRes = await fetch(objectUrl, {
-            headers: {
-              Accept: 'application/json',
-              'User-Agent': 'Atlas of Art (Educational Collection Explorer)',
-            },
-            cache: 'no-store',
-          });
-
-          if (!objRes.ok) { fetchFailed++; skipped++; continue; }
-
-          const contentType = objRes.headers.get('content-type') || '';
-          if (!contentType.includes('application/json')) {
-            fetchFailed++;
-            skipped++;
-            continue;
-          }
-
-          const obj = await objRes.json();
-
-          // Detailed diagnostics for why objects get skipped
-          if (!isHumanMadeObject(obj)) {
-            noType++;
-            skipped++;
-            continue;
-          }
-
-          const parsed = parseLinkedArtObject(obj);
-
-          if (!parsed) {
-            skipped++;
-            continue;
-          }
-
-          // Skip image-less artworks if toggle is on
-          if (onlyWithImages && !parsed.image_url_primary) {
-            noImage++;
-            continue;
-          }
-
-          // Fetch image dimensions from IIIF info.json for proper aspect ratio display
-          if (parsed.image_url_primary) {
-            const dims = await fetchIIIFDimensions(parsed.image_url_primary);
-            if (dims) {
-              parsed.image_width = dims.width;
-              parsed.image_height = dims.height;
-            }
-          }
-
-          const { error: upsertError } = await supabaseAdmin
-            .from('artworks')
-            .upsert(parsed, { onConflict: 'object_id', ignoreDuplicates: false });
-
-          if (upsertError) {
-            errors.push(`${parsed.object_id}: ${upsertError.message}`);
-          } else {
-            added++;
-          }
-
-          // Rate limit — Getty's servers appreciate breathing room
-          await new Promise(r => setTimeout(r, 250));
-        } catch (e: any) {
-          errors.push(`Object fetch error: ${e.message}`);
-        }
-      }
-
-      // Advance to next page
-      nextPageUrl = pageData?.next?.id ?? null;
     }
+
+    const nextOffset = offset + batchSize;
 
     // Update log
     supabaseAdmin
       .from('ingestion_logs')
       .update({
-        status: errors.length > added ? 'failed' : 'completed',
+        status: errors.length > added + alreadyExists ? 'failed' : 'completed',
         artworks_added: added,
-        artworks_updated: updated,
+        artworks_updated: 0,
         errors: errors.length ? errors.slice(0, 20) : null,
         completed_at: new Date().toISOString(),
       })
       .eq('batch_id', batchId)
-      .then(() => {}, () => {}); // fire-and-forget
+      .then(() => {}, () => {});
 
     console.log(
-      `[Getty] Done: added=${added}, updated=${updated}, alreadyExists=${alreadyExists}, skipped=${skipped}, noImage=${noImage}, noType=${noType}, fetchFailed=${fetchFailed}, errors=${errors.length}`
+      `[Getty SPARQL] Done: added=${added}, alreadyExists=${alreadyExists}, noImage=${noImage}, fetchFailed=${fetchFailed}, errors=${errors.length}`
     );
-
-    const nextStartPage = startPage + pagesPerRun;
 
     return NextResponse.json({
       success: true,
       batchId,
       added,
-      updated,
-      skipped,
       alreadyExists,
       noImage,
-      noType,
       fetchFailed,
       errors: errors.slice(0, 10),
-      nextStartPage,
-      message: `Added ${added} new artworks. ${alreadyExists} already in DB (skipped fast). ${noImage} no image, ${fetchFailed} fetch failed. Next start page: ${nextStartPage}`,
+      nextOffset,
+      finished: objectURIs.length < batchSize,
+      message: `Added ${added} new artworks. ${alreadyExists} already in DB. ${noImage} no usable image. Next offset: ${nextOffset}`,
     });
   } catch (error: any) {
-    console.error('[Getty] Fatal error:', error);
+    console.error('[Getty SPARQL] Fatal error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Unknown error' },
       { status: 500 }
@@ -567,12 +506,13 @@ export async function GET() {
       return NextResponse.json({
         success: false,
         error: 'Supabase not configured',
-        stats: { totalArtworks: 0, gettyArtworks: 0, withCoordinates: 0, withImages: 0 },
+        stats: { totalArtworks: 0, gettyArtworks: 0, withCoordinates: 0, withImages: 0, totalGettyAvailable: 0 },
         recentLogs: [],
       });
     }
 
-    const [totalRes, gettyRes, coordRes, imgRes, logsRes] = await Promise.all([
+    // Fetch DB stats and Getty total count in parallel
+    const [totalRes, gettyRes, coordRes, imgRes, logsRes, gettyTotal] = await Promise.all([
       supabaseAdmin.from('artworks').select('*', { count: 'exact', head: true }),
       supabaseAdmin
         .from('artworks')
@@ -591,6 +531,7 @@ export async function GET() {
         .select('*')
         .order('created_at', { ascending: false })
         .limit(10),
+      getTotalObjectsWithImages().catch(() => 0),
     ]);
 
     return NextResponse.json({
@@ -600,6 +541,7 @@ export async function GET() {
         gettyArtworks: gettyRes.count ?? 0,
         withCoordinates: coordRes.count ?? 0,
         withImages: imgRes.count ?? 0,
+        totalGettyAvailable: gettyTotal,
       },
       recentLogs: logsRes.data ?? [],
     });
@@ -607,7 +549,7 @@ export async function GET() {
     return NextResponse.json({
       success: false,
       error: error.message,
-      stats: { totalArtworks: 0, gettyArtworks: 0, withCoordinates: 0, withImages: 0 },
+      stats: { totalArtworks: 0, gettyArtworks: 0, withCoordinates: 0, withImages: 0, totalGettyAvailable: 0 },
       recentLogs: [],
     });
   }

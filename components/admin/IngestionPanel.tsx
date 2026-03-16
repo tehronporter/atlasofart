@@ -19,13 +19,11 @@ interface IngestLog {
 interface IngestResult {
   success: boolean;
   added?: number;
-  updated?: number;
-  skipped?: number;
   alreadyExists?: number;
   noImage?: number;
-  noType?: number;
   fetchFailed?: number;
-  nextStartPage?: number;
+  nextOffset?: number;
+  finished?: boolean;
   errors?: string[];
   error?: string;
   message?: string;
@@ -36,6 +34,7 @@ interface Stats {
   gettyArtworks: number;
   withCoordinates: number;
   withImages: number;
+  totalGettyAvailable?: number;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -73,17 +72,16 @@ interface IngestionPanelProps {
 export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefreshStats }: IngestionPanelProps) {
   const [isIngesting, setIsIngesting] = useState(false);
   const [ingestResult, setIngestResult] = useState<IngestResult | null>(null);
-  const [startPage, setStartPage] = useState(35000);
-  const [pagesPerRun, setPagesPerRun] = useState(5);
-  const [onlyWithImages, setOnlyWithImages] = useState(true);
+  const [offset, setOffset] = useState(0);
+  const [batchSize, setBatchSize] = useState(50);
 
   const [autoBatches, setAutoBatches] = useState(25);
   const [autoRunning, setAutoRunning] = useState(false);
-  const [autoProgress, setAutoProgress] = useState({ current: 0, total: 0, totalAdded: 0, totalUpdated: 0 });
+  const [autoProgress, setAutoProgress] = useState({ current: 0, total: 0, totalAdded: 0, totalSkipped: 0 });
   const stopAutoRef = useRef(false);
-  const currentPageRef = useRef(startPage);
+  const currentOffsetRef = useRef(offset);
 
-  useEffect(() => { currentPageRef.current = startPage; }, [startPage]);
+  useEffect(() => { currentOffsetRef.current = offset; }, [offset]);
 
   const handleIngest = async () => {
     setIsIngesting(true);
@@ -93,15 +91,15 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
       const res = await fetch('/api/ingest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ startPage, pagesPerRun, onlyWithImages }),
+        body: JSON.stringify({ offset, batchSize }),
       });
 
       const data: IngestResult = await res.json();
       setIngestResult(data);
 
-      if (data.success && data.nextStartPage !== undefined) {
-        setStartPage(data.nextStartPage);
-        currentPageRef.current = data.nextStartPage;
+      if (data.success && data.nextOffset !== undefined) {
+        setOffset(data.nextOffset);
+        currentOffsetRef.current = data.nextOffset;
         await onRefreshStats();
       }
     } catch (err: any) {
@@ -119,10 +117,10 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
 
     stopAutoRef.current = false;
     setAutoRunning(true);
-    setAutoProgress({ current: 0, total: autoBatches, totalAdded: 0, totalUpdated: 0 });
+    setAutoProgress({ current: 0, total: autoBatches, totalAdded: 0, totalSkipped: 0 });
     setIngestResult(null);
     let cumulativeAdded = 0;
-    let cumulativeUpdated = 0;
+    let cumulativeSkipped = 0;
 
     for (let i = 0; i < autoBatches; i++) {
       if (stopAutoRef.current) break;
@@ -134,9 +132,8 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            startPage: currentPageRef.current,
-            pagesPerRun,
-            onlyWithImages,
+            offset: currentOffsetRef.current,
+            batchSize,
           }),
         });
 
@@ -148,18 +145,21 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
         }
 
         cumulativeAdded += data.added ?? 0;
-        cumulativeUpdated += data.updated ?? 0;
+        cumulativeSkipped += data.alreadyExists ?? 0;
 
-        if (data.nextStartPage !== undefined) {
-          setStartPage(data.nextStartPage);
-          currentPageRef.current = data.nextStartPage;
+        if (data.nextOffset !== undefined) {
+          setOffset(data.nextOffset);
+          currentOffsetRef.current = data.nextOffset;
         }
 
         setAutoProgress(p => ({
           ...p,
           totalAdded: cumulativeAdded,
-          totalUpdated: cumulativeUpdated,
+          totalSkipped: cumulativeSkipped,
         }));
+
+        // Stop if we've reached the end
+        if (data.finished) break;
 
         if ((i + 1) % 5 === 0) await onRefreshStats();
 
@@ -174,12 +174,14 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
     setIngestResult({
       success: true,
       added: cumulativeAdded,
-      updated: cumulativeUpdated,
-      message: `Auto-run complete: ${cumulativeAdded} added, ${cumulativeUpdated} updated across ${autoBatches} batches.`,
+      alreadyExists: cumulativeSkipped,
+      message: `Auto-run complete: ${cumulativeAdded} added, ${cumulativeSkipped} already in DB across ${autoBatches} batches.`,
     });
   };
 
   const dbConnected = !statsError;
+  const totalAvailable = stats.totalGettyAvailable ?? 0;
+  const progressPct = totalAvailable > 0 ? Math.round((stats.gettyArtworks / totalAvailable) * 100) : 0;
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
@@ -209,7 +211,7 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
           <StatCard
             label="Getty Sourced"
             value={isLoadingStats ? '—' : stats.gettyArtworks.toLocaleString()}
-            sub="via Linked Art API"
+            sub={totalAvailable > 0 ? `${progressPct}% of ${totalAvailable.toLocaleString()} available` : 'via SPARQL'}
             accent
           />
           <StatCard
@@ -228,12 +230,10 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
       {/* Ingestion panel */}
       <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
         <div className="px-6 py-5 border-b border-neutral-800">
-          <h2 className="font-semibold text-white">J. Paul Getty Museum — Linked Art API</h2>
+          <h2 className="font-semibold text-white">J. Paul Getty Museum — SPARQL Ingestion</h2>
           <p className="text-xs text-neutral-500 mt-1.5 leading-relaxed">
-            Fetches artworks from the Getty Linked Art API activity stream at{' '}
-            <code className="bg-neutral-800 px-1 rounded text-neutral-400">data.getty.edu</code>.
-            HumanMadeObject entries are on pages 35,000–42,500 (~100 per page).
-            Already-ingested artworks are skipped instantly (no re-fetch). Coordinates are geocoded from provenance metadata.
+            Queries the Getty SPARQL endpoint to discover all artworks with images (~{totalAvailable > 0 ? totalAvailable.toLocaleString() : '123,500'} objects).
+            Each batch fetches unique object URIs, skips already-ingested ones instantly, and fetches only new objects from Getty.
           </p>
         </div>
 
@@ -241,20 +241,20 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
           {/* Config row */}
           <div className="flex items-end gap-6 flex-wrap">
             <div>
-              <label className="text-[10px] uppercase tracking-widest text-neutral-600 block mb-1.5">Start page</label>
+              <label className="text-[10px] uppercase tracking-widest text-neutral-600 block mb-1.5">Offset</label>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
-                  min={1}
-                  step={pagesPerRun}
-                  value={startPage}
-                  onChange={e => setStartPage(Number(e.target.value))}
-                  disabled={isIngesting}
+                  min={0}
+                  step={batchSize}
+                  value={offset}
+                  onChange={e => setOffset(Number(e.target.value))}
+                  disabled={isIngesting || autoRunning}
                   className="w-28 bg-neutral-800 border border-neutral-700 text-sm text-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500/50 tabular-nums"
                 />
-                {startPage !== 35000 && (
+                {offset !== 0 && (
                   <button
-                    onClick={() => setStartPage(35000)}
+                    onClick={() => setOffset(0)}
                     className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors"
                   >
                     Reset
@@ -264,33 +264,35 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
             </div>
 
             <div>
-              <label className="text-[10px] uppercase tracking-widest text-neutral-600 block mb-1.5">Pages per run</label>
+              <label className="text-[10px] uppercase tracking-widest text-neutral-600 block mb-1.5">Batch size</label>
               <select
-                value={pagesPerRun}
-                onChange={e => setPagesPerRun(Number(e.target.value))}
-                disabled={isIngesting}
+                value={batchSize}
+                onChange={e => setBatchSize(Number(e.target.value))}
+                disabled={isIngesting || autoRunning}
                 className="bg-neutral-800 border border-neutral-700 text-sm text-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500/50 cursor-pointer"
               >
-                <option value={3}>3</option>
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
+                <option value={25}>25</option>
                 <option value={50}>50</option>
+                <option value={100}>100</option>
               </select>
             </div>
 
-            <div>
-              <label className="text-[10px] uppercase tracking-widest text-neutral-600 block mb-1.5">Filter</label>
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <div
-                  onClick={() => !isIngesting && setOnlyWithImages(!onlyWithImages)}
-                  className={`w-9 h-5 rounded-full transition-colors relative ${onlyWithImages ? 'bg-amber-500' : 'bg-neutral-700'} ${isIngesting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                >
-                  <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${onlyWithImages ? 'translate-x-4' : 'translate-x-0.5'}`} />
+            {totalAvailable > 0 && (
+              <div className="flex-1 min-w-[200px]">
+                <label className="text-[10px] uppercase tracking-widest text-neutral-600 block mb-1.5">
+                  Collection progress
+                </label>
+                <div className="w-full bg-neutral-800 rounded-full h-2">
+                  <div
+                    className="bg-amber-500 h-2 rounded-full transition-all"
+                    style={{ width: `${Math.min(progressPct, 100)}%` }}
+                  />
                 </div>
-                <span className="text-xs text-neutral-400">Images only</span>
-              </label>
-            </div>
+                <p className="text-[10px] text-neutral-600 mt-1">
+                  {stats.gettyArtworks.toLocaleString()} / {totalAvailable.toLocaleString()} objects ingested
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Action row */}
@@ -312,7 +314,7 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                   Ingesting…
                 </span>
               ) : (
-                `Ingest ${pagesPerRun} page${pagesPerRun !== 1 ? 's' : ''} from page ${startPage.toLocaleString()}`
+                `Ingest ${batchSize} objects from offset ${offset.toLocaleString()}`
               )}
             </button>
 
@@ -325,13 +327,13 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
             </button>
           </div>
 
-          {/* Auto-run: chain multiple batches automatically */}
+          {/* Auto-run */}
           <div className="bg-neutral-800/50 border border-neutral-700/50 rounded-xl p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold text-neutral-300">Auto-Run Mode</p>
                 <p className="text-[10px] text-neutral-600 mt-0.5">
-                  Chain multiple batches automatically — page advances after each batch
+                  Chain multiple batches — offset advances after each batch
                 </p>
               </div>
               {autoRunning && (
@@ -340,7 +342,7 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                     Batch {autoProgress.current}/{autoProgress.total}
                   </p>
                   <p className="text-[10px] text-neutral-500">
-                    +{autoProgress.totalAdded} added, +{autoProgress.totalUpdated} updated
+                    +{autoProgress.totalAdded} added, {autoProgress.totalSkipped} skipped
                   </p>
                 </div>
               )}
@@ -366,13 +368,13 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                   disabled={autoRunning || isIngesting}
                   className="bg-neutral-800 border border-neutral-700 text-sm text-neutral-300 rounded-lg px-3 py-1.5 focus:outline-none focus:border-amber-500/50 cursor-pointer"
                 >
-                  {[10, 25, 50, 100, 200].map(n => (
+                  {[10, 25, 50, 100].map(n => (
                     <option key={n} value={n}>{n}</option>
                   ))}
                 </select>
               </div>
               <p className="text-[10px] text-neutral-600">
-                ≈ {autoBatches * pagesPerRun * 100} activity items processed
+                ≈ {(autoBatches * batchSize).toLocaleString()} unique objects checked
               </p>
               <button
                 onClick={handleAutoRun}
@@ -391,8 +393,7 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
           </div>
 
           <p className="text-xs text-neutral-600">
-            Tip: After each run, <code className="bg-neutral-800 px-1 rounded">Start page</code> advances automatically.
-            Use Auto-Run to ingest the full Getty collection (~42,500 pages total) hands-free.
+            Tip: The offset advances automatically after each batch. Use Auto-Run to ingest the full Getty collection hands-free.
           </p>
 
           {/* Result card */}
@@ -405,14 +406,12 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
               {ingestResult.success ? (
                 <div className="space-y-3">
                   <p className="text-sm font-semibold text-emerald-400">Ingestion complete ✓</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {[
                       { label: 'Added', value: ingestResult.added ?? 0, color: 'text-emerald-400' },
                       { label: 'Already in DB', value: ingestResult.alreadyExists ?? 0, color: 'text-blue-400' },
                       { label: 'No Image', value: ingestResult.noImage ?? 0, color: 'text-neutral-500' },
-                      { label: 'Wrong Type', value: ingestResult.noType ?? 0, color: 'text-amber-500' },
                       { label: 'Fetch Failed', value: ingestResult.fetchFailed ?? 0, color: 'text-red-400' },
-                      { label: 'Other Skip', value: Math.max(0, (ingestResult.skipped ?? 0) - (ingestResult.noType ?? 0) - (ingestResult.fetchFailed ?? 0)), color: 'text-neutral-600' },
                     ].map(({ label, value, color }) => (
                       <div key={label} className="bg-black/20 rounded-lg px-3 py-2">
                         <p className="text-[10px] text-neutral-600 mb-0.5">{label}</p>
@@ -420,22 +419,21 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                       </div>
                     ))}
                   </div>
-                  {(ingestResult.noType ?? 0) > 0 && (
-                    <p className="text-xs text-amber-500/70 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
-                      ⚠ {ingestResult.noType} objects had an unexpected type — likely JSON-LD array format. The ingestion now handles both string and array types automatically.
+                  {ingestResult.nextOffset !== undefined && !ingestResult.finished && (
+                    <p className="text-xs text-neutral-500">
+                      Next batch starts at offset{' '}
+                      <span className="text-neutral-300 font-mono">{ingestResult.nextOffset.toLocaleString()}</span>
                     </p>
                   )}
-                  {ingestResult.nextStartPage !== undefined && (
-                    <p className="text-xs text-neutral-500">
-                      Next run starts at page{' '}
-                      <span className="text-neutral-300 font-mono">{ingestResult.nextStartPage.toLocaleString()}</span>
-                      {' '}— already updated above.
+                  {ingestResult.finished && (
+                    <p className="text-xs text-emerald-400/80 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
+                      🎉 Reached the end of the Getty collection! All available objects have been processed.
                     </p>
                   )}
                   {ingestResult.errors && ingestResult.errors.length > 0 && (
                     <details className="text-xs">
                       <summary className="text-amber-500/60 cursor-pointer hover:text-amber-400 transition-colors">
-                        {ingestResult.errors.length} object errors (expand)
+                        {ingestResult.errors.length} errors (expand)
                       </summary>
                       <div className="mt-2 space-y-0.5 font-mono max-h-32 overflow-y-auto">
                         {ingestResult.errors.map((e, i) => (
@@ -489,14 +487,11 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                       <span>
                         <span className="text-emerald-400 font-semibold tabular-nums">{log.artworks_added ?? 0}</span> added
                       </span>
-                      <span>
-                        <span className="text-neutral-300 font-semibold tabular-nums">{log.artworks_updated ?? 0}</span> updated
-                      </span>
                       {log.metadata?.source && (
                         <span className="text-neutral-700">via {log.metadata.source}</span>
                       )}
-                      {log.metadata?.startPage && (
-                        <span className="text-neutral-700">page {log.metadata.startPage.toLocaleString()}</span>
+                      {log.metadata?.offset !== undefined && (
+                        <span className="text-neutral-700">offset {log.metadata.offset.toLocaleString()}</span>
                       )}
                     </div>
                   </div>
