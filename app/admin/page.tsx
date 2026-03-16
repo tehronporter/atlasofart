@@ -3,7 +3,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface Stats {
   totalArtworks: number;
@@ -27,8 +27,11 @@ interface IngestLog {
 interface IngestResult {
   success: boolean;
   added?: number;
+  updated?: number;
   skipped?: number;
   noImage?: number;
+  noType?: number;
+  fetchFailed?: number;
   nextStartPage?: number;
   errors?: string[];
   error?: string;
@@ -70,6 +73,13 @@ export default function AdminPage() {
   const [pagesPerRun, setPagesPerRun] = useState(3);
   const [onlyWithImages, setOnlyWithImages] = useState(true);
 
+  // Auto-run: chain multiple batches without manual clicking
+  const [autoBatches, setAutoBatches] = useState(10);
+  const [autoRunning, setAutoRunning] = useState(false);
+  const [autoProgress, setAutoProgress] = useState({ current: 0, total: 0, totalAdded: 0, totalUpdated: 0 });
+  const stopAutoRef = useRef(false);
+  const currentPageRef = useRef(startPage);
+
   const fetchStats = async () => {
     try {
       setStatsError(null);
@@ -90,6 +100,9 @@ export default function AdminPage() {
 
   useEffect(() => { fetchStats(); }, []);
 
+  // Keep page ref in sync
+  useEffect(() => { currentPageRef.current = startPage; }, [startPage]);
+
   const handleIngest = async () => {
     setIsIngesting(true);
     setIngestResult(null);
@@ -106,6 +119,7 @@ export default function AdminPage() {
 
       if (data.success && data.nextStartPage !== undefined) {
         setStartPage(data.nextStartPage);
+        currentPageRef.current = data.nextStartPage;
         await fetchStats();
       }
     } catch (err: any) {
@@ -113,6 +127,77 @@ export default function AdminPage() {
     } finally {
       setIsIngesting(false);
     }
+  };
+
+  // Auto-run: chains autoBatches batches in sequence, advancing the page automatically
+  const handleAutoRun = async () => {
+    if (autoRunning) {
+      // Stop the auto run
+      stopAutoRef.current = true;
+      return;
+    }
+
+    stopAutoRef.current = false;
+    setAutoRunning(true);
+    setAutoProgress({ current: 0, total: autoBatches, totalAdded: 0, totalUpdated: 0 });
+    setIngestResult(null);
+    let cumulativeAdded = 0;
+    let cumulativeUpdated = 0;
+
+    for (let i = 0; i < autoBatches; i++) {
+      if (stopAutoRef.current) break;
+
+      setAutoProgress(p => ({ ...p, current: i + 1 }));
+
+      try {
+        const res = await fetch('/api/ingest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            startPage: currentPageRef.current,
+            pagesPerRun,
+            onlyWithImages,
+          }),
+        });
+
+        const data: IngestResult = await res.json();
+
+        if (!data.success) {
+          setIngestResult(data);
+          break;
+        }
+
+        cumulativeAdded += data.added ?? 0;
+        cumulativeUpdated += data.updated ?? 0;
+
+        if (data.nextStartPage !== undefined) {
+          setStartPage(data.nextStartPage);
+          currentPageRef.current = data.nextStartPage;
+        }
+
+        setAutoProgress(p => ({
+          ...p,
+          totalAdded: cumulativeAdded,
+          totalUpdated: cumulativeUpdated,
+        }));
+
+        // Refresh stats every 5 batches
+        if ((i + 1) % 5 === 0) await fetchStats();
+
+      } catch (err: any) {
+        setIngestResult({ success: false, error: err.message || 'Network error' });
+        break;
+      }
+    }
+
+    await fetchStats();
+    setAutoRunning(false);
+    setIngestResult({
+      success: true,
+      added: cumulativeAdded,
+      updated: cumulativeUpdated,
+      message: `Auto-run complete: ${cumulativeAdded} added, ${cumulativeUpdated} updated across ${autoBatches} batches.`,
+    });
   };
 
   const dbConnected = !statsError;
@@ -251,12 +336,12 @@ export default function AdminPage() {
             </div>
 
             {/* Action row */}
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={handleIngest}
-                disabled={isIngesting || !dbConnected}
+                disabled={isIngesting || autoRunning || !dbConnected}
                 className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all ${
-                  isIngesting
+                  isIngesting || autoRunning
                     ? 'bg-neutral-700 text-neutral-400 cursor-not-allowed'
                     : !dbConnected
                     ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed'
@@ -282,9 +367,74 @@ export default function AdminPage() {
               </button>
             </div>
 
+            {/* Auto-run: chain multiple batches automatically */}
+            <div className="bg-neutral-800/50 border border-neutral-700/50 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-neutral-300">Auto-Run Mode</p>
+                  <p className="text-[10px] text-neutral-600 mt-0.5">
+                    Chain multiple batches automatically — page advances after each batch
+                  </p>
+                </div>
+                {autoRunning && (
+                  <div className="text-right">
+                    <p className="text-xs text-amber-400 font-mono tabular-nums">
+                      Batch {autoProgress.current}/{autoProgress.total}
+                    </p>
+                    <p className="text-[10px] text-neutral-500">
+                      +{autoProgress.totalAdded} added, +{autoProgress.totalUpdated} updated
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {autoRunning && (
+                <div className="w-full bg-neutral-700 rounded-full h-1.5">
+                  <div
+                    className="bg-amber-500 h-1.5 rounded-full transition-all duration-500"
+                    style={{ width: `${(autoProgress.current / autoProgress.total) * 100}%` }}
+                  />
+                </div>
+              )}
+
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <label className="text-[10px] uppercase tracking-widest text-neutral-600 whitespace-nowrap">
+                    Batches
+                  </label>
+                  <select
+                    value={autoBatches}
+                    onChange={e => setAutoBatches(Number(e.target.value))}
+                    disabled={autoRunning || isIngesting}
+                    className="bg-neutral-800 border border-neutral-700 text-sm text-neutral-300 rounded-lg px-3 py-1.5 focus:outline-none focus:border-amber-500/50 cursor-pointer"
+                  >
+                    {[5, 10, 20, 50, 100].map(n => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                </div>
+                <p className="text-[10px] text-neutral-600">
+                  ≈ {autoBatches * pagesPerRun * 100} activity items processed
+                </p>
+                <button
+                  onClick={handleAutoRun}
+                  disabled={!dbConnected || isIngesting}
+                  className={`ml-auto px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    autoRunning
+                      ? 'bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30'
+                      : !dbConnected || isIngesting
+                      ? 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
+                      : 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25'
+                  }`}
+                >
+                  {autoRunning ? '⬛ Stop Auto-Run' : `▶ Auto-Run ${autoBatches} Batches`}
+                </button>
+              </div>
+            </div>
+
             <p className="text-xs text-neutral-600">
               Tip: After each run, <code className="bg-neutral-800 px-1 rounded">Start page</code> advances automatically.
-              Run repeatedly to ingest the full Getty collection (~42,500 pages total).
+              Use Auto-Run to ingest the full Getty collection (~42,500 pages total) hands-free.
             </p>
 
             {/* Result card */}
@@ -297,11 +447,14 @@ export default function AdminPage() {
                 {ingestResult.success ? (
                   <div className="space-y-3">
                     <p className="text-sm font-semibold text-emerald-400">Ingestion complete ✓</p>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {[
                         { label: 'Added', value: ingestResult.added ?? 0, color: 'text-emerald-400' },
-                        { label: 'Skipped', value: ingestResult.skipped ?? 0, color: 'text-neutral-500' },
-                        { label: 'No Image', value: ingestResult.noImage ?? 0, color: 'text-neutral-600' },
+                        { label: 'Updated', value: ingestResult.updated ?? 0, color: 'text-blue-400' },
+                        { label: 'No Image', value: ingestResult.noImage ?? 0, color: 'text-neutral-500' },
+                        { label: 'Wrong Type', value: ingestResult.noType ?? 0, color: 'text-amber-500' },
+                        { label: 'Fetch Failed', value: ingestResult.fetchFailed ?? 0, color: 'text-red-400' },
+                        { label: 'Other Skip', value: Math.max(0, (ingestResult.skipped ?? 0) - (ingestResult.noType ?? 0) - (ingestResult.fetchFailed ?? 0)), color: 'text-neutral-600' },
                       ].map(({ label, value, color }) => (
                         <div key={label} className="bg-black/20 rounded-lg px-3 py-2">
                           <p className="text-[10px] text-neutral-600 mb-0.5">{label}</p>
@@ -309,6 +462,11 @@ export default function AdminPage() {
                         </div>
                       ))}
                     </div>
+                    {(ingestResult.noType ?? 0) > 0 && (
+                      <p className="text-xs text-amber-500/70 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
+                        ⚠ {ingestResult.noType} objects had an unexpected type — likely JSON-LD array format. The ingestion now handles both string and array types automatically.
+                      </p>
+                    )}
                     {ingestResult.nextStartPage !== undefined && (
                       <p className="text-xs text-neutral-500">
                         Next run starts at page{' '}

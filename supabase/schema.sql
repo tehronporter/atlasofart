@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS artworks (
   longitude DECIMAL(11, 8),
   image_url_primary TEXT,
   image_url_thumbnail TEXT,
+  image_width INTEGER,   -- natural pixel width from IIIF info.json (for aspect ratio)
+  image_height INTEGER,  -- natural pixel height from IIIF info.json (for aspect ratio)
   description TEXT,
   repository TEXT,
   place_created TEXT,

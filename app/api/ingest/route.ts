@@ -102,8 +102,39 @@ function geocodeFromPlace(text: string | null): [number | null, number | null] {
 
 // ── Linked Art parser ─────────────────────────────────────────────────────────
 
+// Getty's Linked Art API returns `type` as either a string "HumanMadeObject"
+// or an array ["HumanMadeObject", ...]. Handle both.
+function isHumanMadeObject(obj: any): boolean {
+  if (!obj) return false;
+  const t = obj.type;
+  if (Array.isArray(t)) return t.includes('HumanMadeObject');
+  return t === 'HumanMadeObject';
+}
+
+// Fetch the natural image dimensions from a Getty IIIF info.json endpoint
+// to preserve aspect ratios in the UI (no cropping needed)
+async function fetchIIIFDimensions(
+  imageUrl: string
+): Promise<{ width: number; height: number } | null> {
+  try {
+    // IIIF image URL pattern: .../iiif/image/{UUID}/full/{size}/0/default.jpg
+    // Info URL pattern: .../iiif/image/{UUID}/info.json
+    const infoUrl = imageUrl.replace(/\/full\/[^/]+\/0\/default\.jpg$/, '/info.json');
+    const res = await fetch(infoUrl, {
+      headers: { Accept: 'application/json', 'User-Agent': 'Atlas of Art (Educational Collection Explorer)' },
+      cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    const info = await res.json();
+    if (info.width && info.height) return { width: info.width, height: info.height };
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 function parseLinkedArtObject(obj: any): Record<string, any> | null {
-  if (!obj || obj.type !== 'HumanMadeObject') return null;
+  if (!isHumanMadeObject(obj)) return null;
 
   const objectId = obj.id?.split('/').pop();
   if (!objectId) return null;
@@ -312,6 +343,8 @@ export async function POST(request: NextRequest) {
     let updated = 0;
     let skipped = 0;
     let noImage = 0;
+    let noType = 0;      // fetched but wrong type (diagnostic)
+    let fetchFailed = 0; // HTTP error fetching object
     const errors: string[] = [];
     let nextPageUrl: string | null =
       `${GETTY_STREAM}/${startPage}`;
@@ -379,25 +412,51 @@ export async function POST(request: NextRequest) {
             cache: 'no-store',
           });
 
-          if (!objRes.ok) { skipped++; continue; }
+          if (!objRes.ok) { fetchFailed++; skipped++; continue; }
 
           const contentType = objRes.headers.get('content-type') || '';
           if (!contentType.includes('application/json')) {
+            fetchFailed++;
             skipped++;
             continue;
           }
 
           const obj = await objRes.json();
+
+          // Detailed diagnostics for why objects get skipped
+          if (!isHumanMadeObject(obj)) {
+            noType++;
+            skipped++;
+            continue;
+          }
+
+          if (onlyWithImages && !obj.representation?.[0]?.id) {
+            noImage++;
+            continue;
+          }
+
           const parsed = parseLinkedArtObject(obj);
 
           if (!parsed) {
-            if (onlyWithImages && !obj.representation?.[0]?.id) {
-              noImage++;
-            } else {
-              skipped++;
-            }
+            skipped++;
             continue;
           }
+
+          // Fetch image dimensions from IIIF info.json for proper aspect ratio display
+          if (parsed.image_url_primary) {
+            const dims = await fetchIIIFDimensions(parsed.image_url_primary);
+            if (dims) {
+              parsed.image_width = dims.width;
+              parsed.image_height = dims.height;
+            }
+          }
+
+          // Check if artwork already exists to distinguish add vs update
+          const { data: existing } = await supabaseAdmin
+            .from('artworks')
+            .select('id')
+            .eq('object_id', parsed.object_id)
+            .maybeSingle();
 
           const { error: upsertError } = await supabaseAdmin
             .from('artworks')
@@ -405,6 +464,8 @@ export async function POST(request: NextRequest) {
 
           if (upsertError) {
             errors.push(`${parsed.object_id}: ${upsertError.message}`);
+          } else if (existing) {
+            updated++;
           } else {
             added++;
           }
@@ -434,7 +495,7 @@ export async function POST(request: NextRequest) {
       .then(() => {}, () => {}); // fire-and-forget
 
     console.log(
-      `[Getty] Done: added=${added}, skipped=${skipped}, noImage=${noImage}, errors=${errors.length}`
+      `[Getty] Done: added=${added}, updated=${updated}, skipped=${skipped}, noImage=${noImage}, noType=${noType}, fetchFailed=${fetchFailed}, errors=${errors.length}`
     );
 
     const nextStartPage = startPage + pagesPerRun;
@@ -446,9 +507,11 @@ export async function POST(request: NextRequest) {
       updated,
       skipped,
       noImage,
+      noType,
+      fetchFailed,
       errors: errors.slice(0, 10),
       nextStartPage,
-      message: `Added ${added} Getty artworks (${skipped} skipped, ${noImage} no image, ${errors.length} errors). Next start page: ${nextStartPage}`,
+      message: `Added ${added}, updated ${updated} Getty artworks. Skipped: ${skipped} total (${noImage} no image, ${noType} wrong type, ${fetchFailed} fetch failed, ${errors.length} errors). Next start page: ${nextStartPage}`,
     });
   } catch (error: any) {
     console.error('[Getty] Fatal error:', error);
