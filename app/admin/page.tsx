@@ -1,5 +1,5 @@
 // app/admin/page.tsx
-// Atlas of Art — Admin Dashboard (Production-ready UX)
+// Atlas of Art — Admin Dashboard (Getty Linked Art API)
 
 'use client';
 
@@ -7,7 +7,9 @@ import { useState, useEffect } from 'react';
 
 interface Stats {
   totalArtworks: number;
-  museumArtworks: number;
+  gettyArtworks: number;
+  withCoordinates: number;
+  withImages: number;
 }
 
 interface IngestLog {
@@ -25,10 +27,9 @@ interface IngestLog {
 interface IngestResult {
   success: boolean;
   added?: number;
-  updated?: number;
   skipped?: number;
-  totalAvailable?: number;
-  nextOffset?: number;
+  noImage?: number;
+  nextStartPage?: number;
   errors?: string[];
   error?: string;
   message?: string;
@@ -59,14 +60,15 @@ function StatCard({ label, value, sub, accent }: { label: string; value: number 
 }
 
 export default function AdminPage() {
-  const [stats, setStats] = useState<Stats>({ totalArtworks: 0, museumArtworks: 0 });
+  const [stats, setStats] = useState<Stats>({ totalArtworks: 0, gettyArtworks: 0, withCoordinates: 0, withImages: 0 });
   const [logs, setLogs] = useState<IngestLog[]>([]);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isIngesting, setIsIngesting] = useState(false);
   const [statsError, setStatsError] = useState<string | null>(null);
   const [ingestResult, setIngestResult] = useState<IngestResult | null>(null);
-  const [batchSize, setBatchSize] = useState(25);
-  const [currentOffset, setCurrentOffset] = useState(0);
+  const [startPage, setStartPage] = useState(35000);
+  const [pagesPerRun, setPagesPerRun] = useState(3);
+  const [onlyWithImages, setOnlyWithImages] = useState(true);
 
   const fetchStats = async () => {
     try {
@@ -74,7 +76,7 @@ export default function AdminPage() {
       const res = await fetch('/api/ingest');
       const data = await res.json();
       if (data.success) {
-        setStats(data.stats ?? { totalArtworks: 0, museumArtworks: 0 });
+        setStats(data.stats ?? { totalArtworks: 0, gettyArtworks: 0, withCoordinates: 0, withImages: 0 });
         setLogs(data.recentLogs ?? []);
       } else {
         setStatsError(data.error || 'Failed to load stats');
@@ -96,14 +98,14 @@ export default function AdminPage() {
       const res = await fetch('/api/ingest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ batchSize, startOffset: currentOffset }),
+        body: JSON.stringify({ startPage, pagesPerRun, onlyWithImages }),
       });
 
       const data: IngestResult = await res.json();
       setIngestResult(data);
 
-      if (data.success && data.nextOffset !== undefined) {
-        setCurrentOffset(data.nextOffset);
+      if (data.success && data.nextStartPage !== undefined) {
+        setStartPage(data.nextStartPage);
         await fetchStats();
       }
     } catch (err: any) {
@@ -155,24 +157,27 @@ export default function AdminPage() {
         {/* Stats grid */}
         <div>
           <h2 className="text-xs uppercase tracking-widest text-neutral-600 font-medium mb-4">Database Overview</h2>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               label="Total Artworks"
               value={isLoadingStats ? '—' : stats.totalArtworks.toLocaleString()}
               sub="stored in Supabase"
             />
             <StatCard
-              label="Museum Sourced"
-              value={isLoadingStats ? '—' : stats.museumArtworks.toLocaleString()}
-              sub="via Met Museum API"
+              label="Getty Sourced"
+              value={isLoadingStats ? '—' : stats.gettyArtworks.toLocaleString()}
+              sub="via Linked Art API"
               accent
             />
             <StatCard
-              label="Coverage"
-              value={stats.totalArtworks > 0
-                ? `${Math.round((stats.museumArtworks / stats.totalArtworks) * 100)}%`
-                : '—'}
-              sub="museum-sourced ratio"
+              label="With Coordinates"
+              value={isLoadingStats ? '—' : stats.withCoordinates.toLocaleString()}
+              sub="plotted on map"
+            />
+            <StatCard
+              label="With Images"
+              value={isLoadingStats ? '—' : stats.withImages.toLocaleString()}
+              sub="IIIF images available"
             />
           </div>
         </div>
@@ -180,10 +185,12 @@ export default function AdminPage() {
         {/* Ingestion panel */}
         <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
           <div className="px-6 py-5 border-b border-neutral-800">
-            <h2 className="font-semibold text-white">Metropolitan Museum of Art — Ingestion</h2>
+            <h2 className="font-semibold text-white">J. Paul Getty Museum — Linked Art API</h2>
             <p className="text-xs text-neutral-500 mt-1.5 leading-relaxed">
-              Fetches highlighted artworks with images from the free Met Museum Open Access API (no key needed).
-              Coordinates are geocoded from culture / country metadata. Duplicates are automatically skipped.
+              Fetches artworks from the Getty Linked Art API activity stream at{' '}
+              <code className="bg-neutral-800 px-1 rounded text-neutral-400">data.getty.edu</code>.
+              HumanMadeObject entries concentrate around pages 35,000+. Each page contains ~100 activity items.
+              Coordinates are geocoded from provenance metadata. Duplicates are automatically skipped via upsert.
             </p>
           </div>
 
@@ -191,40 +198,55 @@ export default function AdminPage() {
             {/* Config row */}
             <div className="flex items-end gap-6 flex-wrap">
               <div>
-                <label className="text-[10px] uppercase tracking-widest text-neutral-600 block mb-1.5">Artworks per batch</label>
-                <select
-                  value={batchSize}
-                  onChange={e => setBatchSize(Number(e.target.value))}
-                  disabled={isIngesting}
-                  className="bg-neutral-800 border border-neutral-700 text-sm text-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500/50 cursor-pointer"
-                >
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-[10px] uppercase tracking-widest text-neutral-600 block mb-1.5">Starting offset</label>
+                <label className="text-[10px] uppercase tracking-widest text-neutral-600 block mb-1.5">Start page</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    min={0}
-                    step={batchSize}
-                    value={currentOffset}
-                    onChange={e => setCurrentOffset(Number(e.target.value))}
+                    min={1}
+                    step={pagesPerRun}
+                    value={startPage}
+                    onChange={e => setStartPage(Number(e.target.value))}
                     disabled={isIngesting}
-                    className="w-24 bg-neutral-800 border border-neutral-700 text-sm text-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500/50 tabular-nums"
+                    className="w-28 bg-neutral-800 border border-neutral-700 text-sm text-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500/50 tabular-nums"
                   />
-                  {currentOffset > 0 && (
+                  {startPage !== 35000 && (
                     <button
-                      onClick={() => setCurrentOffset(0)}
+                      onClick={() => setStartPage(35000)}
                       className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors"
                     >
                       Reset
                     </button>
                   )}
                 </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] uppercase tracking-widest text-neutral-600 block mb-1.5">Pages per run</label>
+                <select
+                  value={pagesPerRun}
+                  onChange={e => setPagesPerRun(Number(e.target.value))}
+                  disabled={isIngesting}
+                  className="bg-neutral-800 border border-neutral-700 text-sm text-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500/50 cursor-pointer"
+                >
+                  <option value={1}>1</option>
+                  <option value={3}>3</option>
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] uppercase tracking-widest text-neutral-600 block mb-1.5">Filter</label>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <div
+                    onClick={() => !isIngesting && setOnlyWithImages(!onlyWithImages)}
+                    className={`w-9 h-5 rounded-full transition-colors relative ${onlyWithImages ? 'bg-amber-500' : 'bg-neutral-700'} ${isIngesting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${onlyWithImages ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                  </div>
+                  <span className="text-xs text-neutral-400">Images only</span>
+                </label>
               </div>
             </div>
 
@@ -247,7 +269,7 @@ export default function AdminPage() {
                     Ingesting…
                   </span>
                 ) : (
-                  `Ingest ${batchSize} artworks (offset ${currentOffset})`
+                  `Ingest ${pagesPerRun} page${pagesPerRun !== 1 ? 's' : ''} from page ${startPage.toLocaleString()}`
                 )}
               </button>
 
@@ -261,8 +283,8 @@ export default function AdminPage() {
             </div>
 
             <p className="text-xs text-neutral-600">
-              Tip: Run multiple batches with increasing offsets to build up the collection.
-              The Met has ~11,000 highlighted artworks available.
+              Tip: After each run, <code className="bg-neutral-800 px-1 rounded">Start page</code> advances automatically.
+              Run repeatedly to ingest the full Getty collection (~42,500 pages total).
             </p>
 
             {/* Result card */}
@@ -278,8 +300,8 @@ export default function AdminPage() {
                     <div className="grid grid-cols-3 gap-3">
                       {[
                         { label: 'Added', value: ingestResult.added ?? 0, color: 'text-emerald-400' },
-                        { label: 'Updated', value: ingestResult.updated ?? 0, color: 'text-neutral-300' },
                         { label: 'Skipped', value: ingestResult.skipped ?? 0, color: 'text-neutral-500' },
+                        { label: 'No Image', value: ingestResult.noImage ?? 0, color: 'text-neutral-600' },
                       ].map(({ label, value, color }) => (
                         <div key={label} className="bg-black/20 rounded-lg px-3 py-2">
                           <p className="text-[10px] text-neutral-600 mb-0.5">{label}</p>
@@ -287,10 +309,11 @@ export default function AdminPage() {
                         </div>
                       ))}
                     </div>
-                    {ingestResult.totalAvailable && (
+                    {ingestResult.nextStartPage !== undefined && (
                       <p className="text-xs text-neutral-500">
-                        {ingestResult.totalAvailable.toLocaleString()} total highlighted artworks in Met collection.{' '}
-                        Next batch offset: <span className="text-neutral-300 font-mono">{ingestResult.nextOffset}</span>
+                        Next run starts at page{' '}
+                        <span className="text-neutral-300 font-mono">{ingestResult.nextStartPage.toLocaleString()}</span>
+                        {' '}— already updated above.
                       </p>
                     )}
                     {ingestResult.errors && ingestResult.errors.length > 0 && (
@@ -356,6 +379,9 @@ export default function AdminPage() {
                         {log.metadata?.source && (
                           <span className="text-neutral-700">via {log.metadata.source}</span>
                         )}
+                        {log.metadata?.startPage && (
+                          <span className="text-neutral-700">page {log.metadata.startPage.toLocaleString()}</span>
+                        )}
                       </div>
                     </div>
                     <div className="text-right shrink-0">
@@ -392,7 +418,7 @@ export default function AdminPage() {
 
         {/* Setup guide */}
         <div className="bg-blue-950/20 border border-blue-900/30 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-blue-300 mb-3">First-Time Setup</h3>
+          <h3 className="text-sm font-semibold text-blue-300 mb-3">Getty Ingestion Guide</h3>
           <ol className="space-y-2 text-xs text-blue-400/60">
             <li className="flex items-start gap-2">
               <span className="bg-blue-500/20 text-blue-400 rounded px-1.5 py-0.5 font-mono text-[10px] shrink-0">1</span>
@@ -404,10 +430,14 @@ export default function AdminPage() {
             </li>
             <li className="flex items-start gap-2">
               <span className="bg-blue-500/20 text-blue-400 rounded px-1.5 py-0.5 font-mono text-[10px] shrink-0">3</span>
-              Click "Ingest" — Met Museum API is free, no API key required
+              Click Ingest — start page defaults to 35,000 where HumanMadeObject entries concentrate
             </li>
             <li className="flex items-start gap-2">
               <span className="bg-blue-500/20 text-blue-400 rounded px-1.5 py-0.5 font-mono text-[10px] shrink-0">4</span>
+              Run multiple batches — start page auto-advances after each run
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-blue-500/20 text-blue-400 rounded px-1.5 py-0.5 font-mono text-[10px] shrink-0">5</span>
               Visit <a href="/" className="text-blue-300 hover:underline">the map</a> — artworks appear automatically
             </li>
           </ol>

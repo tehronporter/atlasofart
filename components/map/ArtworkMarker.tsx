@@ -1,10 +1,10 @@
-// ArtworkMarker.tsx - Simple marker with generic type
-// Phase 13: Compatible with Supabase data
+// components/map/ArtworkMarker.tsx
+// Artwork pin marker — clicking updates the left panel detail card (no popup)
 
 'use client';
 
-import { memo, useState, useCallback } from 'react';
-import { Marker, Popup } from 'react-map-gl/mapbox';
+import { memo, useCallback } from 'react';
+import { Marker } from 'react-map-gl/mapbox';
 
 interface ArtworkMarkerData {
   id: string;
@@ -20,51 +20,31 @@ interface ArtworkMarkerProps {
 }
 
 const ArtworkMarker = memo(function ArtworkMarker({ artwork, isSelected, onClick }: ArtworkMarkerProps) {
-  const [showPopup, setShowPopup] = useState(false);
-
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    setShowPopup(true);
     onClick?.(artwork);
   }, [artwork, onClick]);
 
   return (
-    <>
-      <Marker
-        longitude={artwork.lng}
-        latitude={artwork.lat}
-        anchor="bottom"
-        style={{ cursor: 'pointer' }}
-      >
-        <div
-          className={`w-4 h-4 rounded-full border-2 transition-transform duration-200 shadow-lg shadow-amber-500/50 ${
-            isSelected 
-              ? 'bg-white border-amber-500 scale-125' 
-              : 'bg-amber-500 border-neutral-900 hover:scale-110'
-          }`}
-          onClick={handleClick}
-          role="button"
-          tabIndex={0}
-          aria-label={`View ${artwork.title}`}
-        />
-      </Marker>
-
-      {showPopup && (
-        <Popup
-          longitude={artwork.lng}
-          latitude={artwork.lat}
-          anchor="bottom"
-          offset={25}
-          closeOnClick={false}
-          onClose={() => setShowPopup(false)}
-          className="artwork-popup"
-        >
-          <div className="max-w-[200px]">
-            <h3 className="font-semibold text-neutral-900 text-sm">{artwork.title}</h3>
-          </div>
-        </Popup>
-      )}
-    </>
+    <Marker
+      longitude={artwork.lng}
+      latitude={artwork.lat}
+      anchor="center"
+      style={{ cursor: 'pointer', zIndex: isSelected ? 10 : 1 }}
+    >
+      <div
+        onClick={handleClick}
+        role="button"
+        tabIndex={0}
+        aria-label={`View ${artwork.title}`}
+        title={artwork.title}
+        className={`rounded-full border-2 transition-all duration-150 ${
+          isSelected
+            ? 'w-5 h-5 bg-white border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.8)]'
+            : 'w-3.5 h-3.5 bg-amber-500 border-amber-900/60 hover:w-5 hover:h-5 hover:shadow-[0_0_10px_rgba(251,191,36,0.6)]'
+        }`}
+      />
+    </Marker>
   );
 });
 

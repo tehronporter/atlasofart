@@ -1,6 +1,6 @@
 // app/page.tsx
-// Atlas of Art — Premium homepage
-// Left sidebar panel + immersive dark map + timeline
+// Atlas of Art — Homepage
+// Left sidebar panel + immersive dark map + bottom timeline
 
 'use client';
 
@@ -8,7 +8,6 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import TimelineShell from '@/components/controls/TimelineShell';
 import { supabase } from '@/lib/supabase';
-import { SEED_ARTWORKS } from '@/lib/seed-artworks';
 import { trackArtworkView } from '@/lib/auth';
 
 // Load map client-side only (Mapbox requires browser APIs)
@@ -31,7 +30,6 @@ function GlobeIcon() {
     </svg>
   );
 }
-
 function MapIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -40,7 +38,6 @@ function MapIcon() {
     </svg>
   );
 }
-
 function TimelineIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -51,7 +48,6 @@ function TimelineIcon() {
     </svg>
   );
 }
-
 function GridIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -60,7 +56,6 @@ function GridIcon() {
     </svg>
   );
 }
-
 function BookmarkIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -68,7 +63,6 @@ function BookmarkIcon() {
     </svg>
   );
 }
-
 function SearchIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -76,7 +70,6 @@ function SearchIcon() {
     </svg>
   );
 }
-
 function PinIcon() {
   return (
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -85,7 +78,6 @@ function PinIcon() {
     </svg>
   );
 }
-
 function ChevronRightIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -93,7 +85,6 @@ function ChevronRightIcon() {
     </svg>
   );
 }
-
 function XIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -126,13 +117,12 @@ function transformRow(row: any) {
   return {
     id: row.id,
     title: row.title || 'Untitled',
-    year: row.date || `${row.date_start || '?'}`,
-    year_start: row.date_start || -3000,
-    year_end: row.date_end || 2000,
-    region: row.region || 'Unknown',
+    year: row.date || (row.date_start ? String(row.date_start) : '?'),
+    year_start: row.date_start ?? -3000,
+    year_end: row.date_end ?? 2000,
+    region: row.region || null,
     culture: row.culture || null,
     medium: row.medium || null,
-    // IMPORTANT: map uses lat/lng — use these field names consistently
     lat: Number(row.latitude) || 0,
     lng: Number(row.longitude) || 0,
     image_url: row.image_url_primary || row.image_url_thumbnail || null,
@@ -150,7 +140,7 @@ export default function Home() {
   const [allArtworks, setAllArtworks] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dbError, setDbError] = useState<string | null>(null);
-  const [usingSeeds, setUsingSeeds] = useState(false);
+  const [isEmpty, setIsEmpty] = useState(false);
 
   const [selectedArtworkId, setSelectedArtworkId] = useState<string | null>(null);
   const [timelineMaxYear, setTimelineMaxYear] = useState(2000);
@@ -159,7 +149,7 @@ export default function Home() {
   const [selectedMedium, setSelectedMedium] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Fetch from Supabase; fall back to seed data
+  // Fetch from Supabase — no seed fallback
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -168,26 +158,21 @@ export default function Home() {
           .from('artworks')
           .select('*')
           .order('date_start', { ascending: true })
-          .limit(500);
+          .limit(1000);
 
         if (cancelled) return;
-
         if (error) throw error;
 
         if (data && data.length > 0) {
           setAllArtworks(data.map(transformRow));
-          setUsingSeeds(false);
+          setIsEmpty(false);
         } else {
-          // DB empty — use seed artworks
-          setAllArtworks(SEED_ARTWORKS);
-          setUsingSeeds(true);
+          setIsEmpty(true);
         }
       } catch (err: any) {
         if (cancelled) return;
-        console.warn('Supabase unavailable, using seed data:', err.message);
+        console.error('Supabase error:', err.message);
         setDbError(err.message);
-        setAllArtworks(SEED_ARTWORKS);
-        setUsingSeeds(true);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -199,9 +184,8 @@ export default function Home() {
   const filteredArtworks = useMemo(() => {
     let result = allArtworks;
 
-    // Only filter by timeline if not at max
     if (timelineMaxYear < 2000) {
-      result = result.filter(a => a.year_start <= timelineMaxYear);
+      result = result.filter(a => (a.year_start ?? -9999) <= timelineMaxYear);
     }
 
     if (searchQuery.trim()) {
@@ -212,6 +196,7 @@ export default function Home() {
         a.region?.toLowerCase().includes(q) ||
         a.medium?.toLowerCase().includes(q) ||
         a.place_created?.toLowerCase().includes(q) ||
+        a.artist_display?.toLowerCase().includes(q) ||
         (a.tags || []).some((t: string) => t.toLowerCase().includes(q))
       );
     }
@@ -219,7 +204,7 @@ export default function Home() {
     if (selectedRegion) result = result.filter(a => a.region === selectedRegion);
     if (selectedMedium) result = result.filter(a => a.medium === selectedMedium);
 
-    // Only render markers that have valid coordinates
+    // Only pass artworks with valid coordinates to the map
     return result.filter(a => a.lat !== 0 || a.lng !== 0);
   }, [allArtworks, timelineMaxYear, searchQuery, selectedRegion, selectedMedium]);
 
@@ -230,12 +215,12 @@ export default function Home() {
 
   const regions = useMemo(() => {
     const s = new Set(allArtworks.map(a => a.region).filter(Boolean));
-    return Array.from(s).sort();
+    return Array.from(s).sort() as string[];
   }, [allArtworks]);
 
   const mediums = useMemo(() => {
     const s = new Set(allArtworks.map(a => a.medium).filter(Boolean));
-    return Array.from(s).sort();
+    return Array.from(s).sort() as string[];
   }, [allArtworks]);
 
   const handleArtworkClick = useCallback((artwork: any) => {
@@ -258,7 +243,66 @@ export default function Home() {
       <div className="h-screen w-full bg-[#0a0a0f] flex items-center justify-center">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-amber-500/60 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-neutral-500 text-sm tracking-wide">Loading artworks…</p>
+          <p className="text-neutral-500 text-sm tracking-wide">Loading collection…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── DB error ──────────────────────────────────────────────────────────────
+  if (dbError) {
+    return (
+      <div className="h-screen w-full bg-[#0a0a0f] flex items-center justify-center p-8">
+        <div className="max-w-md text-center">
+          <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-4">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
+              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-semibold text-white mb-2">Database Connection Error</h2>
+          <p className="text-neutral-500 text-sm mb-4">{dbError}</p>
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 text-left text-xs text-neutral-500 mb-4 space-y-1">
+            <p>1. Verify <code className="text-neutral-300">NEXT_PUBLIC_SUPABASE_URL</code> in <code className="text-neutral-300">.env.local</code></p>
+            <p>2. Verify <code className="text-neutral-300">NEXT_PUBLIC_SUPABASE_ANON_KEY</code></p>
+            <p>3. Run <code className="text-neutral-300">supabase/schema.sql</code> in Supabase SQL Editor</p>
+          </div>
+          <div className="flex gap-3 justify-center">
+            <a href="/admin" className="px-4 py-2 bg-amber-500 text-neutral-900 rounded-lg font-medium text-sm hover:bg-amber-400">Admin Panel</a>
+            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-300 hover:bg-neutral-700">Retry</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Empty DB ──────────────────────────────────────────────────────────────
+  if (isEmpty) {
+    return (
+      <div className="h-screen w-full bg-[#0a0a0f] flex items-center justify-center p-8">
+        <div className="max-w-md text-center">
+          <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-5">
+            <GlobeIcon />
+          </div>
+          <h2 className="text-lg font-semibold text-white mb-2">Collection is Empty</h2>
+          <p className="text-neutral-500 text-sm mb-6 leading-relaxed">
+            The database has no artworks yet. Run Getty ingestion from the admin panel to populate
+            the collection with real museum data.
+          </p>
+          <div className="bg-neutral-900/80 border border-neutral-800 rounded-xl p-4 text-left text-xs text-neutral-500 mb-5 space-y-1.5">
+            <p className="text-neutral-400 font-medium mb-2">Quick setup:</p>
+            <p>1. Run <code className="text-amber-400">supabase/schema.sql</code> in Supabase SQL Editor</p>
+            <p>2. Add <code className="text-amber-400">SUPABASE_SERVICE_ROLE_KEY</code> to <code className="text-amber-400">.env.local</code></p>
+            <p>3. Go to Admin → click <strong className="text-amber-400">Ingest from Getty</strong></p>
+            <p>4. Return here — artworks will appear on the map</p>
+          </div>
+          <div className="flex gap-3 justify-center">
+            <a href="/admin" className="px-5 py-2.5 bg-amber-500 text-neutral-900 rounded-lg font-medium text-sm hover:bg-amber-400 transition-colors">
+              Go to Admin
+            </a>
+            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-300 hover:bg-neutral-700 transition-colors">
+              Refresh
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -298,7 +342,7 @@ export default function Home() {
 
         <div className="border-t border-white/[0.05] mx-4 my-1" />
 
-        {/* Search */}
+        {/* Search + Filters */}
         <div className="px-3 py-2.5">
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600 pointer-events-none">
@@ -306,7 +350,7 @@ export default function Home() {
             </span>
             <input
               type="text"
-              placeholder="Search artworks, cultures…"
+              placeholder="Search artworks, artists…"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg pl-8 pr-3 py-2 text-[12.5px] text-neutral-300 placeholder-neutral-600 focus:outline-none focus:border-amber-500/40 transition-colors"
@@ -321,7 +365,6 @@ export default function Home() {
             )}
           </div>
 
-          {/* Filter toggle */}
           <button
             onClick={() => setShowFilters(f => !f)}
             className={`mt-2 flex items-center gap-1.5 text-[11px] transition-colors ${
@@ -341,50 +384,50 @@ export default function Home() {
             )}
           </button>
 
-          {/* Filter panels */}
           {showFilters && (
             <div className="mt-2.5 space-y-3">
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-1.5 px-0.5">Region</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {regions.slice(0, 8).map(r => (
-                    <button
-                      key={r}
-                      onClick={() => setSelectedRegion(prev => prev === r ? null : r)}
-                      className={`px-2 py-1 text-[10px] rounded-full transition-colors border ${
-                        selectedRegion === r
-                          ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
-                          : 'border-white/[0.06] text-neutral-500 hover:text-neutral-300 hover:border-white/[0.12]'
-                      }`}
-                    >
-                      {r}
-                    </button>
-                  ))}
+              {regions.length > 0 && (
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-1.5 px-0.5">Region</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {regions.slice(0, 10).map(r => (
+                      <button
+                        key={r}
+                        onClick={() => setSelectedRegion(prev => prev === r ? null : r)}
+                        className={`px-2 py-1 text-[10px] rounded-full transition-colors border ${
+                          selectedRegion === r
+                            ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
+                            : 'border-white/[0.06] text-neutral-500 hover:text-neutral-300 hover:border-white/[0.12]'
+                        }`}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-1.5 px-0.5">Medium</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {mediums.slice(0, 6).map(m => (
-                    <button
-                      key={m}
-                      onClick={() => setSelectedMedium(prev => prev === m ? null : m)}
-                      className={`px-2 py-1 text-[10px] rounded-full transition-colors border ${
-                        selectedMedium === m
-                          ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
-                          : 'border-white/[0.06] text-neutral-500 hover:text-neutral-300 hover:border-white/[0.12]'
-                      }`}
-                    >
-                      {m.length > 20 ? m.slice(0, 18) + '…' : m}
-                    </button>
-                  ))}
+              )}
+              {mediums.length > 0 && (
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-1.5 px-0.5">Medium</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {mediums.slice(0, 8).map(m => (
+                      <button
+                        key={m}
+                        onClick={() => setSelectedMedium(prev => prev === m ? null : m)}
+                        className={`px-2 py-1 text-[10px] rounded-full transition-colors border ${
+                          selectedMedium === m
+                            ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
+                            : 'border-white/[0.06] text-neutral-500 hover:text-neutral-300 hover:border-white/[0.12]'
+                        }`}
+                      >
+                        {m.length > 22 ? m.slice(0, 20) + '…' : m}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
               {hasFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="text-[10px] text-neutral-600 hover:text-neutral-400 transition-colors"
-                >
+                <button onClick={clearFilters} className="text-[10px] text-neutral-600 hover:text-neutral-400 transition-colors">
                   Clear all filters
                 </button>
               )}
@@ -394,33 +437,37 @@ export default function Home() {
 
         <div className="border-t border-white/[0.05] mx-4 my-1" />
 
-        {/* Selected artwork detail */}
+        {/* Selected artwork detail / empty hint */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden">
           {selectedArtwork ? (
             <div className="px-3 pb-3">
               <div className="rounded-xl overflow-hidden border border-white/[0.08] bg-white/[0.02]">
-                {/* Image area */}
-                <div className="relative h-[140px] bg-neutral-900 overflow-hidden">
+                {/* Image */}
+                <div className="relative h-[150px] bg-neutral-900 overflow-hidden">
                   {selectedArtwork.image_url ? (
                     <img
                       src={selectedArtwork.image_url}
                       alt={selectedArtwork.title}
                       className="w-full h-full object-cover"
-                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      crossOrigin="anonymous"
+                      onError={e => {
+                        const el = e.target as HTMLImageElement;
+                        el.style.display = 'none';
+                        el.nextElementSibling?.classList.remove('hidden');
+                      }}
                     />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-neutral-700">
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                        <circle cx="8.5" cy="8.5" r="1.5" />
-                        <polyline points="21 15 16 10 5 21" />
-                      </svg>
-                      <span className="text-[10px] mt-2 text-neutral-700">No image</span>
-                    </div>
-                  )}
+                  ) : null}
+                  {/* Fallback shown if image fails or is null */}
+                  <div className={`w-full h-full flex flex-col items-center justify-center text-neutral-700 ${selectedArtwork.image_url ? 'hidden' : ''}`}>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <span className="text-[10px] mt-2">No image available</span>
+                  </div>
                   {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  {/* Close button */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                  {/* Close */}
                   <button
                     onClick={() => setSelectedArtworkId(null)}
                     className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/50 border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-black/70 transition-colors"
@@ -437,17 +484,19 @@ export default function Home() {
                   </h3>
 
                   {selectedArtwork.artist_display && (
-                    <p className="text-[11px] text-neutral-400 mt-0.5">{selectedArtwork.artist_display}</p>
+                    <p className="text-[11px] text-neutral-400 mt-0.5 leading-snug">{selectedArtwork.artist_display}</p>
                   )}
 
-                  <p className="text-[11px] text-amber-400/80 mt-1 font-medium">{selectedArtwork.year}</p>
+                  {selectedArtwork.year && (
+                    <p className="text-[11px] text-amber-400/80 mt-1 font-medium">{selectedArtwork.year}</p>
+                  )}
 
                   {selectedArtwork.medium && (
-                    <p className="text-[10px] text-neutral-500 mt-0.5 italic">{selectedArtwork.medium}</p>
+                    <p className="text-[10px] text-neutral-500 mt-0.5 italic leading-relaxed">{selectedArtwork.medium}</p>
                   )}
 
                   {(selectedArtwork.place_created || selectedArtwork.current_museum) && (
-                    <div className="mt-2 pt-2 border-t border-white/[0.06]">
+                    <div className="mt-2 pt-2 border-t border-white/[0.06] space-y-1">
                       {selectedArtwork.place_created && (
                         <div className="flex items-center gap-1.5 text-neutral-500">
                           <PinIcon />
@@ -455,7 +504,7 @@ export default function Home() {
                         </div>
                       )}
                       {selectedArtwork.current_museum && (
-                        <p className="text-[10px] text-neutral-600 mt-0.5 pl-[18px]">{selectedArtwork.current_museum}</p>
+                        <p className="text-[10px] text-neutral-600 pl-[18px]">{selectedArtwork.current_museum}</p>
                       )}
                     </div>
                   )}
@@ -476,10 +525,18 @@ export default function Home() {
                     </p>
                   )}
 
-                  <button className="mt-3 w-full flex items-center justify-between px-3 py-2 bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.07] rounded-lg text-[11px] text-neutral-400 hover:text-neutral-200 transition-colors">
-                    <span>View Related Works</span>
-                    <ChevronRightIcon />
-                  </button>
+                  {selectedArtwork.getty_url && (
+                    <a
+                      href={selectedArtwork.getty_url || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 w-full flex items-center justify-between px-3 py-2 bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.07] rounded-lg text-[11px] text-neutral-400 hover:text-neutral-200 transition-colors"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <span>View on Getty</span>
+                      <ChevronRightIcon />
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
@@ -498,29 +555,20 @@ export default function Home() {
         {/* Footer */}
         <div className="border-t border-white/[0.05] px-4 py-3 flex items-center justify-between">
           <span className="text-[11px] text-neutral-600">
-            <span className="text-amber-400 font-medium">{filteredArtworks.length}</span> artworks
+            <span className="text-amber-400 font-medium">{filteredArtworks.length}</span>
+            {' '}of{' '}
+            <span className="text-neutral-500">{allArtworks.length}</span>
+            {' '}artworks
           </span>
-          {usingSeeds && (
-            <a
-              href="/admin"
-              className="text-[10px] text-amber-500/60 hover:text-amber-400 transition-colors"
-              title="Import real artwork data from Admin"
-            >
-              Demo data · Import →
-            </a>
-          )}
-          {dbError && !usingSeeds && (
-            <span className="text-[10px] text-red-500/60" title={dbError}>
-              DB offline
-            </span>
-          )}
+          <a href="/admin" className="text-[10px] text-neutral-700 hover:text-neutral-400 transition-colors">
+            Admin
+          </a>
         </div>
       </aside>
 
       {/* ── MAP + TIMELINE ───────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0 relative">
 
-        {/* Map container — fills all space above timeline */}
         <div className="flex-1 relative min-h-0">
           <MapShell
             artworks={filteredArtworks}
@@ -528,7 +576,7 @@ export default function Home() {
             onArtworkClick={handleArtworkClick}
           />
 
-          {/* Top-right: artwork count badge */}
+          {/* Top-right: count badge */}
           <div className="absolute top-4 right-4 z-10 pointer-events-none">
             <div className="bg-black/50 backdrop-blur-md border border-white/[0.08] rounded-lg px-3 py-1.5">
               <p className="text-[11px] text-neutral-400">
@@ -538,7 +586,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Top-right: active filter chips */}
+          {/* Active filter chips */}
           {(selectedRegion || selectedMedium) && (
             <div className="absolute top-12 right-4 z-10 flex flex-col gap-1.5">
               {selectedRegion && (
@@ -546,8 +594,7 @@ export default function Home() {
                   onClick={() => setSelectedRegion(null)}
                   className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md border border-amber-500/30 rounded-lg px-2.5 py-1.5 text-[11px] text-amber-400 hover:bg-amber-500/10 transition-colors"
                 >
-                  {selectedRegion}
-                  <XIcon />
+                  {selectedRegion} <XIcon />
                 </button>
               )}
               {selectedMedium && (
@@ -555,7 +602,7 @@ export default function Home() {
                   onClick={() => setSelectedMedium(null)}
                   className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md border border-amber-500/30 rounded-lg px-2.5 py-1.5 text-[11px] text-amber-400 hover:bg-amber-500/10 transition-colors"
                 >
-                  {selectedMedium.length > 20 ? selectedMedium.slice(0, 18) + '…' : selectedMedium}
+                  {selectedMedium.length > 22 ? selectedMedium.slice(0, 20) + '…' : selectedMedium}
                   <XIcon />
                 </button>
               )}
@@ -563,7 +610,6 @@ export default function Home() {
           )}
         </div>
 
-        {/* Timeline — anchored at bottom */}
         <TimelineShell
           artworks={allArtworks}
           maxYear={timelineMaxYear}
