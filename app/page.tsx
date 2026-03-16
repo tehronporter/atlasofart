@@ -7,7 +7,9 @@ import MapShell from '@/components/map/MapShell';
 import TimelineShell from '@/components/controls/TimelineShell';
 import ArtworkDrawerShell from '@/components/drawer/ArtworkDrawerShell';
 import SearchBar from '@/components/search/SearchBar';
+import UserMenu from '@/components/auth/UserMenu';
 import { supabase } from '@/lib/supabase';
+import { trackArtworkView } from '@/lib/auth';
 
 export default function Home() {
   const [selectedArtworkId, setSelectedArtworkId] = useState<string | null>(null);
@@ -82,7 +84,9 @@ export default function Home() {
   [allArtworks, selectedArtworkId]);
 
   const handleArtworkClick = (artwork: any) => {
-    setSelectedArtworkId(artwork?.id || null);
+    const id = artwork?.id || null;
+    setSelectedArtworkId(id);
+    if (id) trackArtworkView(id).catch(console.error);
   };
 
   if (isLoading) {
@@ -110,6 +114,11 @@ export default function Home() {
   return (
     <div className="flex flex-col h-screen w-full bg-black overflow-hidden">
       <div className="flex-1 relative">
+        {/* User menu in top right */}
+        <div className="absolute top-4 right-4 z-30">
+          <UserMenu />
+        </div>
+
         <SearchBar artworks={allArtworks} onSearchChange={setSearchQuery} onRegionFilter={setSelectedRegion} onMediumFilter={setSelectedMedium} />
         <MapShell artworks={filteredArtworks} selectedArtworkId={selectedArtworkId} onArtworkClick={handleArtworkClick} />
         <ArtworkDrawerShell artwork={selectedArtwork} isOpen={!!selectedArtworkId} onClose={() => setSelectedArtworkId(null)} onArtworkSelect={handleArtworkClick} allArtworks={filteredArtworks} />
