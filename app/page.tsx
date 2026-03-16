@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic';
 import TimelineShell from '@/components/controls/TimelineShell';
 import ExpandedArtworkDetail from '@/components/map/ExpandedArtworkDetail';
 import NearbyArtworksTray from '@/components/map/NearbyArtworksTray';
+import ClusterListCard from '@/components/map/ClusterListCard';
 import MobileSearchSheet from '@/components/mobile/MobileSearchSheet';
 import Toast from '@/components/common/Toast';
 import AuthButton from '@/components/auth/AuthButton';
@@ -182,6 +183,10 @@ export default function Home() {
 
   // ── Toast notifications ──────────────────────────────────────────────────────
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'warning' | 'error' } | null>(null);
+
+  // ── Cluster data (from MapShell) ──────────────────────────────────────────────
+  const [clusterArtworks, setClusterArtworks] = useState<any[]>([]);
+  const [clusterCenter, setClusterCenter] = useState<[number, number] | null>(null);
 
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -661,8 +666,11 @@ export default function Home() {
 
         {/* Map View */}
         {currentView === 'map' && (
-          <div className="flex-1 flex flex-col min-w-0 relative">
-            <div className="flex-1 relative min-h-0">
+          <div className="flex-1 flex flex-row min-w-0 relative">
+            {/* Left section: Map + Controls + Cluster List */}
+            <div className="flex-1 flex flex-col min-w-0 relative">
+              {/* Map container */}
+              <div className="flex-1 relative min-h-0">
               <MapShell
                 artworks={filteredArtworks}
                 selectedArtworkId={selectedArtworkId}
@@ -674,6 +682,10 @@ export default function Home() {
                 mapCommand={mapCommand}
                 onMapCommandDone={() => setMapCommand(null)}
                 onVisibleCountChange={setVisibleCount}
+                onClusterChange={(artworks, center) => {
+                  setClusterArtworks(artworks);
+                  setClusterCenter(center);
+                }}
               />
 
               {/* Expanded detail modal */}
@@ -690,8 +702,8 @@ export default function Home() {
                 />
               )}
 
-              {/* ── Top-right controls ─────────────────────────────────────────── */}
-              <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-2">
+              {/* ── Top controls (left on lg+, right on smaller screens) ────────────── */}
+              <div className="absolute top-4 left-4 lg:right-4 lg:left-auto z-10 flex flex-col lg:items-end items-start gap-2">
                 {/* Count + visible */}
                 <div
                   className="pointer-events-none px-3 py-1.5 rounded-lg"
@@ -785,26 +797,45 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Nearby artworks tray — shown when artwork is selected */}
-            {selectedArtwork && nearbyArtworks.length > 0 && !isExpandedDetailOpen && (
-              <NearbyArtworksTray
-                artworks={nearbyArtworks}
-                selectedId={selectedArtworkId!}
-                onSelect={a => {
-                  handleArtworkClick(a);
-                  setMapCommand({ type: 'flyTo', lat: a.lat, lng: a.lng });
-                }}
-              />
-            )}
+              {/* Nearby artworks tray — shown when artwork is selected */}
+              {selectedArtwork && nearbyArtworks.length > 0 && !isExpandedDetailOpen && (
+                <NearbyArtworksTray
+                  artworks={nearbyArtworks}
+                  selectedId={selectedArtworkId!}
+                  onSelect={a => {
+                    handleArtworkClick(a);
+                    setMapCommand({ type: 'flyTo', lat: a.lat, lng: a.lng });
+                  }}
+                />
+              )}
 
-            {/* Timeline at bottom */}
-            <div className="shrink-0 h-32 md:h-40 overflow-hidden">
+              {/* Cluster list — shown at bottom when cluster is selected */}
+              {clusterArtworks.length > 0 && (
+                <ClusterListCard
+                  artworks={clusterArtworks}
+                  center={clusterCenter}
+                  onSelect={a => {
+                    handleArtworkClick(a);
+                    setMapCommand({ type: 'flyTo', lat: a.lat, lng: a.lng });
+                  }}
+                  onClose={() => {
+                    setClusterArtworks([]);
+                    setClusterCenter(null);
+                  }}
+                />
+              )}
+            </div>
+            {/* End of left section */}
+
+            {/* Right section: Timeline */}
+            <div className="shrink-0 w-60 overflow-hidden hidden lg:flex flex-col bg-[#0e0f12]/95 border-l border-white/[0.05]">
               <TimelineShell
                 artworks={allArtworks}
                 maxYear={timelineMaxYear}
                 onMaxYearChange={setTimelineMaxYear}
               />
             </div>
+            {/* End of right section */}
           </div>
         )}
 

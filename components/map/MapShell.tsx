@@ -5,7 +5,6 @@
 
 import MapGL, { MapRef, Source, Layer } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import ClusterListCard from './ClusterListCard';
 import FloatingArtworkCard, { ArtworkCardData } from './FloatingArtworkCard';
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 
@@ -61,6 +60,7 @@ interface MapShellProps {
   mapCommand?: MapCommand | null;
   onMapCommandDone?: () => void;
   onVisibleCountChange?: (count: number) => void;
+  onClusterChange?: (artworks: ArtworkCardData[], center: [number, number] | null) => void;
 }
 
 interface ViewState { latitude: number; longitude: number; zoom: number }
@@ -100,6 +100,7 @@ export default function MapShell({
   mapCommand,
   onMapCommandDone,
   onVisibleCountChange,
+  onClusterChange,
 }: MapShellProps) {
   const mapRef       = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -116,6 +117,11 @@ export default function MapShell({
   // Cluster / overlap panel state
   const [clusterArtworks, setClusterArtworks] = useState<ArtworkCardData[]>([]);
   const [clusterCenter, setClusterCenter]     = useState<[number, number] | null>(null);
+
+  // ── Sync cluster state to parent ──────────────────────────────────────────
+  useEffect(() => {
+    onClusterChange?.(clusterArtworks, clusterCenter);
+  }, [clusterArtworks, clusterCenter, onClusterChange]);
 
   // ── Build GeoJSON ──────────────────────────────────────────────────────────
   const geojsonData = useMemo((): GeoJSON.FeatureCollection => ({
@@ -545,21 +551,6 @@ export default function MapShell({
         />
       )}
 
-      {/* Right-side cluster / overlap panel */}
-      {clusterArtworks.length > 0 && !selectedArtwork && (
-        <ClusterListCard
-          artworks={clusterArtworks}
-          onSelectArtwork={artwork => {
-            setClusterArtworks([]);
-            setClusterCenter(null);
-            onArtworkClick?.({ id: artwork.id });
-          }}
-          onClose={() => {
-            setClusterArtworks([]);
-            setClusterCenter(null);
-          }}
-        />
-      )}
     </div>
   );
 }
