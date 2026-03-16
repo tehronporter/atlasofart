@@ -101,11 +101,18 @@ export async function getProfile(userId: string) {
  */
 export async function isAdmin(): Promise<boolean> {
   try {
-    const user = await getUser();
-    if (!user) return false;
+    const session = await getSession();
+    if (!session?.access_token) return false;
 
-    const profile = await getProfile(user.id);
-    return profile?.role === 'admin';
+    // Use API endpoint to check admin status (bypasses RLS)
+    const res = await fetch('/api/auth/check-admin', {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    const data = await res.json();
+    return data.isAdmin === true;
   } catch {
     return false;
   }
