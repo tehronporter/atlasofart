@@ -21,6 +21,7 @@ interface IngestResult {
   added?: number;
   updated?: number;
   skipped?: number;
+  alreadyExists?: number;
   noImage?: number;
   noType?: number;
   fetchFailed?: number;
@@ -72,8 +73,8 @@ interface IngestionPanelProps {
 export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefreshStats }: IngestionPanelProps) {
   const [isIngesting, setIsIngesting] = useState(false);
   const [ingestResult, setIngestResult] = useState<IngestResult | null>(null);
-  const [startPage, setStartPage] = useState(1);
-  const [pagesPerRun, setPagesPerRun] = useState(10);
+  const [startPage, setStartPage] = useState(35000);
+  const [pagesPerRun, setPagesPerRun] = useState(5);
   const [onlyWithImages, setOnlyWithImages] = useState(true);
 
   const [autoBatches, setAutoBatches] = useState(25);
@@ -231,8 +232,8 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
           <p className="text-xs text-neutral-500 mt-1.5 leading-relaxed">
             Fetches artworks from the Getty Linked Art API activity stream at{' '}
             <code className="bg-neutral-800 px-1 rounded text-neutral-400">data.getty.edu</code>.
-            Artworks (HumanMadeObject) are scattered across ~42,500 pages. Each page contains ~100 activity items.
-            Coordinates are geocoded from provenance metadata. Duplicates are automatically skipped via upsert.
+            HumanMadeObject entries are on pages 35,000–42,500 (~100 per page).
+            Already-ingested artworks are skipped instantly (no re-fetch). Coordinates are geocoded from provenance metadata.
           </p>
         </div>
 
@@ -251,9 +252,9 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                   disabled={isIngesting}
                   className="w-28 bg-neutral-800 border border-neutral-700 text-sm text-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500/50 tabular-nums"
                 />
-                {startPage !== 1 && (
+                {startPage !== 35000 && (
                   <button
-                    onClick={() => setStartPage(1)}
+                    onClick={() => setStartPage(35000)}
                     className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors"
                   >
                     Reset
@@ -407,7 +408,7 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {[
                       { label: 'Added', value: ingestResult.added ?? 0, color: 'text-emerald-400' },
-                      { label: 'Updated', value: ingestResult.updated ?? 0, color: 'text-blue-400' },
+                      { label: 'Already in DB', value: ingestResult.alreadyExists ?? 0, color: 'text-blue-400' },
                       { label: 'No Image', value: ingestResult.noImage ?? 0, color: 'text-neutral-500' },
                       { label: 'Wrong Type', value: ingestResult.noType ?? 0, color: 'text-amber-500' },
                       { label: 'Fetch Failed', value: ingestResult.fetchFailed ?? 0, color: 'text-red-400' },

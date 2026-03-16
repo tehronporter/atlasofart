@@ -4,12 +4,19 @@
 // Activity Stream: https://data.getty.edu/museum/collection/activity-stream/page/{N}
 // Individual objects: https://data.getty.edu/museum/collection/object/{UUID}
 // Images: https://media.getty.edu/iiif/image/{UUID}/full/400,/0/default.jpg
+//
+// IMPORTANT: The activity stream is a CHANGELOG — the same object appears on many
+// pages (Create + multiple Updates). Pages 1-34999 are Person/Group records only.
+// HumanMadeObject entries start around page 35000 and run through ~42500.
+// We skip already-ingested objects (by object_id) BEFORE the expensive Getty fetch.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+// Extend Vercel serverless function timeout (default is 10s on hobby, 60s on pro)
+export const maxDuration = 300; // 5 minutes max
+
 const GETTY_STREAM = 'https://data.getty.edu/museum/collection/activity-stream/page';
-const GETTY_OBJECT = 'https://data.getty.edu/museum/collection/object';
 
 // ── Geocoding lookup ──────────────────────────────────────────────────────────
 // Getty objects don't have coordinates; geocode from place_created text.
@@ -206,9 +213,6 @@ function parseLinkedArtObject(obj: any): Record<string, any> | null {
     }
   }
 
-  // Note: image filtering is handled by the onlyWithImages flag in the POST handler.
-  // We still parse image-less objects so they can be stored for metadata/moderation.
-
   // ── Medium ────────────────────────────────────────────────────────────────
   const matEntry = obj.referred_to_by?.find(
     (r: any) =>
@@ -307,8 +311,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const {
-      startPage = 1,       // Scan from the beginning — artworks are scattered across all pages
-      pagesPerRun = 10,    // Each page ~100 items, filter to HumanMadeObject
+      startPage = 35000,  // HumanMadeObject entries are on pages 35000-42500
+      pagesPerRun = 5,    // Each page ~100 HumanMadeObject items
       onlyWithImages = true,
     } = body;
 
@@ -342,9 +346,10 @@ export async function POST(request: NextRequest) {
     let added = 0;
     let updated = 0;
     let skipped = 0;
+    let alreadyExists = 0; // object already in DB — skip expensive fetch
     let noImage = 0;
-    let noType = 0;      // fetched but wrong type (diagnostic)
-    let fetchFailed = 0; // HTTP error fetching object
+    let noType = 0;
+    let fetchFailed = 0;
     const errors: string[] = [];
     let nextPageUrl: string | null =
       `${GETTY_STREAM}/${startPage}`;
@@ -373,7 +378,7 @@ export async function POST(request: NextRequest) {
           const preview = text.substring(0, 80);
           console.error(`[Getty] Invalid content type: ${contentType}`);
           console.error(`[Getty] Response preview: ${preview}`);
-          errors.push(`Getty API returned invalid content type: ${contentType}. Page ${startPage + run} may not exist. Try a lower page number (e.g., 1000).`);
+          errors.push(`Getty API returned invalid content type: ${contentType}. Page ${startPage + run} may not exist. Try a lower page number.`);
           break;
         }
 
@@ -392,11 +397,10 @@ export async function POST(request: NextRequest) {
       // Match artworks by type OR by object URL pattern (some pages omit type)
       const artworkItems = items.filter((item: any) => {
         if (!item?.object) return false;
-        // Explicit type match
         const objType = item.object.type;
         if (objType === 'HumanMadeObject') return true;
         if (Array.isArray(objType) && objType.includes('HumanMadeObject')) return true;
-        // URL pattern match — Getty object URLs contain /object/ for artworks
+        // URL pattern fallback — Getty object URLs contain /object/ for artworks
         const objId = item.object.id || item.object['@id'] || '';
         if (typeof objId === 'string' && objId.includes('/collection/object/')) return true;
         return false;
@@ -407,10 +411,43 @@ export async function POST(request: NextRequest) {
           `${artworkItems.length} HumanMadeObject`
       );
 
-      // Fetch & upsert each artwork object
+      // ── Batch check: which objects already exist in our DB? ─────────────
+      // Extract UUIDs from activity stream items and check DB in one query.
+      // This avoids the expensive per-item Getty API fetch for duplicates.
+      const objectIds = artworkItems
+        .map((item: any) => {
+          const url: string = item.object?.id || '';
+          const uuid = url.split('/').pop();
+          return uuid ? `getty-${uuid}` : null;
+        })
+        .filter(Boolean) as string[];
+
+      // Batch lookup: fetch all existing object_ids in one query
+      const existingSet = new Set<string>();
+      if (objectIds.length > 0) {
+        const { data: existingRows } = await supabaseAdmin
+          .from('artworks')
+          .select('object_id')
+          .in('object_id', objectIds);
+        if (existingRows) {
+          for (const row of existingRows) {
+            existingSet.add(row.object_id);
+          }
+        }
+      }
+
+      // Fetch & upsert each NEW artwork object (skip already-ingested ones)
       for (const item of artworkItems) {
         const objectUrl = item.object?.id;
         if (!objectUrl) { skipped++; continue; }
+
+        // Extract object_id and skip if already in DB
+        const uuid = objectUrl.split('/').pop();
+        const objectId = uuid ? `getty-${uuid}` : null;
+        if (objectId && existingSet.has(objectId)) {
+          alreadyExists++;
+          continue; // Skip — no need to re-fetch from Getty
+        }
 
         try {
           const objRes = await fetch(objectUrl, {
@@ -461,27 +498,18 @@ export async function POST(request: NextRequest) {
             }
           }
 
-          // Check if artwork already exists to distinguish add vs update
-          const { data: existing } = await supabaseAdmin
-            .from('artworks')
-            .select('id')
-            .eq('object_id', parsed.object_id)
-            .maybeSingle();
-
           const { error: upsertError } = await supabaseAdmin
             .from('artworks')
             .upsert(parsed, { onConflict: 'object_id', ignoreDuplicates: false });
 
           if (upsertError) {
             errors.push(`${parsed.object_id}: ${upsertError.message}`);
-          } else if (existing) {
-            updated++;
           } else {
             added++;
           }
 
-          // Rate limit — Getty's servers appreciate breathing room (300ms between requests)
-          await new Promise(r => setTimeout(r, 300));
+          // Rate limit — Getty's servers appreciate breathing room
+          await new Promise(r => setTimeout(r, 250));
         } catch (e: any) {
           errors.push(`Object fetch error: ${e.message}`);
         }
@@ -505,7 +533,7 @@ export async function POST(request: NextRequest) {
       .then(() => {}, () => {}); // fire-and-forget
 
     console.log(
-      `[Getty] Done: added=${added}, updated=${updated}, skipped=${skipped}, noImage=${noImage}, noType=${noType}, fetchFailed=${fetchFailed}, errors=${errors.length}`
+      `[Getty] Done: added=${added}, updated=${updated}, alreadyExists=${alreadyExists}, skipped=${skipped}, noImage=${noImage}, noType=${noType}, fetchFailed=${fetchFailed}, errors=${errors.length}`
     );
 
     const nextStartPage = startPage + pagesPerRun;
@@ -516,12 +544,13 @@ export async function POST(request: NextRequest) {
       added,
       updated,
       skipped,
+      alreadyExists,
       noImage,
       noType,
       fetchFailed,
       errors: errors.slice(0, 10),
       nextStartPage,
-      message: `Added ${added}, updated ${updated} Getty artworks. Skipped: ${skipped} total (${noImage} no image, ${noType} wrong type, ${fetchFailed} fetch failed, ${errors.length} errors). Next start page: ${nextStartPage}`,
+      message: `Added ${added} new artworks. ${alreadyExists} already in DB (skipped fast). ${noImage} no image, ${fetchFailed} fetch failed. Next start page: ${nextStartPage}`,
     });
   } catch (error: any) {
     console.error('[Getty] Fatal error:', error);
