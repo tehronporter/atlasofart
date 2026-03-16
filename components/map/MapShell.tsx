@@ -1,5 +1,5 @@
-// MapShell.tsx - Map component with generic artwork type
-// Phase 13: Supabase-compatible
+// components/map/MapShell.tsx
+// Immersive dark world map with artwork markers
 
 'use client';
 
@@ -24,19 +24,20 @@ interface MapShellProps {
   onArtworkClick?: (artwork: { id?: string }) => void;
 }
 
-export default function MapShell({ 
-  artworks = [], 
+export default function MapShell({
+  artworks = [],
   selectedArtworkId = null,
-  onArtworkClick 
+  onArtworkClick,
 }: MapShellProps) {
   const [viewState, setViewState] = useState({
-    latitude: 30,
-    longitude: 15,
-    zoom: 1.5,
+    latitude: 25,
+    longitude: 20,
+    zoom: 1.8,
   });
 
   return (
-    <>
+    // Wrapping div ensures height:100% works regardless of flex context
+    <div className="absolute inset-0">
       <Map
         {...viewState}
         onMove={evt => setViewState(evt.viewState)}
@@ -50,33 +51,26 @@ export default function MapShell({
         keyboard={false}
         scrollZoom={true}
         minZoom={1}
-        maxZoom={10}
+        maxZoom={12}
         onClick={() => onArtworkClick?.({})}
+        fog={{
+          color: 'rgba(15, 15, 20, 0.8)',
+          'high-color': 'rgba(10, 10, 15, 0.9)',
+          'horizon-blend': 0.04,
+          'star-intensity': 0.15,
+        }}
       >
-        {artworks.map((artwork) => (
-          <ArtworkMarker
-            key={artwork.id}
-            artwork={artwork}
-            isSelected={selectedArtworkId === artwork.id}
-            onClick={(a) => onArtworkClick?.({ id: a.id })}
-          />
+        {artworks.map(artwork => (
+          artwork.lat !== 0 || artwork.lng !== 0 ? (
+            <ArtworkMarker
+              key={artwork.id}
+              artwork={artwork}
+              isSelected={selectedArtworkId === artwork.id}
+              onClick={a => onArtworkClick?.({ id: a.id })}
+            />
+          ) : null
         ))}
       </Map>
-
-      <div className="hidden sm:block absolute top-4 left-4 pointer-events-none">
-        <div className="bg-neutral-900/80 backdrop-blur-sm px-4 py-3 rounded-lg border border-neutral-800">
-          <h1 className="text-sm font-semibold text-white">Atlas of Art</h1>
-          <p className="text-xs text-neutral-500 mt-0.5">Explore art across time and space</p>
-        </div>
-      </div>
-
-      <div className="absolute top-4 right-4 pointer-events-none">
-        <div className="bg-neutral-900/80 backdrop-blur-sm px-3 py-2 rounded-lg border border-neutral-800">
-          <p className="text-xs text-neutral-400">
-            <span className="text-amber-500 font-semibold">{artworks.length}</span> artworks
-          </p>
-        </div>
-      </div>
-    </>
+    </div>
   );
 }

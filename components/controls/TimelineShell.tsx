@@ -1,5 +1,5 @@
-// TimelineShell.tsx - Simple timeline filter
-// Phase 5: Timeline Filtering
+// components/controls/TimelineShell.tsx
+// Premium timeline control — anchored at bottom of map area
 
 'use client';
 
@@ -11,18 +11,19 @@ interface TimelineShellProps {
   onMaxYearChange?: (year: number) => void;
 }
 
-export default function TimelineShell({ 
+export default function TimelineShell({
   artworks = [],
   maxYear,
-  onMaxYearChange 
+  onMaxYearChange,
 }: TimelineShellProps) {
   const { minYear, absoluteMaxYear } = useMemo(() => {
     if (artworks.length === 0) return { minYear: -3000, absoluteMaxYear: 2000 };
-    
-    const years = artworks.flatMap(a => [a.year_start, a.year_end]);
+    const starts = artworks.map(a => a.year_start ?? 0).filter(y => typeof y === 'number' && !isNaN(y));
+    const ends = artworks.map(a => a.year_end ?? 0).filter(y => typeof y === 'number' && !isNaN(y));
+    if (starts.length === 0) return { minYear: -3000, absoluteMaxYear: 2000 };
     return {
-      minYear: Math.min(...years),
-      absoluteMaxYear: Math.max(...years),
+      minYear: Math.min(...starts),
+      absoluteMaxYear: Math.max(...ends),
     };
   }, [artworks]);
 
@@ -30,56 +31,89 @@ export default function TimelineShell({
 
   const formatYear = (year: number) => {
     if (year < 0) return `${Math.abs(year)} BCE`;
-    if (year === 0) return '1 BCE/1 CE';
+    if (year === 0) return 'Year 0';
     return `${year} CE`;
   };
 
-  const visibleCount = artworks.filter(a => a.year_end <= currentMax).length;
+  const pct = absoluteMaxYear === minYear
+    ? 100
+    : Math.max(0, Math.min(100, Math.round(((currentMax - minYear) / (absoluteMaxYear - minYear)) * 100)));
+
+  const visibleCount = artworks.filter(a =>
+    currentMax >= absoluteMaxYear ? true : (a.year_start ?? 0) <= currentMax
+  ).length;
+
+  const viewingLabel = currentMax >= absoluteMaxYear
+    ? 'All eras'
+    : `Up to ${formatYear(currentMax)}`;
 
   return (
-    <div className="h-16 bg-neutral-950 border-t border-neutral-800 flex items-center px-6 gap-4">
-      <div className="text-neutral-400 text-sm font-medium whitespace-nowrap">
-        Timeline
-      </div>
-      
-      <div className="flex-1 flex items-center gap-3">
-        <span className="text-amber-500 text-xs w-16 text-right font-medium">
-          {formatYear(minYear)}
-        </span>
-        
+    <div className="h-[60px] shrink-0 bg-[#0e0f12]/95 backdrop-blur-sm border-t border-white/[0.05] flex items-center px-5 gap-5">
+      {/* Min year */}
+      <span className="text-[11px] text-neutral-600 font-mono whitespace-nowrap shrink-0 tabular-nums">
+        {formatYear(minYear)}
+      </span>
+
+      {/* Slider */}
+      <div className="flex-1 relative flex items-center">
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-white/[0.07] rounded-full w-full pointer-events-none" />
+        <div
+          className="absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-amber-500/50 rounded-full pointer-events-none transition-all duration-75"
+          style={{ width: `${pct}%` }}
+        />
         <input
           type="range"
           min={minYear}
           max={absoluteMaxYear}
           value={currentMax}
-          onChange={(e) => onMaxYearChange?.(parseInt(e.target.value, 10))}
-          className="flex-1 h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer
+          onChange={e => onMaxYearChange?.(parseInt(e.target.value, 10))}
+          className="
+            w-full relative z-10 h-5 appearance-none bg-transparent cursor-pointer
             [&::-webkit-slider-thumb]:appearance-none
-            [&::-webkit-slider-thumb]:w-4
-            [&::-webkit-slider-thumb]:h-4
+            [&::-webkit-slider-thumb]:w-[14px]
+            [&::-webkit-slider-thumb]:h-[14px]
             [&::-webkit-slider-thumb]:rounded-full
-            [&::-webkit-slider-thumb]:bg-amber-500
-            [&::-webkit-slider-thumb]:border-2
-            [&::-webkit-slider-thumb]:border-neutral-900
+            [&::-webkit-slider-thumb]:bg-amber-400
+            [&::-webkit-slider-thumb]:border-[2px]
+            [&::-webkit-slider-thumb]:border-[#0e0f12]
+            [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(251,191,36,0.45)]
             [&::-webkit-slider-thumb]:cursor-pointer
-            [&::-webkit-slider-thumb]:shadow-lg
-            [&::-moz-range-thumb]:w-4
-            [&::-moz-range-thumb]:h-4
+            [&::-webkit-slider-thumb]:transition-transform
+            [&::-webkit-slider-thumb]:hover:scale-110
+            [&::-moz-range-thumb]:w-[14px]
+            [&::-moz-range-thumb]:h-[14px]
             [&::-moz-range-thumb]:rounded-full
-            [&::-moz-range-thumb]:bg-amber-500
-            [&::-moz-range-thumb]:border-2
-            [&::-moz-range-thumb]:border-neutral-900
+            [&::-moz-range-thumb]:bg-amber-400
+            [&::-moz-range-thumb]:border-[2px]
+            [&::-moz-range-thumb]:border-[#0e0f12]
             [&::-moz-range-thumb]:cursor-pointer
           "
         />
-        
-        <span className="text-neutral-300 text-xs w-16 font-medium">
-          {formatYear(currentMax)}
-        </span>
       </div>
-      
-      <div className="text-neutral-500 text-xs whitespace-nowrap border-l border-neutral-800 pl-4">
-        <span className="text-amber-500">{visibleCount}</span> artworks
+
+      {/* Max year */}
+      <span className="text-[11px] text-neutral-600 font-mono whitespace-nowrap shrink-0 tabular-nums">
+        {formatYear(absoluteMaxYear)}
+      </span>
+
+      <div className="w-px h-5 bg-white/[0.07] shrink-0" />
+
+      {/* Viewing display */}
+      <div className="shrink-0 text-right">
+        <p className="text-[10px] text-neutral-600 leading-none mb-0.5">Viewing</p>
+        <p className="text-[12px] text-neutral-300 font-medium leading-none tabular-nums whitespace-nowrap">
+          {viewingLabel}
+        </p>
+      </div>
+
+      <div className="w-px h-5 bg-white/[0.07] shrink-0" />
+
+      {/* Artwork count */}
+      <div className="shrink-0 text-right min-w-[36px]">
+        <p className="text-[10px] text-neutral-600 leading-none mb-0.5">Shown</p>
+        <p className="text-[13px] font-semibold text-amber-400 leading-none tabular-nums">
+          {visibleCount}
+        </p>
       </div>
     </div>
   );
