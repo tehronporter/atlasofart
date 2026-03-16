@@ -18,7 +18,7 @@ const SPARQL_ENDPOINT = 'https://data.getty.edu/museum/collection/sparql';
 
 // SPARQL query to get HumanMadeObject URIs that have at least one image representation
 const SPARQL_QUERY_OBJECTS = `
-SELECT ?obj WHERE {
+SELECT DISTINCT ?obj WHERE {
   ?obj a <http://www.cidoc-crm.org/cidoc-crm/E22_Human-Made_Object> .
   ?obj <http://www.cidoc-crm.org/cidoc-crm/P138i_has_representation> ?img .
 }
@@ -422,7 +422,7 @@ export async function POST(request: NextRequest) {
         if (!objRes.ok) { fetchFailed++; continue; }
 
         const contentType = objRes.headers.get('content-type') || '';
-        if (!contentType.includes('application/json')) { fetchFailed++; continue; }
+        if (!contentType.includes('json')) { fetchFailed++; continue; }
 
         const obj = await objRes.json();
         const parsed = parseLinkedArtObject(obj);
