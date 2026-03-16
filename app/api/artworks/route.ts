@@ -32,6 +32,7 @@ export async function GET(req: NextRequest) {
     .select(SELECTED_COLUMNS)
     .not('latitude', 'is', null)
     .not('longitude', 'is', null)
+    .not('image_url_primary', 'is', null)   // Map only shows artworks with images
     .order('date_start', { ascending: true, nullsFirst: false })
     .range(offset, offset + limit - 1);
 
