@@ -8,6 +8,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import TimelineShell from '@/components/controls/TimelineShell';
 import ExpandedArtworkDetail from '@/components/map/ExpandedArtworkDetail';
+import AuthButton from '@/components/auth/AuthButton';
 import { trackArtworkView } from '@/lib/auth';
 
 // Load map client-side only (Mapbox requires browser APIs)
@@ -506,15 +507,18 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-white/[0.04] bg-gradient-to-b from-transparent to-black/10 px-4 py-3.5 flex items-center justify-between">
-          <span className="text-[10px] text-neutral-600">
-            <span className="text-amber-400 font-semibold">{filteredArtworks.length}</span>
-            <span className="text-neutral-700"> of </span>
-            <span className="text-neutral-600">{allArtworks.length}</span>
-          </span>
-          <a href="/admin" className="text-[10px] text-neutral-700 hover:text-amber-400 transition-colors font-light">
-            Admin
-          </a>
+        <div className="border-t border-white/[0.04] bg-gradient-to-b from-transparent to-black/10 px-4 py-4 space-y-3">
+          <AuthButton />
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-neutral-600">
+              <span className="text-amber-400 font-semibold">{filteredArtworks.length}</span>
+              <span className="text-neutral-700"> of </span>
+              <span className="text-neutral-600">{allArtworks.length}</span>
+            </span>
+            <a href="/admin" className="text-[10px] text-neutral-700 hover:text-amber-400 transition-colors font-light">
+              Admin
+            </a>
+          </div>
         </div>
       </aside>
 
