@@ -321,7 +321,10 @@ export async function POST(request: NextRequest) {
 
       try {
         const pageRes = await fetch(nextPageUrl, {
-          headers: { Accept: 'application/json' },
+          headers: {
+            Accept: 'application/json',
+            'User-Agent': 'Atlas of Art (Educational Collection Explorer)',
+          },
           cache: 'no-store',
         });
 
@@ -330,13 +333,29 @@ export async function POST(request: NextRequest) {
           break;
         }
 
+        // Check content type before parsing JSON
+        const contentType = pageRes.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          const text = await pageRes.text();
+          const preview = text.substring(0, 80);
+          console.error(`[Getty] Invalid content type: ${contentType}`);
+          console.error(`[Getty] Response preview: ${preview}`);
+          errors.push(`Getty API returned invalid content type: ${contentType}. Page ${startPage + run} may not exist. Try a lower page number (e.g., 1000).`);
+          break;
+        }
+
         pageData = await pageRes.json();
+
+        if (!pageData?.orderedItems) {
+          errors.push(`Invalid page structure: missing orderedItems`);
+          break;
+        }
       } catch (e: any) {
         errors.push(`Page fetch error: ${e.message}`);
         break;
       }
 
-      const items: any[] = pageData?.orderedItems ?? [];
+      const items: any[] = pageData.orderedItems ?? [];
       const artworkItems = items.filter(
         (item: any) => item?.object?.type === 'HumanMadeObject'
       );
@@ -353,11 +372,20 @@ export async function POST(request: NextRequest) {
 
         try {
           const objRes = await fetch(objectUrl, {
-            headers: { Accept: 'application/json' },
+            headers: {
+              Accept: 'application/json',
+              'User-Agent': 'Atlas of Art (Educational Collection Explorer)',
+            },
             cache: 'no-store',
           });
 
           if (!objRes.ok) { skipped++; continue; }
+
+          const contentType = objRes.headers.get('content-type') || '';
+          if (!contentType.includes('application/json')) {
+            skipped++;
+            continue;
+          }
 
           const obj = await objRes.json();
           const parsed = parseLinkedArtObject(obj);
@@ -381,8 +409,8 @@ export async function POST(request: NextRequest) {
             added++;
           }
 
-          // Gentle rate limit — Getty is a real museum server
-          await new Promise(r => setTimeout(r, 120));
+          // Rate limit — Getty's servers appreciate breathing room (500ms between requests)
+          await new Promise(r => setTimeout(r, 500));
         } catch (e: any) {
           errors.push(`Object fetch error: ${e.message}`);
         }
