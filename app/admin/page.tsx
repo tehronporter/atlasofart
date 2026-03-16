@@ -4,6 +4,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { isAdmin } from '@/lib/auth';
 
 interface Stats {
   totalArtworks: number;
@@ -63,6 +65,7 @@ function StatCard({ label, value, sub, accent }: { label: string; value: number 
 }
 
 export default function AdminPage() {
+  const router = useRouter();
   const [stats, setStats] = useState<Stats>({ totalArtworks: 0, gettyArtworks: 0, withCoordinates: 0, withImages: 0 });
   const [logs, setLogs] = useState<IngestLog[]>([]);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
@@ -72,6 +75,7 @@ export default function AdminPage() {
   const [startPage, setStartPage] = useState(35000);
   const [pagesPerRun, setPagesPerRun] = useState(3);
   const [onlyWithImages, setOnlyWithImages] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   // Auto-run: chain multiple batches without manual clicking
   const [autoBatches, setAutoBatches] = useState(10);
@@ -79,6 +83,19 @@ export default function AdminPage() {
   const [autoProgress, setAutoProgress] = useState({ current: 0, total: 0, totalAdded: 0, totalUpdated: 0 });
   const stopAutoRef = useRef(false);
   const currentPageRef = useRef(startPage);
+
+  // Check authorization on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const authorized = await isAdmin();
+      if (!authorized) {
+        router.push('/');
+      } else {
+        setIsAuthorized(true);
+      }
+    };
+    checkAuth();
+  }, [router]);
 
   const fetchStats = async () => {
     try {
@@ -98,7 +115,9 @@ export default function AdminPage() {
     }
   };
 
-  useEffect(() => { fetchStats(); }, []);
+  useEffect(() => {
+    if (isAuthorized) fetchStats();
+  }, [isAuthorized]);
 
   // Keep page ref in sync
   useEffect(() => { currentPageRef.current = startPage; }, [startPage]);
@@ -201,6 +220,17 @@ export default function AdminPage() {
   };
 
   const dbConnected = !statsError;
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-10 h-10 border-2 border-amber-500/60 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-neutral-500 text-sm">Checking authorization...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-neutral-100">

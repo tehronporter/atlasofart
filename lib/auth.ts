@@ -97,6 +97,21 @@ export async function getProfile(userId: string) {
 }
 
 /**
+ * Check if user is admin
+ */
+export async function isAdmin(): Promise<boolean> {
+  try {
+    const user = await getUser();
+    if (!user) return false;
+
+    const profile = await getProfile(user.id);
+    return profile?.role === 'admin';
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Add artwork to favorites
  */
 export async function addToFavorites(artworkId: string) {

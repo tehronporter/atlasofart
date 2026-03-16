@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   full_name TEXT,
   avatar_url TEXT,
   is_public BOOLEAN DEFAULT false,
+  role TEXT DEFAULT 'guest' CHECK (role IN ('admin', 'guest')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -77,6 +78,9 @@ CREATE POLICY "Users can update own profile"
 CREATE POLICY "Public profiles viewable by all"
   ON profiles FOR SELECT USING (is_public = true);
 
+CREATE POLICY "Enable insert for signup trigger"
+  ON profiles FOR INSERT WITH CHECK (true);
+
 -- Collections: users manage their own
 CREATE POLICY "Users can view own collections"
   ON collections FOR SELECT USING (auth.uid() = user_id);
@@ -129,16 +133,17 @@ CREATE POLICY "Users can view own views"
 CREATE OR REPLACE FUNCTION create_profile_on_signup()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO profiles (id, email, full_name, avatar_url)
+  INSERT INTO profiles (id, email, full_name, role)
   VALUES (
     NEW.id,
     NEW.email,
-    NEW.raw_user_meta_data->>'full_name',
-    NEW.raw_user_meta_data->>'avatar_url'
-  );
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
+    CASE WHEN NEW.email = 'hello@tehron.xyz' THEN 'admin' ELSE 'guest' END
+  )
+  ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
