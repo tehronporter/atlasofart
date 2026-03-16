@@ -52,7 +52,7 @@ export default function Home() {
         setAllArtworks(transformed);
         setIsLoading(false);
       } catch (err: any) {
-        setError(err.message || 'Failed to load');
+        setError(err.message || 'Failed to load artworks');
         setIsLoading(false);
       }
     }
@@ -94,7 +94,7 @@ export default function Home() {
       <div className="h-screen w-full bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-neutral-400">Loading...</p>
+          <p className="text-neutral-400">Loading artworks...</p>
         </div>
       </div>
     );
@@ -102,10 +102,37 @@ export default function Home() {
 
   if (error) {
     return (
-      <div className="h-screen w-full bg-black flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-400 mb-4">{error}</p>
-          <button onClick={() => window.location.reload()} className="px-4 py-2 bg-amber-500 text-neutral-900 rounded">Retry</button>
+      <div className="h-screen w-full bg-black flex items-center justify-center p-8">
+        <div className="text-center max-w-md">
+          <h2 className="text-xl font-bold text-white mb-2">Connection Error</h2>
+          <p className="text-neutral-400 mb-4">{error}</p>
+          <div className="bg-neutral-900 border border-neutral-800 rounded p-4 mb-4 text-left text-sm">
+            <p className="text-amber-500 font-semibold mb-2">Setup Required:</p>
+            <ol className="list-decimal list-inside space-y-1 text-neutral-300">
+              <li>Run Supabase schema in SQL Editor</li>
+              <li>Trigger Getty ingestion from /admin</li>
+              <li>Or add sample artworks manually</li>
+            </ol>
+          </div>
+          <div className="flex gap-3 justify-center">
+            <a href="/admin" className="px-4 py-2 bg-amber-500 text-neutral-900 rounded font-medium hover:bg-amber-400">Go to Admin</a>
+            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-neutral-800 rounded hover:bg-neutral-700">Retry</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (allArtworks.length === 0) {
+    return (
+      <div className="h-screen w-full bg-black flex items-center justify-center p-8">
+        <div className="text-center max-w-md">
+          <h2 className="text-xl font-bold text-white mb-2">No Artworks Found</h2>
+          <p className="text-neutral-400 mb-4">The database is empty. Import artworks to get started.</p>
+          <div className="flex gap-3 justify-center">
+            <a href="/admin" className="px-4 py-2 bg-amber-500 text-neutral-900 rounded font-medium hover:bg-amber-400">Import from Getty</a>
+            <a href="/" className="px-4 py-2 bg-neutral-800 rounded hover:bg-neutral-700">Refresh</a>
+          </div>
         </div>
       </div>
     );
