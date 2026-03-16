@@ -95,17 +95,25 @@ export default function ExpandedArtworkDetail({
             </svg>
           </button>
 
-          {/* Keyboard hint */}
-          {nearbyArtworks.length > 0 && (
-            <div className="absolute top-4 left-4 z-10">
+          {/* Keyboard hints */}
+          <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5">
+            {nearbyArtworks.length > 0 && (
               <div
                 className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] text-neutral-600"
                 style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.07)' }}
               >
-                <span>←→ navigate nearby</span>
+                <span className="font-mono text-neutral-500">←→</span>
+                <span>navigate nearby</span>
               </div>
+            )}
+            <div
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] text-neutral-600"
+              style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.07)' }}
+            >
+              <span className="font-mono text-neutral-500">Esc</span>
+              <span>close</span>
             </div>
-          )}
+          </div>
 
           {/* Hero image */}
           <div

@@ -10,6 +10,7 @@ import TimelineShell from '@/components/controls/TimelineShell';
 import ExpandedArtworkDetail from '@/components/map/ExpandedArtworkDetail';
 import NearbyArtworksTray from '@/components/map/NearbyArtworksTray';
 import MobileSearchSheet from '@/components/mobile/MobileSearchSheet';
+import Toast from '@/components/common/Toast';
 import AuthButton from '@/components/auth/AuthButton';
 import UserProfileSection from '@/components/dashboard/UserProfileSection';
 import UserQuickLinks from '@/components/dashboard/UserQuickLinks';
@@ -179,6 +180,9 @@ export default function Home() {
   // ── Share toast ─────────────────────────────────────────────────────────────
   const [showCopied, setShowCopied] = useState(false);
 
+  // ── Toast notifications ──────────────────────────────────────────────────────
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'warning' | 'error' } | null>(null);
+
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // ── Fetch all artworks ───────────────────────────────────────────────────────
@@ -246,6 +250,13 @@ export default function Home() {
     searchDebounceRef.current = setTimeout(() => setDebouncedSearchQuery(searchQuery), 300);
     return () => { if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current); };
   }, [searchQuery]);
+
+  // ── Show toast when search returns no results ────────────────────────────────
+  useEffect(() => {
+    if ((searchQuery || selectedRegion || selectedMedium) && allArtworks.length > 0 && filteredArtworks.length === 0) {
+      setToast({ message: 'No artworks match your filters. Try adjusting your search.', type: 'info' });
+    }
+  }, [searchQuery, selectedRegion, selectedMedium, filteredArtworks.length, allArtworks.length]);
 
   // ── Filtered artworks ───────────────────────────────────────────────────────
   const filteredArtworks = useMemo(() => {
@@ -341,7 +352,10 @@ export default function Home() {
   const handleShare = useCallback(() => {
     navigator.clipboard.writeText(window.location.href).then(() => {
       setShowCopied(true);
+      setToast({ message: 'Link copied to clipboard', type: 'success' });
       setTimeout(() => setShowCopied(false), 2000);
+    }).catch(() => {
+      setToast({ message: 'Failed to copy link', type: 'error' });
     });
   }, []);
 
@@ -823,7 +837,20 @@ export default function Home() {
               </div>
               {filteredArtworks.length === 0 && (
                 <div className="flex items-center justify-center h-64">
-                  <p className="text-neutral-500 text-sm">No artworks match your filters</p>
+                  <div className="text-center">
+                    <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-amber-400/60">
+                        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-neutral-600 leading-relaxed font-light mb-3">No artworks match your filters</p>
+                    <p className="text-xs text-neutral-700 mb-4">Try adjusting your search, region, or medium to find artworks</p>
+                    {hasFilters && (
+                      <button onClick={clearFilters} className="text-xs text-amber-400 hover:text-amber-300 transition-colors font-medium">
+                        Clear all filters
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -847,6 +874,15 @@ export default function Home() {
         filteredCount={filteredArtworks.length}
         totalCount={allArtworks.length}
       />
+
+      {/* Toast notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onDismiss={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

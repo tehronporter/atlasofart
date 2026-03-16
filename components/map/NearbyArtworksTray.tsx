@@ -19,6 +19,8 @@ export default function NearbyArtworksTray({
   onSelect,
 }: NearbyArtworksTrayProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const currentIndex = artworks.findIndex(a => a.id === selectedId);
+  const displayIndex = currentIndex >= 0 ? currentIndex + 1 : 1;
 
   if (artworks.length === 0) return null;
 
@@ -34,7 +36,7 @@ export default function NearbyArtworksTray({
       {/* Label */}
       <div className="flex-none flex flex-col items-start justify-center pr-3 border-r border-white/[0.06]" style={{ minWidth: 64 }}>
         <p className="text-[9px] uppercase tracking-widest text-neutral-600 leading-none mb-1">Nearby</p>
-        <p className="text-[10px] text-neutral-500">{artworks.length}</p>
+        <p className="text-[10px] text-neutral-500"><span className="text-amber-400 font-medium">{displayIndex}</span><span className="text-neutral-700"> of </span>{artworks.length}</p>
       </div>
 
       {/* Scrollable thumbnail strip */}
