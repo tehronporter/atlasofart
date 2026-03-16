@@ -8,7 +8,6 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import TimelineShell from '@/components/controls/TimelineShell';
 import ExpandedArtworkDetail from '@/components/map/ExpandedArtworkDetail';
-import { supabase } from '@/lib/supabase';
 import { trackArtworkView } from '@/lib/auth';
 
 // Load map client-side only (Mapbox requires browser APIs)
@@ -156,29 +155,39 @@ export default function Home() {
   const [showFilters, setShowFilters] = useState(false);
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch from Supabase — no seed fallback
+  // Fetch all artworks from paginated API (5,000 per page) — handles 10,000+ collections
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
-        const { data, error } = await supabase
-          .from('artworks')
-          .select('*')
-          .order('date_start', { ascending: true })
-          .limit(1000);
+        let page = 0;
+        const limit = 5000;
+        let allRows: any[] = [];
+        let hasMore = true;
+
+        while (hasMore) {
+          const res = await fetch(`/api/artworks?page=${page}&limit=${limit}`);
+          if (!res.ok) {
+            const text = await res.text();
+            throw new Error(text || `HTTP ${res.status}`);
+          }
+          const json = await res.json();
+          if (cancelled) return;
+          allRows = [...allRows, ...json.artworks];
+          hasMore = json.hasMore;
+          page++;
+        }
 
         if (cancelled) return;
-        if (error) throw error;
-
-        if (data && data.length > 0) {
-          setAllArtworks(data.map(transformRow));
+        if (allRows.length > 0) {
+          setAllArtworks(allRows.map(transformRow));
           setIsEmpty(false);
         } else {
           setIsEmpty(true);
         }
       } catch (err: any) {
         if (cancelled) return;
-        console.error('Supabase error:', err.message);
+        console.error('Artworks fetch error:', err.message);
         setDbError(err.message);
       } finally {
         if (!cancelled) setIsLoading(false);
