@@ -1,12 +1,14 @@
 // app/page.tsx
 // Atlas of Art — Homepage
-// Left sidebar panel + immersive dark map + bottom timeline
+// Left sidebar panel + immersive dark map + bottom timeline + floating marker cards
 
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import TimelineShell from '@/components/controls/TimelineShell';
+import FloatingArtworkCard from '@/components/map/FloatingArtworkCard';
+import ExpandedArtworkDetail from '@/components/map/ExpandedArtworkDetail';
 import { supabase } from '@/lib/supabase';
 import { trackArtworkView } from '@/lib/auth';
 
@@ -143,6 +145,7 @@ export default function Home() {
   const [isEmpty, setIsEmpty] = useState(false);
 
   const [selectedArtworkId, setSelectedArtworkId] = useState<string | null>(null);
+  const [isExpandedDetailOpen, setIsExpandedDetailOpen] = useState(false);
   const [timelineMaxYear, setTimelineMaxYear] = useState(2000);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
@@ -437,119 +440,16 @@ export default function Home() {
 
         <div className="border-t border-white/[0.05] mx-4 my-1" />
 
-        {/* Selected artwork detail / empty hint */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden">
-          {selectedArtwork ? (
-            <div className="px-3 pb-3">
-              <div className="rounded-xl overflow-hidden border border-white/[0.08] bg-white/[0.02]">
-                {/* Image */}
-                <div className="relative h-[150px] bg-neutral-900 overflow-hidden">
-                  {selectedArtwork.image_url ? (
-                    <img
-                      src={selectedArtwork.image_url}
-                      alt={selectedArtwork.title}
-                      className="w-full h-full object-cover"
-                      crossOrigin="anonymous"
-                      onError={e => {
-                        const el = e.target as HTMLImageElement;
-                        el.style.display = 'none';
-                        el.nextElementSibling?.classList.remove('hidden');
-                      }}
-                    />
-                  ) : null}
-                  {/* Fallback shown if image fails or is null */}
-                  <div className={`w-full h-full flex flex-col items-center justify-center text-neutral-700 ${selectedArtwork.image_url ? 'hidden' : ''}`}>
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                      <circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
-                    </svg>
-                    <span className="text-[10px] mt-2">No image available</span>
-                  </div>
-                  {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-                  {/* Close */}
-                  <button
-                    onClick={() => setSelectedArtworkId(null)}
-                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/50 border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-black/70 transition-colors"
-                    aria-label="Close"
-                  >
-                    <XIcon />
-                  </button>
-                </div>
-
-                {/* Metadata */}
-                <div className="p-3">
-                  <h3 className="text-[13px] font-semibold text-white leading-snug">
-                    {selectedArtwork.title}
-                  </h3>
-
-                  {selectedArtwork.artist_display && (
-                    <p className="text-[11px] text-neutral-400 mt-0.5 leading-snug">{selectedArtwork.artist_display}</p>
-                  )}
-
-                  {selectedArtwork.year && (
-                    <p className="text-[11px] text-amber-400/80 mt-1 font-medium">{selectedArtwork.year}</p>
-                  )}
-
-                  {selectedArtwork.medium && (
-                    <p className="text-[10px] text-neutral-500 mt-0.5 italic leading-relaxed">{selectedArtwork.medium}</p>
-                  )}
-
-                  {(selectedArtwork.place_created || selectedArtwork.current_museum) && (
-                    <div className="mt-2 pt-2 border-t border-white/[0.06] space-y-1">
-                      {selectedArtwork.place_created && (
-                        <div className="flex items-center gap-1.5 text-neutral-500">
-                          <PinIcon />
-                          <span className="text-[10px]">{selectedArtwork.place_created}</span>
-                        </div>
-                      )}
-                      {selectedArtwork.current_museum && (
-                        <p className="text-[10px] text-neutral-600 pl-[18px]">{selectedArtwork.current_museum}</p>
-                      )}
-                    </div>
-                  )}
-
-                  {selectedArtwork.tags && selectedArtwork.tags.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {selectedArtwork.tags.slice(0, 4).map((tag: string, i: number) => (
-                        <span key={i} className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.06] text-neutral-500 rounded">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {selectedArtwork.description && (
-                    <p className="text-[10px] text-neutral-600 mt-2 leading-relaxed line-clamp-3">
-                      {selectedArtwork.description}
-                    </p>
-                  )}
-
-                  {selectedArtwork.getty_url && (
-                    <a
-                      href={selectedArtwork.getty_url || '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 w-full flex items-center justify-between px-3 py-2 bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.07] rounded-lg text-[11px] text-neutral-400 hover:text-neutral-200 transition-colors"
-                      onClick={e => e.stopPropagation()}
-                    >
-                      <span>View on Getty</span>
-                      <ChevronRightIcon />
-                    </a>
-                  )}
-                </div>
-              </div>
+        {/* Hint / Empty state */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden flex items-center justify-center px-4 py-6">
+          <div className="text-center">
+            <div className="w-12 h-12 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto mb-3">
+              <MapIcon />
             </div>
-          ) : (
-            <div className="px-4 py-6 text-center">
-              <div className="w-10 h-10 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto mb-3">
-                <MapIcon />
-              </div>
-              <p className="text-[11px] text-neutral-600 leading-relaxed">
-                Click any marker on the map to explore an artwork
-              </p>
-            </div>
-          )}
+            <p className="text-[11px] text-neutral-600 leading-relaxed">
+              Click a marker to view artwork details
+            </p>
+          </div>
         </div>
 
         {/* Footer */}
@@ -575,6 +475,23 @@ export default function Home() {
             selectedArtworkId={selectedArtworkId}
             onArtworkClick={handleArtworkClick}
           />
+
+          {/* Floating artwork preview card (anchored to marker) */}
+          {selectedArtwork && !isExpandedDetailOpen && (
+            <FloatingArtworkCard
+              artwork={selectedArtwork}
+              onDoubleClick={() => setIsExpandedDetailOpen(true)}
+              onClose={() => setSelectedArtworkId(null)}
+            />
+          )}
+
+          {/* Expanded artwork detail overlay */}
+          {selectedArtwork && isExpandedDetailOpen && (
+            <ExpandedArtworkDetail
+              artwork={selectedArtwork}
+              onClose={() => setIsExpandedDetailOpen(false)}
+            />
+          )}
 
           {/* Top-right: count badge */}
           <div className="absolute top-4 right-4 z-10 pointer-events-none">
