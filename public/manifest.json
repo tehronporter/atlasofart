@@ -1,0 +1,41 @@
+{
+  "name": "Atlas of Art",
+  "short_name": "ArtAtlas",
+  "description": "Explore art history across time and space",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#f59e0b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "art", "culture"],
+  "shortcuts": [
+    {
+      "name": "Browse Map",
+      "short_name": "Map",
+      "description": "View the interactive art map",
+      "url": "/",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My Collections",
+      "short_name": "Collections",
+      "description": "View your saved collections",
+      "url": "/collections",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
