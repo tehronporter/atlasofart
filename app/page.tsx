@@ -17,7 +17,7 @@ import UserProfileSection from '@/components/dashboard/UserProfileSection';
 import UserQuickLinks from '@/components/dashboard/UserQuickLinks';
 import AdminSection from '@/components/dashboard/AdminSection';
 import FloatingArtworksBrowser from '@/components/map/FloatingArtworksBrowser';
-import ArtworkDetailPanel from '@/components/map/ArtworkDetailPanel';
+import ArtworkDetailPanel, { type ArtworkCardData } from '@/components/map/ArtworkDetailPanel';
 import { trackArtworkView } from '@/lib/auth';
 import type { MapCommand } from '@/components/map/MapShell';
 
@@ -128,7 +128,7 @@ function NavItem({ icon, label, active, onClick }: { icon: React.ReactNode; labe
 }
 
 // ── Transform DB row → app artwork ───────────────────────────────────────────
-function transformRow(row: any) {
+function transformRow(row: any): ArtworkCardData & { year_start: number; year_end: number; region: string | null; culture: string | null } {
   return {
     id: row.id,
     title: row.title || 'Untitled',
@@ -151,10 +151,13 @@ function transformRow(row: any) {
   };
 }
 
+// ── Type for artwork with extra properties ────────────────────────────────────
+type Artwork = ArtworkCardData & { year_start: number; year_end: number; region: string | null; culture: string | null };
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function Home() {
   // ── Data ────────────────────────────────────────────────────────────────────
-  const [allArtworks, setAllArtworks] = useState<any[]>([]);
+  const [allArtworks, setAllArtworks] = useState<Artwork[]>([]);
   const [isLoading, setIsLoading]     = useState(true);
   const [dbError, setDbError]         = useState<string | null>(null);
   const [isEmpty, setIsEmpty]         = useState(false);
@@ -188,7 +191,7 @@ export default function Home() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'warning' | 'error' } | null>(null);
 
   // ── Cluster data (from MapShell) ──────────────────────────────────────────────
-  const [clusterArtworks, setClusterArtworks] = useState<any[]>([]);
+  const [clusterArtworks, setClusterArtworks] = useState<Artwork[]>([]);
   const [clusterCenter, setClusterCenter] = useState<[number, number] | null>(null);
 
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);

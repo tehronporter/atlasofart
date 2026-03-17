@@ -4,7 +4,7 @@
 'use client';
 
 import { memo, useState, useRef, useEffect } from 'react';
-import { ArtworkCardData } from './FloatingArtworkCard';
+import { type ArtworkCardData } from './FloatingArtworkCard';
 
 interface ArtworkDetailPanelProps {
   artwork: ArtworkCardData | null;
@@ -270,3 +270,4 @@ const ArtworkDetailPanel = memo(function ArtworkDetailPanel({
 });
 
 export default ArtworkDetailPanel;
+export type { ArtworkCardData };
