@@ -109,9 +109,9 @@ export default function MapShell({
   const [markerPos, setMarkerPos] = useState<Pos | null>(null);
   const [cursor, setCursor]       = useState('grab');
 
-  // Map display state
-  const [mapStyle, setMapStyle]   = useState<MapStyleKey>('light');
-  const [showHeatmap, setShowHeatmap] = useState(true);
+  // Map display state — locked to light style, density always on
+  const mapStyle: MapStyleKey = 'light';
+  const showHeatmap = true;
   const [showLegend, setShowLegend]   = useState(false);
 
   // Cluster / overlap panel state
@@ -317,12 +317,7 @@ export default function MapShell({
         onClick={handleMapClick}
         onMouseMove={handleMouseMove}
         interactiveLayerIds={['clusters', 'unclustered-point']}
-        fog={mapStyle === 'dark' ? {
-          color: 'rgba(15, 15, 20, 0.8)',
-          'high-color': 'rgba(10, 10, 15, 0.9)',
-          'horizon-blend': 0.04,
-          'star-intensity': 0.15,
-        } : undefined}
+        fog={undefined}
       >
         <Source
           id="artworks"
@@ -436,42 +431,6 @@ export default function MapShell({
       {/* ── Left-side map controls ─────────────────────────────────────────── */}
       <div className="absolute top-3 left-3 z-20 flex flex-col gap-2 pointer-events-auto select-none">
 
-        {/* Map style toggle */}
-        <div
-          className="flex items-center gap-0.5 rounded-lg p-0.5"
-          style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(0,0,0,0.1)', backdropFilter: 'blur(12px)' }}
-        >
-          {(['dark', 'satellite', 'light'] as MapStyleKey[]).map(s => (
-            <button
-              key={s}
-              onClick={() => setMapStyle(s)}
-              className={`px-2.5 py-1.5 rounded-md text-[10px] font-medium transition-all duration-200 ${
-                mapStyle === s
-                  ? 'bg-[#2e53ff] text-white'
-                  : 'text-neutral-600 hover:text-neutral-900'
-              }`}
-            >
-              {s === 'dark' ? 'Dark' : s === 'satellite' ? 'Sat.' : 'Light'}
-            </button>
-          ))}
-        </div>
-
-        {/* Heatmap density toggle */}
-        <button
-          onClick={() => setShowHeatmap(h => !h)}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all duration-200 ${
-            showHeatmap
-              ? 'bg-amber-500/20 border border-amber-500/30 text-amber-600'
-              : 'bg-white/80 border border-gray-200 text-neutral-600 hover:text-neutral-900'
-          }`}
-          style={{ backdropFilter: 'blur(12px)' }}
-        >
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" />
-          </svg>
-          Density
-        </button>
-
         {/* Era legend toggle */}
         <button
           onClick={() => setShowLegend(l => !l)}
@@ -493,7 +452,7 @@ export default function MapShell({
       {showLegend && (
         <div
           className="absolute left-3 z-20 pointer-events-auto"
-          style={{ top: 150 }}
+          style={{ top: 48 }}
         >
           <div
             className="rounded-xl px-3.5 py-3 space-y-1.5"

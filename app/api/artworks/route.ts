@@ -19,7 +19,7 @@ const SELECTED_COLUMNS = [
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const page   = Math.max(0, parseInt(searchParams.get('page')  ?? '0',  10));
-  const limit  = Math.min(5000, parseInt(searchParams.get('limit') ?? '5000', 10));
+  const limit  = Math.min(1000, parseInt(searchParams.get('limit') ?? '1000', 10));
   const offset = page * limit;
   const region    = searchParams.get('region');
   const dateStart = searchParams.get('dateStart');

@@ -168,6 +168,7 @@ export default function Home() {
   const [showFilters, setShowFilters]                   = useState(false);
   const [currentView, setCurrentView]                   = useState<'map' | 'artworks'>('map');
   const [mobileSheetOpen, setMobileSheetOpen]           = useState(false);
+  const [timelineCollapsed, setTimelineCollapsed]       = useState(false);
 
   // ── Map command (fit / flyTo) ────────────────────────────────────────────────
   const [mapCommand, setMapCommand] = useState<MapCommand | null>(null);
@@ -196,7 +197,7 @@ export default function Home() {
     async function load() {
       try {
         let page = 0;
-        const limit = 5000;
+        const limit = 1000; // Supabase max per request
         let allRows: any[] = [];
         let hasMore = true;
         while (hasMore) {
@@ -582,33 +583,57 @@ export default function Home() {
 
         <div className="border-t border-white/[0.05] mx-4 my-1" />
 
-        {/* Hint / empty state */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden flex items-center justify-center px-4 py-8">
-          <div className="text-center">
-            {filteredArtworks.length === 0 && hasFilters ? (
-              <>
-                <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-amber-400/60">
-                    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-                  </svg>
-                </div>
-                <p className="text-[11px] text-white/70 leading-relaxed font-light mb-2">No artworks match your filters</p>
-                <button onClick={clearFilters} className="text-[10px] text-amber-400 hover:text-amber-300 transition-colors font-medium">
-                  Clear filters
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/[0.08] flex items-center justify-center mx-auto mb-4">
-                  <MapIcon />
-                </div>
-                <p className="text-[11px] text-white/70 leading-relaxed font-light">
-                  Click a marker to explore artwork details
-                </p>
-              </>
+        {/* Stats + Actions panel */}
+        <div className="px-3.5 py-3 space-y-3">
+          {/* Artwork count stats */}
+          <div className="rounded-lg bg-white/[0.08] border border-white/[0.12] px-3 py-2.5 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-white/50 uppercase tracking-widest">Showing</span>
+              <span className="text-[11px] font-semibold text-amber-300">{filteredArtworks.length.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-white/50 uppercase tracking-widest">Total</span>
+              <span className="text-[11px] text-white/70">{allArtworks.length.toLocaleString()}</span>
+            </div>
+            {hasFilters && filteredArtworks.length === 0 && (
+              <button onClick={clearFilters} className="w-full text-[10px] text-amber-300 hover:text-amber-200 transition-colors pt-1 border-t border-white/[0.08]">
+                ✕ Clear filters
+              </button>
             )}
           </div>
+
+          {/* Map action buttons */}
+          <div className="space-y-1.5">
+            <p className="text-[10px] uppercase tracking-widest text-white/50 px-0.5">Map Actions</p>
+            <button
+              onClick={handleFitToResults}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.12] text-[11px] text-white/80 hover:bg-white/[0.14] hover:text-white transition-all"
+            >
+              <FitIcon />
+              <span>Fit to Results</span>
+            </button>
+            <button
+              onClick={handleSurpriseMe}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.12] text-[11px] text-white/80 hover:bg-amber-500/20 hover:text-amber-300 hover:border-amber-500/30 transition-all"
+            >
+              <DiceIcon />
+              <span>Surprise Me</span>
+            </button>
+            <button
+              onClick={handleShare}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border text-[11px] transition-all ${
+                showCopied
+                  ? 'bg-green-500/15 border-green-500/30 text-green-300'
+                  : 'bg-white/[0.08] border-white/[0.12] text-white/80 hover:bg-white/[0.14] hover:text-white'
+              }`}
+            >
+              <ShareIcon />
+              <span>{showCopied ? '✓ Copied!' : 'Share Link'}</span>
+            </button>
+          </div>
         </div>
+
+        <div className="flex-1" />
 
         {/* Viewed history breadcrumb */}
         {historyArtworks.length > 0 && (
@@ -702,89 +727,29 @@ export default function Home() {
                 />
               )}
 
-              {/* ── Top controls (left on lg+, right on smaller screens) ────────────── */}
-              <div className="absolute top-4 left-4 lg:right-4 lg:left-auto z-10 flex flex-col lg:items-end items-start gap-2">
-                {/* Count + visible */}
-                <div
-                  className="pointer-events-none px-3 py-1.5 rounded-lg"
-                  style={{ background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}
-                >
-                  <p className="text-[11px] text-neutral-400">
-                    <span className="text-amber-400 font-semibold">{filteredArtworks.length}</span>
-                    {' artworks'}
-                    {visibleCount > 0 && visibleCount < filteredArtworks.length && (
-                      <span className="text-neutral-600"> · <span className="text-neutral-500">{visibleCount} in view</span></span>
-                    )}
-                  </p>
+              {/* Active filter chips (floating, top-right) */}
+              {(selectedRegion || selectedMedium) && (
+                <div className="absolute top-4 right-4 z-10 flex flex-col gap-1 items-end pointer-events-auto">
+                  {selectedRegion && (
+                    <button
+                      onClick={() => setSelectedRegion(null)}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] text-amber-400 hover:bg-amber-500/10 transition-colors"
+                      style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(245,158,11,0.3)', backdropFilter: 'blur(12px)' }}
+                    >
+                      {selectedRegion} <XIcon />
+                    </button>
+                  )}
+                  {selectedMedium && (
+                    <button
+                      onClick={() => setSelectedMedium(null)}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] text-amber-400 hover:bg-amber-500/10 transition-colors"
+                      style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(245,158,11,0.3)', backdropFilter: 'blur(12px)' }}
+                    >
+                      {selectedMedium.length > 22 ? selectedMedium.slice(0, 20) + '…' : selectedMedium} <XIcon />
+                    </button>
+                  )}
                 </div>
-
-                {/* Action buttons */}
-                <div className="flex items-center gap-1.5 pointer-events-auto">
-                  {/* Fit to results */}
-                  <button
-                    onClick={handleFitToResults}
-                    title="Fit map to all results"
-                    className="h-8 px-2.5 flex items-center gap-1.5 rounded-lg text-[10px] font-medium text-neutral-400 hover:text-white transition-all duration-200"
-                    style={{ background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)' }}
-                  >
-                    <FitIcon />
-                    Fit
-                  </button>
-
-                  {/* Surprise Me */}
-                  <button
-                    onClick={handleSurpriseMe}
-                    title="Fly to a random artwork"
-                    className="h-8 px-2.5 flex items-center gap-1.5 rounded-lg text-[10px] font-medium text-neutral-400 hover:text-amber-400 transition-all duration-200"
-                    style={{ background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(245,158,11,0.3)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)'; }}
-                  >
-                    <DiceIcon />
-                    Surprise
-                  </button>
-
-                  {/* Share */}
-                  <button
-                    onClick={handleShare}
-                    title="Copy link to this view"
-                    className="h-8 px-2.5 flex items-center gap-1.5 rounded-lg text-[10px] font-medium transition-all duration-200"
-                    style={{
-                      background: showCopied ? 'rgba(34,197,94,0.15)' : 'rgba(0,0,0,0.55)',
-                      border: showCopied ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(255,255,255,0.1)',
-                      backdropFilter: 'blur(12px)',
-                      color: showCopied ? 'rgb(134,239,172)' : 'rgba(163,163,163,1)',
-                    }}
-                  >
-                    <ShareIcon />
-                    {showCopied ? 'Copied!' : 'Share'}
-                  </button>
-                </div>
-
-                {/* Active filter chips */}
-                {(selectedRegion || selectedMedium) && (
-                  <div className="flex flex-col gap-1 items-end pointer-events-auto">
-                    {selectedRegion && (
-                      <button
-                        onClick={() => setSelectedRegion(null)}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] text-amber-400 hover:bg-amber-500/10 transition-colors"
-                        style={{ background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(245,158,11,0.3)', backdropFilter: 'blur(12px)' }}
-                      >
-                        {selectedRegion} <XIcon />
-                      </button>
-                    )}
-                    {selectedMedium && (
-                      <button
-                        onClick={() => setSelectedMedium(null)}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] text-amber-400 hover:bg-amber-500/10 transition-colors"
-                        style={{ background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(245,158,11,0.3)', backdropFilter: 'blur(12px)' }}
-                      >
-                        {selectedMedium.length > 22 ? selectedMedium.slice(0, 20) + '…' : selectedMedium} <XIcon />
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
+              )}
 
               {/* Mobile search FAB */}
               <button
@@ -827,13 +792,38 @@ export default function Home() {
             </div>
             {/* End of left section */}
 
-            {/* Right section: Timeline */}
-            <div className="shrink-0 w-60 overflow-hidden hidden lg:flex flex-col bg-[#0e0f12]/95 border-l border-white/[0.05]">
-              <TimelineShell
-                artworks={allArtworks}
-                maxYear={timelineMaxYear}
-                onMaxYearChange={setTimelineMaxYear}
-              />
+            {/* Right section: Timeline (collapsible) */}
+            <div className={`shrink-0 overflow-hidden hidden lg:flex flex-col border-l border-white/[0.15] transition-all duration-300 ${timelineCollapsed ? 'w-10' : 'w-60'}`}
+              style={{ background: '#2e53ff' }}
+            >
+              {timelineCollapsed ? (
+                /* Collapsed strip */
+                <div className="flex flex-col items-center py-4 gap-3 h-full">
+                  <button
+                    onClick={() => setTimelineCollapsed(false)}
+                    className="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white/80 hover:text-white transition-all"
+                    title="Expand timeline"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                  </button>
+                  <div className="flex-1 flex items-center justify-center">
+                    <p className="text-[9px] uppercase tracking-widest text-white/50 font-medium"
+                      style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                      Timeline
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                /* Expanded panel */
+                <TimelineShell
+                  artworks={allArtworks}
+                  maxYear={timelineMaxYear}
+                  onMaxYearChange={setTimelineMaxYear}
+                  onCollapse={() => setTimelineCollapsed(true)}
+                />
+              )}
             </div>
             {/* End of right section */}
           </div>

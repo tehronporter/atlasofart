@@ -1,5 +1,5 @@
 // components/controls/TimelineShell.tsx
-// Enhanced timeline with histogram visualization
+// Vertical timeline — histogram as horizontal bars, vertical slider
 
 'use client';
 
@@ -9,12 +9,14 @@ interface TimelineShellProps {
   artworks?: any[];
   maxYear?: number;
   onMaxYearChange?: (year: number) => void;
+  onCollapse?: () => void;
 }
 
 export default function TimelineShell({
   artworks = [],
   maxYear,
   onMaxYearChange,
+  onCollapse,
 }: TimelineShellProps) {
   const [isDragging, setIsDragging] = useState(false);
 
@@ -28,7 +30,7 @@ export default function TimelineShell({
     const min = Math.min(...starts);
     const max = Math.max(...ends);
 
-    // Create 50-year bins for histogram
+    // Create 50-year bins
     const binSize = 50;
     const binCount = Math.ceil((max - min) / binSize) + 1;
     const bins: number[] = new Array(binCount).fill(0);
@@ -36,17 +38,13 @@ export default function TimelineShell({
     artworks.forEach(artwork => {
       const start = artwork.year_start ?? min;
       const end = artwork.year_end ?? max;
-      // Count artwork in all bins it spans
       for (let year = Math.max(start, min); year <= Math.min(end, max); year += binSize) {
         const binIndex = Math.floor((year - min) / binSize);
-        if (binIndex >= 0 && binIndex < bins.length) {
-          bins[binIndex]++;
-        }
+        if (binIndex >= 0 && binIndex < bins.length) bins[binIndex]++;
       }
     });
 
     const maxBinCount = Math.max(...bins, 1);
-
     const histogram = bins.map((count, idx) => ({
       year: min + idx * binSize,
       count,
@@ -74,68 +72,51 @@ export default function TimelineShell({
 
   const viewingLabel = currentMax >= absoluteMaxYear
     ? 'All eras'
-    : `Up to ${formatYear(currentMax)}`;
+    : `To ${formatYear(currentMax)}`;
 
   return (
-    <div className="h-full w-full bg-[#2e53ff] backdrop-blur-sm border-t border-white/20 flex flex-col p-4 md:p-6 gap-4">
-      {/* Header */}
-      <div className="flex items-baseline justify-between">
+    <div className="h-full w-full flex flex-col" style={{ background: '#2e53ff' }}>
+
+      {/* ── Header ── */}
+      <div className="px-4 pt-4 pb-3 flex items-start justify-between shrink-0">
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-white/50 mb-1">Timeline</p>
-          <p className="text-lg md:text-2xl font-light text-white">{viewingLabel}</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/50 mb-0.5">Timeline</p>
+          <p className="text-base font-light text-white leading-tight">{viewingLabel}</p>
+          <p className="text-[11px] text-white/60 mt-0.5">
+            <span className="text-amber-300 font-semibold">{visibleCount.toLocaleString()}</span> shown
+          </p>
         </div>
-        <div className="text-right">
-          <p className="text-[11px] text-white/60 mb-1">Artworks shown</p>
-          <p className="text-2xl font-semibold text-amber-300">{visibleCount}</p>
-        </div>
+        <button
+          onClick={onCollapse}
+          className="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white/70 hover:text-white transition-all mt-0.5"
+          title="Collapse timeline"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
       </div>
 
-      {/* Histogram */}
-      <div className="flex-1 flex flex-col min-h-0">
-        <div className="flex items-end justify-between gap-0.5 h-full">
-          {histogram.map((bin, idx) => (
-            <div
-              key={idx}
-              className="flex-1 flex flex-col items-center justify-end group cursor-pointer"
-              onClick={() => onMaxYearChange?.(bin.year + 50)}
-              title={`${formatYear(bin.year)}: ${bin.count} artworks`}
-            >
-              {/* Bar */}
-              <div
-                className={`w-full rounded-t transition-all duration-150 ${
-                  bin.year <= currentMax
-                    ? 'bg-gradient-to-t from-amber-400 to-amber-300'
-                    : 'bg-white/20 group-hover:bg-white/35'
-                }`}
-                style={{ height: `${Math.max(2, bin.percentage)}%` }}
-              />
+      {/* ── Vertical scrubber + horizontal bar histogram ── */}
+      <div className="flex-1 flex flex-row min-h-0 px-3 pb-3 gap-2">
 
-              {/* Tooltip on hover */}
-              <div className="absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 backdrop-blur px-2 py-1 rounded text-[9px] text-white whitespace-nowrap pointer-events-none">
-                {bin.count} artworks
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Slider */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-[11px] text-white/60 font-mono whitespace-nowrap">
-            {formatYear(minYear)}
+        {/* Vertical slider column */}
+        <div className="flex flex-col items-center gap-1.5 shrink-0" style={{ width: 32 }}>
+          {/* Max label (top = newest since we drag down) */}
+          <span className="text-[8px] text-white/50 font-mono text-center leading-tight">
+            {formatYear(absoluteMaxYear).replace(' ', '\n')}
           </span>
-          <div className="flex-1 relative flex items-center h-8">
+
+          {/* Slider wrapper */}
+          <div className="flex-1 relative flex justify-center items-stretch" style={{ minHeight: 60 }}>
             {/* Track background */}
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 bg-white/25 rounded-full w-full pointer-events-none" />
+            <div className="absolute left-1/2 -translate-x-1/2 w-1.5 rounded-full bg-white/20"
+              style={{ top: 0, bottom: 0 }} />
+            {/* Active track — from top to thumb */}
+            <div className="absolute left-1/2 -translate-x-1/2 w-1.5 rounded-full bg-gradient-to-b from-amber-400 to-amber-500"
+              style={{ top: 0, height: `${pct}%` }} />
 
-            {/* Active track */}
-            <div
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 bg-gradient-to-r from-amber-500 to-amber-400 rounded-full pointer-events-none transition-all duration-75"
-              style={{ width: `${pct}%` }}
-            />
-
-            {/* Range input */}
+            {/* Vertical range input */}
             <input
               type="range"
               min={minYear}
@@ -147,76 +128,82 @@ export default function TimelineShell({
               onTouchStart={() => setIsDragging(true)}
               onTouchEnd={() => setIsDragging(false)}
               className="
-                w-full relative z-10 h-8 appearance-none bg-transparent cursor-pointer
-                [&::-webkit-slider-thumb]:appearance-none
-                [&::-webkit-slider-thumb]:w-6
-                [&::-webkit-slider-thumb]:h-6
-                [&::-webkit-slider-thumb]:rounded-full
-                [&::-webkit-slider-thumb]:bg-amber-400
-                [&::-webkit-slider-thumb]:border-2
-                [&::-webkit-slider-thumb]:border-white
-                [&::-webkit-slider-thumb]:shadow-lg
-                [&::-webkit-slider-thumb]:shadow-amber-500/50
-                [&::-webkit-slider-thumb]:cursor-grab
-                [&::-webkit-slider-thumb]:active:cursor-grabbing
-                [&::-webkit-slider-thumb]:hover:bg-amber-300
-                [&::-webkit-slider-thumb]:hover:scale-110
-                [&::-webkit-slider-thumb]:transition-all
-                [&::-moz-range-thumb]:w-6
-                [&::-moz-range-thumb]:h-6
-                [&::-moz-range-thumb]:rounded-full
-                [&::-moz-range-thumb]:bg-amber-400
-                [&::-moz-range-thumb]:border-2
-                [&::-moz-range-thumb]:border-white
-                [&::-moz-range-thumb]:cursor-grab
-                [&::-moz-range-thumb]:active:cursor-grabbing
-                [&::-moz-range-thumb]:hover:bg-amber-300
-                [&::-moz-range-thumb]:hover:scale-110
-                [&::-moz-range-thumb]:shadow-lg
-                [&::-moz-range-thumb]:shadow-amber-500/50
-                [&::-moz-range-thumb]:transition-all
+                absolute inset-0 opacity-0 cursor-pointer z-10
               "
+              style={{
+                writingMode: 'vertical-lr',
+                direction: 'rtl',
+                width: '100%',
+                height: '100%',
+                WebkitAppearance: 'slider-vertical',
+              } as any}
             />
 
-            {/* Year tooltip while dragging */}
-            {isDragging && (
-              <div
-                className="absolute -top-10 text-center pointer-events-none"
-                style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}
-              >
-                <div className="bg-black/90 backdrop-blur px-3 py-1.5 rounded-lg whitespace-nowrap">
-                  <p className="text-sm font-semibold text-amber-400">{formatYear(currentMax)}</p>
-                  <p className="text-xs text-white/60 mt-0.5">{visibleCount} artworks</p>
+            {/* Custom thumb indicator */}
+            <div
+              className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+              style={{ top: `${pct}%`, transform: 'translate(-50%, -50%)' }}
+            >
+              <div className="w-4 h-4 rounded-full bg-amber-400 border-2 border-white shadow-lg shadow-amber-500/40" />
+              {isDragging && (
+                <div className="absolute left-6 top-1/2 -translate-y-1/2 bg-black/90 px-2 py-1 rounded-lg whitespace-nowrap z-20">
+                  <p className="text-[10px] font-semibold text-amber-400">{formatYear(currentMax)}</p>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-          <span className="text-[11px] text-white/60 font-mono whitespace-nowrap">
-            {formatYear(absoluteMaxYear)}
+
+          {/* Min label (bottom = oldest) */}
+          <span className="text-[8px] text-white/50 font-mono text-center leading-tight">
+            {formatYear(minYear).replace(' ', '\n')}
           </span>
         </div>
 
-        {/* Quick jump buttons */}
-        <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => onMaxYearChange?.(minYear)}
-            className="px-2.5 py-1.5 text-[10px] rounded-lg bg-white/15 border border-white/25 text-white/80 hover:bg-white/25 hover:text-white transition-all"
-          >
-            Start
-          </button>
-          <button
-            onClick={() => onMaxYearChange?.(Math.floor((minYear + absoluteMaxYear) / 2))}
-            className="px-2.5 py-1.5 text-[10px] rounded-lg bg-white/15 border border-white/25 text-white/80 hover:bg-white/25 hover:text-white transition-all"
-          >
-            Midpoint
-          </button>
-          <button
-            onClick={() => onMaxYearChange?.(absoluteMaxYear)}
-            className="px-2.5 py-1.5 text-[10px] rounded-lg bg-amber-400/20 border border-amber-400/40 text-amber-300 hover:bg-amber-400/30 transition-all"
-          >
-            All Time
-          </button>
+        {/* Horizontal bar chart */}
+        <div className="flex-1 flex flex-col justify-between gap-px min-h-0">
+          {histogram.map((bin, idx) => {
+            const active = bin.year <= currentMax;
+            return (
+              <div
+                key={idx}
+                className="flex items-center flex-1 group cursor-pointer"
+                onClick={() => onMaxYearChange?.(bin.year + 50)}
+                title={`${formatYear(bin.year)}: ${bin.count} artworks`}
+              >
+                <div
+                  className={`h-full rounded-r transition-all duration-150 ${
+                    active
+                      ? 'bg-gradient-to-r from-amber-400 to-amber-300'
+                      : 'bg-white/15 group-hover:bg-white/28'
+                  }`}
+                  style={{ width: `${Math.max(2, bin.percentage)}%`, minHeight: 1 }}
+                />
+              </div>
+            );
+          })}
         </div>
+      </div>
+
+      {/* ── Quick jump buttons ── */}
+      <div className="px-3 pb-4 flex gap-1.5 shrink-0">
+        <button
+          onClick={() => onMaxYearChange?.(minYear)}
+          className="flex-1 py-1.5 text-[9px] rounded-lg bg-white/15 border border-white/25 text-white/80 hover:bg-white/25 hover:text-white transition-all"
+        >
+          Start
+        </button>
+        <button
+          onClick={() => onMaxYearChange?.(Math.floor((minYear + absoluteMaxYear) / 2))}
+          className="flex-1 py-1.5 text-[9px] rounded-lg bg-white/15 border border-white/25 text-white/80 hover:bg-white/25 hover:text-white transition-all"
+        >
+          Midpoint
+        </button>
+        <button
+          onClick={() => onMaxYearChange?.(absoluteMaxYear)}
+          className="flex-1 py-1.5 text-[9px] rounded-lg bg-amber-400/20 border border-amber-400/40 text-amber-300 hover:bg-amber-400/30 transition-all"
+        >
+          All Time
+        </button>
       </div>
     </div>
   );
