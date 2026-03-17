@@ -80,14 +80,14 @@ export default function ExpandedArtworkDetail({
       {/* Panel */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div
-          className="pointer-events-auto w-full max-w-3xl max-h-[92vh] rounded-2xl overflow-hidden border border-white/[0.1] shadow-2xl flex flex-col animate-in fade-in zoom-in-95 duration-300"
-          style={{ background: 'linear-gradient(180deg, #0f0f14 0%, #0a0a0f 60%, #05050a 100%)' }}
+          className="pointer-events-auto w-full max-w-3xl max-h-[92vh] rounded-2xl overflow-hidden border border-gray-200 shadow-2xl flex flex-col animate-in fade-in zoom-in-95 duration-300"
+          style={{ background: 'linear-gradient(180deg, #ffffff 0%, #f8f9fa 60%, #f0f0f0 100%)' }}
           onClick={e => e.stopPropagation()}
         >
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 w-9 h-9 rounded-xl bg-white/[0.07] hover:bg-white/[0.13] border border-white/[0.1] flex items-center justify-center text-white/50 hover:text-white/80 transition-all duration-200"
+            className="absolute top-4 right-4 z-10 w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 border border-gray-300 flex items-center justify-center text-neutral-600 hover:text-neutral-600 transition-all duration-200"
             aria-label="Close"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -100,17 +100,17 @@ export default function ExpandedArtworkDetail({
             {nearbyArtworks.length > 0 && (
               <div
                 className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] text-neutral-600"
-                style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.07)' }}
+                style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.1)' }}
               >
-                <span className="font-mono text-neutral-500">←→</span>
+                <span className="font-mono text-neutral-600">←→</span>
                 <span>navigate nearby</span>
               </div>
             )}
             <div
               className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] text-neutral-600"
-              style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.07)' }}
+              style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.1)' }}
             >
-              <span className="font-mono text-neutral-500">Esc</span>
+              <span className="font-mono text-neutral-600">Esc</span>
               <span>close</span>
             </div>
           </div>
@@ -153,10 +153,10 @@ export default function ExpandedArtworkDetail({
           </div>
 
           {/* Metadata — scrollable */}
-          <div className="flex-1 overflow-y-auto" style={{ background: 'linear-gradient(180deg, #0f0f14 0%, #0a0a0f 100%)' }}>
+          <div className="flex-1 overflow-y-auto" style={{ background: 'linear-gradient(180deg, #f8f9fa 0%, #f0f0f0 100%)' }}>
             <div className="p-8 md:p-10 space-y-7">
               {/* Title */}
-              <h1 className="text-4xl md:text-5xl font-light text-white leading-tight tracking-tight">
+              <h1 className="text-4xl md:text-5xl font-light text-neutral-900 leading-tight tracking-tight">
                 {artwork.title}
               </h1>
 
@@ -165,7 +165,7 @@ export default function ExpandedArtworkDetail({
                 {artwork.artist_display && (
                   <div>
                     <p className="text-xs uppercase tracking-widest text-neutral-500 mb-1.5">Artist</p>
-                    <p className="text-xl text-neutral-100 font-light">{artwork.artist_display}</p>
+                    <p className="text-xl text-neutral-900 font-light">{artwork.artist_display}</p>
                   </div>
                 )}
                 {artwork.year && (
@@ -181,22 +181,22 @@ export default function ExpandedArtworkDetail({
                 {artwork.medium && (
                   <div>
                     <p className="text-xs uppercase tracking-widest text-neutral-500 mb-2">Medium</p>
-                    <p className="text-sm text-neutral-300 leading-relaxed">{artwork.medium}</p>
+                    <p className="text-sm text-neutral-700 leading-relaxed">{artwork.medium}</p>
                   </div>
                 )}
                 {artwork.place_created && (
                   <div>
                     <p className="text-xs uppercase tracking-widest text-neutral-500 mb-2">Place Created</p>
-                    <p className="text-sm text-neutral-300">{artwork.place_created}</p>
+                    <p className="text-sm text-neutral-700">{artwork.place_created}</p>
                   </div>
                 )}
               </div>
 
               {/* Museum */}
               {artwork.current_museum && (
-                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                <div className="p-4 rounded-xl bg-gray-100 border border-gray-200">
                   <p className="text-xs uppercase tracking-widest text-neutral-500 mb-2">Collection</p>
-                  <p className="text-sm text-neutral-300">{artwork.current_museum}</p>
+                  <p className="text-sm text-neutral-700">{artwork.current_museum}</p>
                 </div>
               )}
 
@@ -204,7 +204,7 @@ export default function ExpandedArtworkDetail({
               {artwork.description && (
                 <div className="pt-4 border-t border-white/[0.07]">
                   <p className="text-xs uppercase tracking-widest text-neutral-500 mb-4">About This Work</p>
-                  <p className="text-base text-neutral-400 leading-relaxed line-clamp-6">{artwork.description}</p>
+                  <p className="text-base text-neutral-600 leading-relaxed line-clamp-6">{artwork.description}</p>
                 </div>
               )}
 
@@ -216,7 +216,7 @@ export default function ExpandedArtworkDetail({
                     {artwork.tags.map((tag, i) => (
                       <span
                         key={i}
-                        className="px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.07] text-xs text-neutral-400 rounded-lg transition-all duration-200"
+                        className="px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.07] text-xs text-neutral-600 rounded-lg transition-all duration-200"
                       >
                         {tag}
                       </span>
@@ -267,7 +267,7 @@ export default function ExpandedArtworkDetail({
                     )}
                     <div className="min-w-0">
                       <p className="text-[9px] text-neutral-600 uppercase tracking-widest mb-0.5">Previous</p>
-                      <p className="text-[11px] text-neutral-400 truncate">{prevArtwork.title}</p>
+                      <p className="text-[11px] text-neutral-600 truncate">{prevArtwork.title}</p>
                     </div>
                   </div>
                 )}
@@ -290,7 +290,7 @@ export default function ExpandedArtworkDetail({
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="min-w-0">
                       <p className="text-[9px] text-neutral-600 uppercase tracking-widest mb-0.5 text-right">Next</p>
-                      <p className="text-[11px] text-neutral-400 truncate">{nextArtwork.title}</p>
+                      <p className="text-[11px] text-neutral-600 truncate">{nextArtwork.title}</p>
                     </div>
                     {nextArtwork.image_url && (
                       <img src={nextArtwork.image_url} alt="" className="w-8 h-8 rounded object-cover shrink-0 opacity-70" />
