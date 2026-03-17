@@ -581,7 +581,7 @@ export default function Home() {
           <NavItem icon={<MapIcon />} label="Map" active={true} />
         </nav>
 
-        <div className="border-t border-white/[0.05] mx-4 my-1" />
+        <div className="border-t border-[#e5e7eb] mx-4 my-1" />
 
         {/* Search */}
         <div className="px-3.5 py-3 space-y-2">
@@ -768,7 +768,7 @@ export default function Home() {
               {historyArtworks.map(a => (
                 <button
                   key={a.id}
-                  onClick={() => handleArtworkClick(a)}
+                  onClick={() => { handleArtworkClick(a); setMapCommand({ type: 'flyTo', lat: a.lat, lng: a.lng }); }}
                   title={a.title}
                   className={`w-8 h-8 rounded-lg overflow-hidden border shrink-0 transition-all duration-200 ${
                     a.id === selectedArtworkId
@@ -857,7 +857,7 @@ export default function Home() {
 
               {/* Active filter chips (floating, top-right) */}
               {(selectedRegion || selectedMedium) && (
-                <div className="absolute top-4 right-4 z-10 flex flex-col gap-1 items-end pointer-events-auto">
+                <div className="absolute top-4 z-10 flex flex-col gap-1 items-end pointer-events-auto" style={{ right: (selectedArtwork || clusterArtworks.length > 0) && !isExpandedDetailOpen ? 408 : 16 }}>
                   {selectedRegion && (
                     <button
                       onClick={() => setSelectedRegion(null)}
@@ -912,6 +912,7 @@ export default function Home() {
                 /* Expanded panel */
                 <TimelineShell
                   artworks={allArtworks}
+                  histogramArtworks={filteredArtworks}
                   maxYear={timelineMaxYear}
                   onMaxYearChange={setTimelineMaxYear}
                   onCollapse={() => setTimelineCollapsed(true)}

@@ -7,6 +7,7 @@ import { useMemo, useState } from 'react';
 
 interface TimelineShellProps {
   artworks?: any[];
+  histogramArtworks?: any[];
   maxYear?: number;
   onMaxYearChange?: (year: number) => void;
   onCollapse?: () => void;
@@ -14,44 +15,49 @@ interface TimelineShellProps {
 
 export default function TimelineShell({
   artworks = [],
+  histogramArtworks,
   maxYear,
   onMaxYearChange,
   onCollapse,
 }: TimelineShellProps) {
   const [isDragging, setIsDragging] = useState(false);
 
-  const { minYear, absoluteMaxYear, histogram } = useMemo(() => {
-    if (artworks.length === 0) return { minYear: -3000, absoluteMaxYear: 2000, histogram: [] };
+  // Compute slider range from all artworks (stays stable regardless of filters)
+  const { minYear, absoluteMaxYear } = useMemo(() => {
+    if (artworks.length === 0) return { minYear: -3000, absoluteMaxYear: 2000 };
 
     const starts = artworks.map(a => a.year_start ?? 0).filter(y => typeof y === 'number' && !isNaN(y));
     const ends   = artworks.map(a => a.year_end   ?? 0).filter(y => typeof y === 'number' && !isNaN(y));
-    if (starts.length === 0) return { minYear: -3000, absoluteMaxYear: 2000, histogram: [] };
+    if (starts.length === 0) return { minYear: -3000, absoluteMaxYear: 2000 };
 
-    const min = Math.min(...starts);
-    const max = Math.max(...ends);
+    return { minYear: Math.min(...starts), absoluteMaxYear: Math.max(...ends) };
+  }, [artworks]);
+
+  // Compute histogram from filtered artworks (reflects active search/filters)
+  const histogram = useMemo(() => {
+    const source = histogramArtworks ?? artworks;
+    if (source.length === 0 || absoluteMaxYear === minYear) return [];
 
     const binSize  = 50;
-    const binCount = Math.ceil((max - min) / binSize) + 1;
+    const binCount = Math.ceil((absoluteMaxYear - minYear) / binSize) + 1;
     const bins: number[] = new Array(binCount).fill(0);
 
-    artworks.forEach(artwork => {
-      const start = artwork.year_start ?? min;
-      const end   = artwork.year_end   ?? max;
-      for (let year = Math.max(start, min); year <= Math.min(end, max); year += binSize) {
-        const idx = Math.floor((year - min) / binSize);
+    source.forEach(artwork => {
+      const start = artwork.year_start ?? minYear;
+      const end   = artwork.year_end   ?? absoluteMaxYear;
+      for (let year = Math.max(start, minYear); year <= Math.min(end, absoluteMaxYear); year += binSize) {
+        const idx = Math.floor((year - minYear) / binSize);
         if (idx >= 0 && idx < bins.length) bins[idx]++;
       }
     });
 
     const maxBin = Math.max(...bins, 1);
-    const histogram = bins.map((count, idx) => ({
-      year:       min + idx * binSize,
+    return bins.map((count, idx) => ({
+      year:       minYear + idx * binSize,
       count,
       percentage: (count / maxBin) * 100,
     }));
-
-    return { minYear: min, absoluteMaxYear: max, histogram };
-  }, [artworks]);
+  }, [histogramArtworks, artworks, minYear, absoluteMaxYear]);
 
   const currentMax = maxYear ?? absoluteMaxYear;
 
@@ -63,7 +69,7 @@ export default function TimelineShell({
     ? 100
     : Math.max(0, Math.min(100, Math.round(((currentMax - minYear) / (absoluteMaxYear - minYear)) * 100)));
 
-  const visibleCount = artworks.filter(a =>
+  const visibleCount = (histogramArtworks ?? artworks).filter(a =>
     currentMax >= absoluteMaxYear ? true : (a.year_start ?? 0) <= currentMax
   ).length;
 

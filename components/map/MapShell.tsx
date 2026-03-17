@@ -471,18 +471,18 @@ export default function MapShell({
           <div
             className="text-center max-w-xs px-8 py-6 rounded-2xl"
             style={{
-              background: 'rgba(10,10,15,0.75)',
-              border: '1px solid rgba(255,255,255,0.09)',
+              background: 'rgba(255,255,255,0.85)',
+              border: '1px solid rgba(0,0,0,0.08)',
               backdropFilter: 'blur(16px)',
             }}
           >
-            <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-3">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-amber-400/60">
+            <div className="w-10 h-10 rounded-full bg-[#eff2ff] border border-[#2e5bff]/20 flex items-center justify-center mx-auto mb-3">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#2e5bff]/60">
                 <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
             </div>
-            <p className="text-[13px] font-medium text-neutral-300 mb-1">No artworks match</p>
-            <p className="text-[11px] text-neutral-600">Adjust filters or the timeline to see results</p>
+            <p className="text-[13px] font-medium text-neutral-800 mb-1">No artworks match</p>
+            <p className="text-[11px] text-neutral-500">Adjust filters or the timeline to see results</p>
           </div>
         </div>
       )}

@@ -216,7 +216,7 @@ export default function ExpandedArtworkDetail({
 
               {/* Description */}
               {artwork.description && (
-                <div className="pt-4 border-t border-white/[0.07]">
+                <div className="pt-4 border-t border-gray-200">
                   <p className="text-xs uppercase tracking-widest text-neutral-500 mb-4">About This Work</p>
                   <p className="text-base text-neutral-600 leading-relaxed line-clamp-6">{artwork.description}</p>
                 </div>
@@ -230,7 +230,7 @@ export default function ExpandedArtworkDetail({
                     {artwork.tags.map((tag, i) => (
                       <span
                         key={i}
-                        className="px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.07] text-xs text-neutral-600 rounded-lg transition-all duration-200"
+                        className="px-3 py-1.5 bg-[#f9fafb] hover:bg-[#eff2ff] border border-[#e5e7eb] text-xs text-neutral-600 rounded-lg transition-all duration-200"
                       >
                         {tag}
                       </span>

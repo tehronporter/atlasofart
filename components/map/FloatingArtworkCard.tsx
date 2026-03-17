@@ -183,7 +183,7 @@ export default function FloatingArtworkCard({
           {/* Close */}
           <button
             onClick={e => { e.stopPropagation(); onClose?.(); }}
-            className="absolute top-2.5 right-2.5 w-6 h-6 rounded-lg bg-black/50 hover:bg-black/70 border border-white/20 flex items-center justify-center text-neutral-900/60 hover:text-neutral-900 transition-all duration-200 backdrop-blur"
+            className="absolute top-2.5 right-2.5 w-6 h-6 rounded-lg bg-white/80 hover:bg-white border border-gray-300 flex items-center justify-center text-neutral-500 hover:text-neutral-900 transition-all duration-200 backdrop-blur-sm"
             aria-label="Close"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -206,7 +206,7 @@ export default function FloatingArtworkCard({
 
           <div className="flex items-center gap-2 pt-0.5">
             {artwork.year && (
-              <span className="text-[11px] text-amber-400/90 font-medium">{artwork.year}</span>
+              <span className="text-[11px] text-[#2e5bff] font-medium">{artwork.year}</span>
             )}
             {artwork.medium && (
               <span className="text-[10px] text-neutral-500 italic flex-1 truncate">{artwork.medium}</span>
@@ -215,7 +215,7 @@ export default function FloatingArtworkCard({
 
           {artwork.place_created && (
             <div className="flex items-start gap-1.5 text-neutral-500 pt-1.5 border-t border-gray-200">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mt-0.5 shrink-0 text-amber-500/50">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mt-0.5 shrink-0 text-[#2e5bff]/60">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
@@ -226,7 +226,7 @@ export default function FloatingArtworkCard({
           {/* View Details button — primary CTA */}
           <button
             onClick={e => { e.stopPropagation(); handleExpand(); }}
-            className="w-full mt-1 py-2 rounded-lg bg-gradient-to-r from-amber-500/20 to-amber-400/10 hover:from-amber-500/30 hover:to-amber-400/20 border border-amber-500/25 hover:border-amber-500/40 text-amber-400 text-[11px] font-medium transition-all duration-200 flex items-center justify-center gap-1.5"
+            className="w-full mt-1 py-2 rounded-lg bg-[#2e5bff] hover:bg-[#1a3acc] text-white text-[11px] font-medium transition-all duration-200 flex items-center justify-center gap-1.5"
           >
             <span>View Details</span>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
