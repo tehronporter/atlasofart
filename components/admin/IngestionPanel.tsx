@@ -55,7 +55,7 @@ function StatCard({ label, value, sub, accent }: { label: string; value: number 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-5">
       <p className="text-xs text-neutral-700 font-medium uppercase tracking-wider mb-2">{label}</p>
-      <p className={`text-3xl font-bold tabular-nums ${accent ? 'text-amber-600' : 'text-neutral-900'}`}>{value}</p>
+      <p className={`text-3xl font-bold tabular-nums ${accent ? 'text-[#2e53ff]' : 'text-neutral-900'}`}>{value}</p>
       {sub && <p className="text-xs text-neutral-600 mt-1">{sub}</p>}
     </div>
   );
@@ -302,10 +302,10 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
               disabled={isIngesting || autoRunning || !dbConnected}
               className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all ${
                 isIngesting || autoRunning
-                  ? 'bg-neutral-700 text-neutral-400 cursor-not-allowed'
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                   : !dbConnected
-                  ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed'
-                  : 'bg-amber-500 text-neutral-900 hover:bg-amber-400 active:scale-[0.98] shadow-[0_0_20px_rgba(30,90,150,0.15)]'
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-[#2e53ff] text-white hover:bg-[#1e3fd4] active:scale-[0.98] shadow-sm'
               }`}
             >
               {isIngesting ? (
@@ -338,7 +338,7 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
               </div>
               {autoRunning && (
                 <div className="text-right">
-                  <p className="text-xs text-amber-400 font-mono tabular-nums">
+                  <p className="text-xs text-[#2e53ff] font-mono tabular-nums">
                     Batch {autoProgress.current}/{autoProgress.total}
                   </p>
                   <p className="text-[10px] text-neutral-500">
@@ -349,9 +349,9 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
             </div>
 
             {autoRunning && (
-              <div className="w-full bg-neutral-700 rounded-full h-1.5">
+              <div className="w-full bg-gray-200 rounded-full h-1.5">
                 <div
-                  className="bg-amber-500 h-1.5 rounded-full transition-all duration-500"
+                  className="bg-[#2e53ff] h-1.5 rounded-full transition-all duration-500"
                   style={{ width: `${(autoProgress.current / autoProgress.total) * 100}%` }}
                 />
               </div>
@@ -366,7 +366,7 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                   value={autoBatches}
                   onChange={e => setAutoBatches(Number(e.target.value))}
                   disabled={autoRunning || isIngesting}
-                  className="bg-gray-100 border border-gray-200 text-sm text-neutral-300 rounded-lg px-3 py-1.5 focus:outline-none focus:border-amber-500/50 cursor-pointer"
+                  className="bg-gray-100 border border-gray-200 text-sm text-neutral-700 rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#2e53ff]/50 cursor-pointer"
                 >
                   {[10, 25, 50, 100].map(n => (
                     <option key={n} value={n}>{n}</option>
@@ -413,8 +413,8 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                       { label: 'No Image', value: ingestResult.noImage ?? 0, color: 'text-neutral-500' },
                       { label: 'Fetch Failed', value: ingestResult.fetchFailed ?? 0, color: 'text-red-400' },
                     ].map(({ label, value, color }) => (
-                      <div key={label} className="bg-black/20 rounded-lg px-3 py-2">
-                        <p className="text-[10px] text-neutral-600 mb-0.5">{label}</p>
+                      <div key={label} className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+                        <p className="text-[10px] text-gray-500 mb-0.5">{label}</p>
                         <p className={`text-xl font-bold tabular-nums ${color}`}>{value}</p>
                       </div>
                     ))}
@@ -432,7 +432,7 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                   )}
                   {ingestResult.errors && ingestResult.errors.length > 0 && (
                     <details className="text-xs">
-                      <summary className="text-amber-500/60 cursor-pointer hover:text-amber-400 transition-colors">
+                      <summary className="text-[#2e53ff]/60 cursor-pointer hover:text-[#2e53ff] transition-colors">
                         {ingestResult.errors.length} errors (expand)
                       </summary>
                       <div className="mt-2 space-y-0.5 font-mono max-h-32 overflow-y-auto">
@@ -461,49 +461,49 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
       </div>
 
       {/* Ingestion logs */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-neutral-800 flex items-center justify-between">
-          <h2 className="font-semibold text-white text-sm">Recent Ingestion Runs</h2>
-          <button onClick={onRefreshStats} className="text-xs text-amber-500 hover:text-amber-400 transition-colors">
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="font-semibold text-neutral-900 text-sm">Recent Ingestion Runs</h2>
+          <button onClick={onRefreshStats} className="text-xs text-[#2e53ff] hover:text-[#1e3fd4] transition-colors">
             Refresh
           </button>
         </div>
 
         {logs.length === 0 ? (
           <div className="px-6 py-10 text-center">
-            <p className="text-xs text-neutral-600">No ingestion logs yet. Run an ingestion above to get started.</p>
+            <p className="text-xs text-neutral-500">No ingestion logs yet. Run an ingestion above to get started.</p>
           </div>
         ) : (
-          <div className="divide-y divide-neutral-800">
+          <div className="divide-y divide-gray-100">
             {logs.map(log => (
               <div key={log.id} className="px-6 py-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1.5">
                       <StatusBadge status={log.status} />
-                      <span className="text-[10px] text-neutral-600 font-mono truncate">{log.batch_id}</span>
+                      <span className="text-[10px] text-gray-400 font-mono truncate">{log.batch_id}</span>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-neutral-500">
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
                       <span>
-                        <span className="text-emerald-400 font-semibold tabular-nums">{log.artworks_added ?? 0}</span> added
+                        <span className="text-emerald-600 font-semibold tabular-nums">{log.artworks_added ?? 0}</span> added
                       </span>
                       {log.metadata?.source && (
-                        <span className="text-neutral-700">via {log.metadata.source}</span>
+                        <span className="text-gray-400">via {log.metadata.source}</span>
                       )}
                       {log.metadata?.offset !== undefined && (
-                        <span className="text-neutral-700">offset {log.metadata.offset.toLocaleString()}</span>
+                        <span className="text-gray-400">offset {log.metadata.offset.toLocaleString()}</span>
                       )}
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-[10px] text-neutral-600 tabular-nums">
+                    <p className="text-[10px] text-gray-400 tabular-nums">
                       {new Date(log.created_at).toLocaleDateString('en-US', {
                         month: 'short', day: 'numeric',
                         hour: '2-digit', minute: '2-digit',
                       })}
                     </p>
                     {log.completed_at && log.created_at && (
-                      <p className="text-[10px] text-neutral-700 mt-0.5">
+                      <p className="text-[10px] text-gray-400 mt-0.5">
                         {Math.round((new Date(log.completed_at).getTime() - new Date(log.created_at).getTime()) / 1000)}s
                       </p>
                     )}
@@ -511,12 +511,12 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                 </div>
                 {log.errors && log.errors.length > 0 && (
                   <details className="mt-2">
-                    <summary className="text-[10px] text-amber-500/50 cursor-pointer hover:text-amber-400">
+                    <summary className="text-[10px] text-[#2e53ff]/60 cursor-pointer hover:text-[#2e53ff]">
                       {log.errors.length} errors
                     </summary>
                     <div className="mt-1 space-y-0.5 font-mono">
                       {log.errors.slice(0, 5).map((e, i) => (
-                        <p key={i} className="text-[10px] text-red-500/40">{e}</p>
+                        <p key={i} className="text-[10px] text-red-500/60">{e}</p>
                       ))}
                     </div>
                   </details>

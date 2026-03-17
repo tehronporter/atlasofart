@@ -96,20 +96,20 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-neutral-100">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Header */}
-      <div className="border-b border-neutral-800/60 bg-neutral-950/80 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b border-white/20 bg-[#2e53ff] sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <a href="/" className="text-neutral-500 hover:text-neutral-300 transition-colors text-sm">
+            <a href="/" className="text-white/70 hover:text-white transition-colors text-sm">
               ← Map
             </a>
-            <span className="text-neutral-700">/</span>
+            <span className="text-white/30">/</span>
             <h1 className="text-sm font-semibold text-white">Admin</h1>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${dbConnected ? 'bg-emerald-500' : 'bg-red-500'} shadow-[0_0_6px_currentColor]`} />
-            <span className="text-xs text-neutral-500">
+            <span className={`w-2 h-2 rounded-full ${dbConnected ? 'bg-emerald-400' : 'bg-red-400'} shadow-[0_0_6px_currentColor]`} />
+            <span className="text-xs text-white/70">
               {isLoadingStats ? 'Connecting…' : dbConnected ? 'Supabase connected' : 'Supabase error'}
             </span>
           </div>

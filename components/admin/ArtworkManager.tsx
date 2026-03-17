@@ -150,7 +150,7 @@ export function ArtworkManager() {
                     <td className="px-6 py-4 text-neutral-700 text-xs">{artwork.date || '—'}</td>
                     <td className="px-6 py-4 text-neutral-700 text-xs">{artwork.region || '—'}</td>
                     <td className="px-6 py-4">
-                      <span className={`text-xs px-2 py-1 rounded ${artwork.is_from_getty ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-neutral-700'}`}>
+                      <span className={`text-xs px-2 py-1 rounded ${artwork.is_from_getty ? 'bg-blue-50 text-[#2e53ff]' : 'bg-gray-100 text-neutral-700'}`}>
                         {artwork.is_from_getty ? 'Getty' : 'Manual'}
                       </span>
                     </td>
