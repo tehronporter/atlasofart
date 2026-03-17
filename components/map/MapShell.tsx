@@ -7,6 +7,8 @@ import MapGL, { MapRef, Source, Layer } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import FloatingArtworkCard, { ArtworkCardData } from './FloatingArtworkCard';
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
+export { ERA_LEGEND } from './eraLegend';
+import { ERA_LEGEND } from './eraLegend';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
 const MAX_ZOOM = 12;
@@ -34,16 +36,6 @@ const ERA_COLOR_EXPR: any = [
    1900, '#f87171',  //  1900+       — Modern / Contemporary    (rose)
 ];
 
-const ERA_LEGEND = [
-  { label: 'Ancient',     color: '#818cf8', years: '< 1500 BCE' },
-  { label: 'Classical',   color: '#a78bfa', years: '1500–500 BCE' },
-  { label: 'Hellenistic', color: '#34d399', years: '500 BCE–500 CE' },
-  { label: 'Medieval',    color: '#22d3ee', years: '500–1400' },
-  { label: 'Renaissance', color: '#f59e0b', years: '1400–1700' },
-  { label: 'Baroque',     color: '#fb923c', years: '1700–1900' },
-  { label: 'Modern',      color: '#f87171', years: '1900+' },
-];
-
 // ── Types ──────────────────────────────────────────────────────────────────────
 export type MapCommand =
   | { type: 'fitBounds'; bounds: [[number, number], [number, number]] }
@@ -61,6 +53,7 @@ interface MapShellProps {
   onMapCommandDone?: () => void;
   onVisibleCountChange?: (count: number) => void;
   onClusterChange?: (artworks: ArtworkCardData[], center: [number, number] | null) => void;
+  eraLegendOpen?: boolean;
 }
 
 interface ViewState { latitude: number; longitude: number; zoom: number }
@@ -93,6 +86,7 @@ export default function MapShell({
   artworks = [],
   selectedArtworkId = null,
   selectedArtwork = null,
+  eraLegendOpen = false,
   onArtworkClick,
   onExpand,
   onDoubleClick,
@@ -112,7 +106,7 @@ export default function MapShell({
   // Map display state — locked to light style, density always on
   const mapStyle: MapStyleKey = 'light';
   const showHeatmap = true;
-  const [showLegend, setShowLegend]   = useState(false);
+  const showLegend = eraLegendOpen;
 
   // Cluster / overlap panel state
   const [clusterArtworks, setClusterArtworks] = useState<ArtworkCardData[]>([]);
@@ -428,25 +422,6 @@ export default function MapShell({
         </Source>
       </MapGL>
 
-      {/* ── Left-side map controls ─────────────────────────────────────────── */}
-      <div className="absolute top-3 left-3 z-20 flex flex-col gap-2 pointer-events-auto select-none">
-
-        {/* Era legend toggle */}
-        <button
-          onClick={() => setShowLegend(l => !l)}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all duration-200 ${
-            showLegend
-              ? 'bg-[#2e53ff] border border-[#2e53ff] text-white'
-              : 'bg-white/80 border border-gray-200 text-neutral-600 hover:text-neutral-900'
-          }`}
-          style={{ backdropFilter: 'blur(12px)' }}
-        >
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          Era Legend
-        </button>
-      </div>
 
       {/* Era legend panel */}
       {showLegend && (

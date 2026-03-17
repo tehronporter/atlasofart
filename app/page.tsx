@@ -16,7 +16,7 @@ import UserQuickLinks from '@/components/dashboard/UserQuickLinks';
 import AdminSection from '@/components/dashboard/AdminSection';
 import FloatingArtworksBrowser from '@/components/map/FloatingArtworksBrowser';
 import ArtworkDetailPanel, { type ArtworkCardData } from '@/components/map/ArtworkDetailPanel';
-import { ERA_LEGEND } from '@/components/map/MapShell';
+import { ERA_LEGEND } from '@/components/map/eraLegend';
 import { trackArtworkView } from '@/lib/auth';
 import type { MapCommand } from '@/components/map/MapShell';
 
