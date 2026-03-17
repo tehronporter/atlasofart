@@ -409,6 +409,12 @@ export default function Home() {
     }
   }, []);
 
+  // ── Stable cluster change handler (avoids ref-change loop in MapShell) ──────
+  const handleClusterChange = useCallback((artworks: ArtworkCardData[], center: [number, number] | null) => {
+    setClusterArtworks(artworks);
+    setClusterCenter(center);
+  }, []);
+
   // ── Surprise Me — fly to a random artwork ──────────────────────────────────
   const handleSurpriseMe = useCallback(() => {
     if (filteredArtworks.length === 0) return;
@@ -811,10 +817,7 @@ export default function Home() {
                 mapCommand={mapCommand}
                 onMapCommandDone={() => setMapCommand(null)}
                 onVisibleCountChange={setVisibleCount}
-                onClusterChange={(artworks, center) => {
-                  setClusterArtworks(artworks);
-                  setClusterCenter(center);
-                }}
+                onClusterChange={handleClusterChange}
                 onFitToResults={handleFitToResults}
                 eraLegendOpen={eraLegendOpen}
               />
