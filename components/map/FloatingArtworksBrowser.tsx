@@ -12,6 +12,8 @@ interface Artwork {
   year: string;
   medium: string | null;
   artist_display: string | null;
+  lat: number;
+  lng: number;
 }
 
 interface FloatingArtworksBrowserProps {
