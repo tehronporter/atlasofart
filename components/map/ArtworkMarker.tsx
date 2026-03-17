@@ -3,7 +3,7 @@
 
 'use client';
 
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { Marker } from 'react-map-gl/mapbox';
 
 interface ArtworkMarkerData {
@@ -16,14 +16,29 @@ interface ArtworkMarkerData {
 interface ArtworkMarkerProps {
   artwork: ArtworkMarkerData;
   isSelected?: boolean;
+  onHover?: (show: boolean) => void;
   onClick?: (artwork: ArtworkMarkerData) => void;
 }
 
-const ArtworkMarker = memo(function ArtworkMarker({ artwork, isSelected, onClick }: ArtworkMarkerProps) {
+const ArtworkMarker = memo(function ArtworkMarker({ artwork, isSelected, onHover, onClick }: ArtworkMarkerProps) {
+  const [isHovering, setIsHovering] = useState(false);
+
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     onClick?.(artwork);
   }, [artwork, onClick]);
+
+  const handleMouseEnter = useCallback(() => {
+    setIsHovering(true);
+    onHover?.(true);
+  }, [onHover]);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovering(false);
+    onHover?.(false);
+  }, [onHover]);
+
+  const size = isSelected || isHovering ? 6 : 4;
 
   return (
     <Marker
@@ -34,15 +49,21 @@ const ArtworkMarker = memo(function ArtworkMarker({ artwork, isSelected, onClick
     >
       <div
         onClick={handleClick}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         role="button"
         tabIndex={0}
         aria-label={`View ${artwork.title}`}
         title={artwork.title}
-        className={`rounded-full border-2 transition-all duration-150 ${
-          isSelected
-            ? 'w-5 h-5 bg-white border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.8)]'
-            : 'w-3.5 h-3.5 bg-amber-500 border-amber-900/60 hover:w-5 hover:h-5 hover:shadow-[0_0_10px_rgba(251,191,36,0.6)]'
-        }`}
+        style={{ width: size, height: size }}
+        className={`
+          rounded-full border-2 transition-all duration-150
+          ${isSelected
+            ? 'bg-white border-blue-500 shadow-[0_0_12px_rgba(46,83,255,0.8)]'
+            : isHovering
+            ? 'bg-blue-500 border-blue-400 shadow-[0_0_8px_rgba(46,83,255,0.6)]'
+            : 'bg-blue-500 border-blue-700/60 hover:shadow-[0_0_6px_rgba(46,83,255,0.4)]'}
+        `}
       />
     </Marker>
   );

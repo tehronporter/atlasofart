@@ -6,6 +6,8 @@
 import MapGL, { MapRef, Source, Layer } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import FloatingArtworkCard, { ArtworkCardData } from './FloatingArtworkCard';
+import ClusterPreviewCard from './ClusterPreviewCard';
+import ArtworkPreviewCard from './ArtworkPreviewCard';
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
@@ -117,6 +119,13 @@ export default function MapShell({
   // Cluster / overlap panel state
   const [clusterArtworks, setClusterArtworks] = useState<ArtworkCardData[]>([]);
   const [clusterCenter, setClusterCenter]     = useState<[number, number] | null>(null);
+
+  // Preview card state
+  const [hoverArtworkId, setHoverArtworkId]   = useState<string | null>(null);
+  const [hoverArtwork, setHoverArtwork]       = useState<ArtworkCardData | null>(null);
+  const [hoverClusterPos, setHoverClusterPos] = useState<Pos | null>(null);
+  const [hoverClusterArtworks, setHoverClusterArtworks] = useState<ArtworkCardData[]>([]);
+  const [hoverClusterCount, setHoverClusterCount] = useState<number>(0);
 
   // ── Sync cluster state to parent ──────────────────────────────────────────
   useEffect(() => {
@@ -291,7 +300,60 @@ export default function MapShell({
   }, [onArtworkClick]);
 
   const handleMouseMove = useCallback((e: any) => {
-    setCursor((e.features ?? []).length > 0 ? 'pointer' : 'grab');
+    const features: any[] = e.features ?? [];
+    setCursor(features.length > 0 ? 'pointer' : 'grab');
+
+    const map = mapRef.current?.getMap();
+    const container = containerRef.current;
+    if (!map || !container || !e.point) return;
+
+    // Check if hovering over a cluster
+    const clusterFeatures = features.filter(f => f.layer?.id === 'clusters');
+    if (clusterFeatures.length > 0) {
+      const feature = clusterFeatures[0];
+      const clusterId = feature.properties?.cluster_id;
+      const pointCount = feature.properties?.point_count ?? 0;
+      const source = map.getSource('artworks') as any;
+
+      if (clusterId != null && source) {
+        source.getClusterLeaves(clusterId, 4, 0, (err: any, leaves: any[]) => {
+          if (err || !leaves) {
+            setHoverClusterArtworks([]);
+            return;
+          }
+          const items = leaves.filter((l: any) => l.properties?.id).map((l: any) => propsToArtwork(l.properties));
+          setHoverClusterArtworks(items);
+          setHoverClusterCount(pointCount);
+          setHoverClusterPos({ x: e.point.x, y: e.point.y });
+          setHoverArtworkId(null);
+          setHoverArtwork(null);
+        });
+      }
+      return;
+    }
+
+    // Check if hovering over an individual artwork
+    const pointFeatures = features.filter(f => f.layer?.id === 'unclustered-point');
+    if (pointFeatures.length > 0) {
+      const feature = pointFeatures[0];
+      const props = feature.properties;
+      if (props?.id) {
+        const artwork = propsToArtwork(props);
+        setHoverArtworkId(props.id);
+        setHoverArtwork(artwork);
+        setHoverClusterPos(null);
+        setHoverClusterArtworks([]);
+        setHoverClusterCount(0);
+      }
+      return;
+    }
+
+    // Not hovering over any feature
+    setHoverArtworkId(null);
+    setHoverArtwork(null);
+    setHoverClusterPos(null);
+    setHoverClusterArtworks([]);
+    setHoverClusterCount(0);
   }, []);
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -357,9 +419,9 @@ export default function MapShell({
             type="circle"
             filter={['has', 'point_count']}
             paint={{
-              'circle-color': ['step', ['get', 'point_count'], '#f59e0b', 10, '#f97316', 100, '#ef4444'],
+              'circle-color': ['step', ['get', 'point_count'], '#3b82f6', 10, '#2563eb', 100, '#1d4ed8'],
               'circle-radius': ['step', ['get', 'point_count'], 26, 10, 36, 100, 46],
-              'circle-opacity': 0.15,
+              'circle-opacity': 0.12,
             }}
           />
 
@@ -369,11 +431,11 @@ export default function MapShell({
             type="circle"
             filter={['has', 'point_count']}
             paint={{
-              'circle-color': ['step', ['get', 'point_count'], '#f59e0b', 10, '#f97316', 100, '#ef4444'],
+              'circle-color': ['step', ['get', 'point_count'], '#3b82f6', 10, '#2563eb', 100, '#1d4ed8'],
               'circle-radius': ['step', ['get', 'point_count'], 18, 10, 26, 100, 34],
               'circle-stroke-width': 2.5,
-              'circle-stroke-color': 'rgba(255,255,255,0.35)',
-              'circle-opacity': 0.95,
+              'circle-stroke-color': 'rgba(255,255,255,0.4)',
+              'circle-opacity': 0.9,
             }}
           />
 
@@ -494,6 +556,28 @@ export default function MapShell({
             <p className="text-[11px] text-neutral-600">Adjust filters or the timeline to see results</p>
           </div>
         </div>
+      )}
+
+      {/* Hover preview cards */}
+      {hoverArtwork && hoverClusterPos && (
+        <ArtworkPreviewCard
+          artwork={hoverArtwork}
+          markerX={hoverClusterPos.x}
+          markerY={hoverClusterPos.y}
+          containerWidth={containerRef.current?.offsetWidth ?? 800}
+          containerHeight={containerRef.current?.offsetHeight ?? 600}
+        />
+      )}
+
+      {hoverClusterArtworks.length > 0 && hoverClusterPos && (
+        <ClusterPreviewCard
+          artworks={hoverClusterArtworks}
+          count={hoverClusterCount}
+          markerX={hoverClusterPos.x}
+          markerY={hoverClusterPos.y}
+          containerWidth={containerRef.current?.offsetWidth ?? 800}
+          containerHeight={containerRef.current?.offsetHeight ?? 600}
+        />
       )}
 
       {/* Floating artwork preview card */}
