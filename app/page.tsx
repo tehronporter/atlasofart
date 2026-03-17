@@ -9,6 +9,9 @@ import dynamic from 'next/dynamic';
 import TimelineShell from '@/components/controls/TimelineShell';
 import ExpandedArtworkDetail from '@/components/map/ExpandedArtworkDetail';
 import MobileSearchSheet from '@/components/mobile/MobileSearchSheet';
+import MobileTabBar, { type TabType } from '@/components/mobile/MobileTabBar';
+import MobileSearchBar from '@/components/mobile/MobileSearchBar';
+import BottomSheet from '@/components/mobile/BottomSheet';
 import Toast from '@/components/common/Toast';
 import AuthButton from '@/components/auth/AuthButton';
 import UserProfileSection from '@/components/dashboard/UserProfileSection';
@@ -174,6 +177,8 @@ export default function Home() {
   const [mobileSheetOpen, setMobileSheetOpen]           = useState(false);
   const [timelineCollapsed, setTimelineCollapsed]       = useState(false);
   const [eraLegendOpen, setEraLegendOpen]               = useState(false);
+  const [activeTab, setActiveTab]                       = useState<TabType>('map');
+  const [showMobileSearchBar, setShowMobileSearchBar]   = useState(false);
 
   // ── Map command (fit / flyTo) ────────────────────────────────────────────────
   const [mapCommand, setMapCommand] = useState<MapCommand | null>(null);
@@ -716,7 +721,7 @@ export default function Home() {
       </aside>
 
       {/* ── CONTENT AREA ──────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0 relative">
+      <div className="flex-1 flex flex-col min-w-0 relative lg:pb-0 pb-[62px]">
 
         {/* Map View */}
         <div className="flex-1 flex flex-row min-w-0 relative">
@@ -799,15 +804,7 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Mobile search FAB */}
-              <button
-                onClick={() => setMobileSheetOpen(true)}
-                className="lg:hidden absolute bottom-4 right-4 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 active:scale-95 text-white"
-                style={{ background: '#2e5bff' }}
-                aria-label="Open search"
-              >
-                <SearchIcon />
-              </button>
+              {/* Mobile FAB removed - now using bottom tab bar */}
             </div>
 
             </div>
@@ -889,6 +886,129 @@ export default function Home() {
           onDismiss={() => setToast(null)}
         />
       )}
+
+      {/* ── MOBILE COMPONENTS (iOS Optimized) ──────────────────────────────────── */}
+
+      {/* Mobile Search Bar - Top */}
+      <MobileSearchBar
+        isVisible={showMobileSearchBar}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onFocus={() => setShowMobileSearchBar(true)}
+        onBlur={() => setTimeout(() => setShowMobileSearchBar(false), 200)}
+        filteredCount={filteredArtworks.length}
+        totalCount={allArtworks.length}
+      />
+
+      {/* Mobile Bottom Sheet for Artwork Detail */}
+      {selectedArtwork && !isExpandedDetailOpen && activeTab === 'map' && (
+        <BottomSheet
+          isOpen={!!selectedArtwork}
+          onClose={() => setSelectedArtworkId(null)}
+          snapPoints={[30, 70, 95]}
+          initialSnap={1}
+          showGrabHandle={true}
+          header={
+            <div className="px-6 pt-4 pb-2">
+              <div className="flex items-center gap-3">
+                {selectedArtwork.image_url && (
+                  <img
+                    src={selectedArtwork.image_url}
+                    alt={selectedArtwork.title}
+                    className="w-10 h-10 rounded-lg object-cover"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-[#111111] line-clamp-1">
+                    {selectedArtwork.title}
+                  </h3>
+                  {selectedArtwork.year && (
+                    <p className="text-[11px] text-[#6b7280]">{selectedArtwork.year}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          }
+        >
+          <div className="px-6 py-4 space-y-4">
+            {/* Image */}
+            {selectedArtwork.image_url && (
+              <img
+                src={selectedArtwork.image_url}
+                alt={selectedArtwork.title}
+                className="w-full h-auto rounded-lg"
+              />
+            )}
+
+            {/* Metadata */}
+            <div className="space-y-3">
+              {selectedArtwork.artist_display && (
+                <div>
+                  <p className="text-[12px] text-[#6b7280] font-medium">Artist</p>
+                  <p className="text-sm text-[#111111]">{selectedArtwork.artist_display}</p>
+                </div>
+              )}
+
+              {selectedArtwork.medium && (
+                <div>
+                  <p className="text-[12px] text-[#6b7280] font-medium">Medium</p>
+                  <p className="text-sm text-[#111111]">{selectedArtwork.medium}</p>
+                </div>
+              )}
+
+              {selectedArtwork.current_museum && (
+                <div>
+                  <p className="text-[12px] text-[#6b7280] font-medium">Museum</p>
+                  <p className="text-sm text-[#111111]">{selectedArtwork.current_museum}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Description */}
+            {selectedArtwork.description && (
+              <div>
+                <p className="text-[12px] text-[#6b7280] font-medium mb-2">Description</p>
+                <p className="text-sm text-[#6b7280] leading-relaxed">{selectedArtwork.description}</p>
+              </div>
+            )}
+
+            {/* Related Works */}
+            {nearbyArtworks.length > 0 && (
+              <div className="pt-2 border-t border-[#e5e7eb]">
+                <p className="text-[12px] text-[#6b7280] font-medium mb-3">Related Artworks</p>
+                <div className="space-y-2">
+                  {nearbyArtworks.slice(0, 5).map(a => (
+                    <button
+                      key={a.id}
+                      onClick={() => {
+                        setSelectedArtworkId(a.id);
+                        setMapCommand({ type: 'flyTo', lat: a.lat, lng: a.lng });
+                      }}
+                      className="w-full text-left p-2 rounded-lg bg-[#f9fafb] hover:bg-[#eff2ff] transition-colors"
+                    >
+                      <p className="text-sm font-medium text-[#111111] line-clamp-1">{a.title}</p>
+                      <p className="text-[11px] text-[#6b7280]">{a.year}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </BottomSheet>
+      )}
+
+      {/* Mobile Tab Bar - Bottom */}
+      <MobileTabBar
+        activeTab={activeTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          if (tab === 'search') {
+            setShowMobileSearchBar(true);
+          } else if (tab === 'map') {
+            setShowMobileSearchBar(false);
+          }
+        }}
+      />
     </div>
   );
 }
