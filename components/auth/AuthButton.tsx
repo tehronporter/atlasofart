@@ -27,7 +27,7 @@ export default function AuthButton() {
   if (isLoading) {
     return (
       <div className="flex gap-2">
-        <div className="h-9 w-full bg-gray-200 rounded-lg animate-pulse" />
+        <div className="h-8 w-full bg-white/15 rounded-lg animate-pulse" />
       </div>
     );
   }
@@ -40,13 +40,13 @@ export default function AuthButton() {
     <div className="flex gap-2">
       <Link
         href="/login"
-        className="flex-1 px-3 py-2 text-[11px] rounded-lg border border-gray-300 text-neutral-700 hover:bg-gray-100 hover:text-neutral-900 transition-all text-center"
+        className="flex-1 px-3 py-2 text-[11px] rounded-lg border border-white/30 text-white/80 hover:bg-white/15 hover:text-white transition-all text-center"
       >
         Sign In
       </Link>
       <Link
         href="/login"
-        className="flex-1 px-3 py-2 text-[11px] rounded-lg bg-[#2e53ff] border border-[#2e53ff] text-white hover:bg-[#1e3fd4] transition-all text-center"
+        className="flex-1 px-3 py-2 text-[11px] rounded-lg bg-white text-[#2e53ff] font-semibold hover:bg-white/90 transition-all text-center"
       >
         Sign Up
       </Link>

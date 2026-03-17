@@ -86,10 +86,10 @@ export default function AdminPage() {
 
   if (!isAuthorized) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+      <div className="min-h-screen bg-[#2e53ff] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-10 h-10 border-2 border-amber-500/60 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-neutral-500 text-sm">Checking authorization...</p>
+          <div className="w-10 h-10 border-2 border-white/60 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white/70 text-sm">Checking authorization...</p>
         </div>
       </div>
     );
