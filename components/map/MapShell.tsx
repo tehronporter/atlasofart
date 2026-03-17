@@ -7,7 +7,6 @@ import MapGL, { MapRef, Source, Layer } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import FloatingArtworkCard, { ArtworkCardData } from './FloatingArtworkCard';
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
-export { ERA_LEGEND } from './eraLegend';
 import { ERA_LEGEND } from './eraLegend';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
