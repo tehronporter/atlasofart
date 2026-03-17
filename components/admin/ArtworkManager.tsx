@@ -69,7 +69,7 @@ export function ArtworkManager() {
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-[#1e5a96] text-white hover:bg-[#164071] rounded-lg font-medium text-sm transition-all"
+          className="px-4 py-2 bg-[#2e53ff] text-white hover:bg-[#1e3fd4] rounded-lg font-medium text-sm transition-all"
         >
           + Add Artwork
         </button>
@@ -82,7 +82,7 @@ export function ArtworkManager() {
           placeholder="Search by title, artist, or region..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-neutral-900 text-sm placeholder-gray-400 focus:outline-none focus:border-[#1e5a96]/50"
+          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-neutral-900 text-sm placeholder-gray-400 focus:outline-none focus:border-[#2e53ff]/50"
         />
       </div>
 
@@ -111,7 +111,7 @@ export function ArtworkManager() {
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         {isLoading ? (
           <div className="px-6 py-12 text-center">
-            <div className="w-8 h-8 border-2 border-[#1e5a96]/60 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <div className="w-8 h-8 border-2 border-[#2e53ff]/60 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             <p className="text-neutral-700 text-sm">Loading artworks...</p>
           </div>
         ) : artworks.length === 0 ? (
@@ -155,7 +155,7 @@ export function ArtworkManager() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-xs space-x-2">
-                      <button className="text-[#1e5a96] hover:text-[#164071]">Edit</button>
+                      <button className="text-[#2e53ff] hover:text-[#1e3fd4]">Edit</button>
                       <button className="text-red-600 hover:text-red-700">Delete</button>
                     </td>
                   </tr>

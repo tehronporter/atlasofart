@@ -127,7 +127,7 @@ export default function MobileSearchSheet({
                   background: '#f8f9fa',
                   border: '1px solid #e0e0e0',
                 }}
-                onFocus={e => { e.currentTarget.style.borderColor = '#1e5a96'; }}
+                onFocus={e => { e.currentTarget.style.borderColor = '#2e53ff'; }}
                 onBlur={e => { e.currentTarget.style.borderColor = '#e0e0e0'; }}
               />
               {searchQuery && (
@@ -200,7 +200,7 @@ export default function MobileSearchSheet({
                 onClick={onClose}
                 className="flex-1 py-3 rounded-xl text-[13px] font-medium transition-all"
                 style={{
-                  background: '#1e5a96',
+                  background: '#2e53ff',
                   color: '#ffffff',
                 }}
               >

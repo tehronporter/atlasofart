@@ -67,7 +67,7 @@ export function ModerationPanel() {
             onClick={() => setSelectedFilter(filter)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               selectedFilter === filter
-                ? 'bg-[#1e5a96] text-white'
+                ? 'bg-[#2e53ff] text-white'
                 : 'bg-gray-100 text-neutral-700 hover:text-neutral-900'
             }`}
           >
@@ -87,7 +87,7 @@ export function ModerationPanel() {
       <div className="space-y-4">
         {isLoading ? (
           <div className="text-center py-12">
-            <div className="w-8 h-8 border-2 border-[#1e5a96]/60 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <div className="w-8 h-8 border-2 border-[#2e53ff]/60 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             <p className="text-neutral-700 text-sm">Loading issues...</p>
           </div>
         ) : items.length === 0 ? (

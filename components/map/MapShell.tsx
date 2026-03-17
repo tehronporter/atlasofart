@@ -447,7 +447,7 @@ export default function MapShell({
               onClick={() => setMapStyle(s)}
               className={`px-2.5 py-1.5 rounded-md text-[10px] font-medium transition-all duration-200 ${
                 mapStyle === s
-                  ? 'bg-[#1e5a96] text-white'
+                  ? 'bg-[#2e53ff] text-white'
                   : 'text-neutral-600 hover:text-neutral-900'
               }`}
             >
@@ -477,7 +477,7 @@ export default function MapShell({
           onClick={() => setShowLegend(l => !l)}
           className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all duration-200 ${
             showLegend
-              ? 'bg-[#1e5a96] border border-[#1e5a96] text-white'
+              ? 'bg-[#2e53ff] border border-[#2e53ff] text-white'
               : 'bg-white/80 border border-gray-200 text-neutral-600 hover:text-neutral-900'
           }`}
           style={{ backdropFilter: 'blur(12px)' }}

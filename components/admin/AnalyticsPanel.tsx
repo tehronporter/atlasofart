@@ -74,7 +74,7 @@ export function AnalyticsPanel() {
       {/* KPI Cards */}
       {isLoading ? (
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-[#1e5a96]/60 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <div className="w-8 h-8 border-2 border-[#2e53ff]/60 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className="text-neutral-700 text-sm">Loading analytics...</p>
         </div>
       ) : (

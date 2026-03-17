@@ -25,7 +25,7 @@ export default function UserMenu() {
     return (
       <a
         href="/login"
-        className="px-4 py-2 bg-[#1e5a96] text-white rounded font-medium hover:bg-[#164071] transition-colors text-sm"
+        className="px-4 py-2 bg-[#2e53ff] text-white rounded font-medium hover:bg-[#1e3fd4] transition-colors text-sm"
       >
         Sign In
       </a>
@@ -38,7 +38,7 @@ export default function UserMenu() {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
       >
-        <div className="w-6 h-6 bg-[#1e5a96] rounded-full flex items-center justify-center text-white text-xs font-bold">
+        <div className="w-6 h-6 bg-[#2e53ff] rounded-full flex items-center justify-center text-white text-xs font-bold">
           {user.email?.[0].toUpperCase()}
         </div>
         <span className="text-sm text-neutral-700 hidden sm:block">

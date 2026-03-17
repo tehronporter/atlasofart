@@ -250,7 +250,7 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                   value={offset}
                   onChange={e => setOffset(Number(e.target.value))}
                   disabled={isIngesting || autoRunning}
-                  className="w-28 bg-gray-100 border border-gray-200 text-sm text-neutral-900 rounded-lg px-3 py-2 focus:outline-none focus:border-[#1e5a96]/50 tabular-nums"
+                  className="w-28 bg-gray-100 border border-gray-200 text-sm text-neutral-900 rounded-lg px-3 py-2 focus:outline-none focus:border-[#2e53ff]/50 tabular-nums"
                 />
                 {offset !== 0 && (
                   <button
@@ -269,7 +269,7 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                 value={batchSize}
                 onChange={e => setBatchSize(Number(e.target.value))}
                 disabled={isIngesting || autoRunning}
-                className="bg-gray-100 border border-gray-200 text-sm text-neutral-900 rounded-lg px-3 py-2 focus:outline-none focus:border-[#1e5a96]/50 cursor-pointer"
+                className="bg-gray-100 border border-gray-200 text-sm text-neutral-900 rounded-lg px-3 py-2 focus:outline-none focus:border-[#2e53ff]/50 cursor-pointer"
               >
                 <option value={25}>25</option>
                 <option value={50}>50</option>
@@ -284,7 +284,7 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                 </label>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
-                    className="bg-[#1e5a96] h-2 rounded-full transition-all"
+                    className="bg-[#2e53ff] h-2 rounded-full transition-all"
                     style={{ width: `${Math.min(progressPct, 100)}%` }}
                   />
                 </div>

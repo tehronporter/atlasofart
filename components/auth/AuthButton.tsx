@@ -46,7 +46,7 @@ export default function AuthButton() {
       </Link>
       <Link
         href="/login"
-        className="flex-1 px-3 py-2 text-[11px] rounded-lg bg-[#1e5a96] border border-[#1e5a96] text-white hover:bg-[#164071] transition-all text-center"
+        className="flex-1 px-3 py-2 text-[11px] rounded-lg bg-[#2e53ff] border border-[#2e53ff] text-white hover:bg-[#1e3fd4] transition-all text-center"
       >
         Sign Up
       </Link>
