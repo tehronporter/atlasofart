@@ -256,13 +256,6 @@ export default function Home() {
     return () => { if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current); };
   }, [searchQuery]);
 
-  // ── Show toast when search returns no results ────────────────────────────────
-  useEffect(() => {
-    if ((searchQuery || selectedRegion || selectedMedium) && allArtworks.length > 0 && filteredArtworks.length === 0) {
-      setToast({ message: 'No artworks match your filters. Try adjusting your search.', type: 'info' });
-    }
-  }, [searchQuery, selectedRegion, selectedMedium, filteredArtworks.length, allArtworks.length]);
-
   // ── Filtered artworks ───────────────────────────────────────────────────────
   const filteredArtworks = useMemo(() => {
     let result = allArtworks;
@@ -285,6 +278,13 @@ export default function Home() {
     if (selectedMedium) result = result.filter(a => a.medium === selectedMedium);
     return result.filter(a => a.lat !== 0 || a.lng !== 0);
   }, [allArtworks, timelineMaxYear, debouncedSearchQuery, selectedRegion, selectedMedium]);
+
+  // ── Show toast when search returns no results ────────────────────────────────
+  useEffect(() => {
+    if ((searchQuery || selectedRegion || selectedMedium) && allArtworks.length > 0 && filteredArtworks.length === 0) {
+      setToast({ message: 'No artworks match your filters. Try adjusting your search.', type: 'info' });
+    }
+  }, [searchQuery, selectedRegion, selectedMedium, filteredArtworks.length, allArtworks.length]);
 
   const selectedArtwork = useMemo(
     () => allArtworks.find(a => a.id === selectedArtworkId) || null,
