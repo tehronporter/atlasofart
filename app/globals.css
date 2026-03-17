@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #000000;
-  --foreground: #ededed;
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+  --getty-blue: #1e5a96;
+  --light-border: #e0e0e0;
+  --light-hover: #f0f0f0;
 }
 
 @theme inline {
@@ -20,25 +23,26 @@ body {
 
 /* Mapbox Popup custom styling */
 .mapboxgl-popup-content {
-  background: #171717 !important;
-  border: 1px solid #404040;
+  background: #ffffff !important;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
   padding: 12px 16px !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  color: #1a1a1a;
 }
 
 .mapboxgl-popup-close-button {
-  color: #a3a3a3;
+  color: #666;
   padding: 4px 8px;
   font-size: 16px;
 }
 
 .mapboxgl-popup-close-button:hover {
-  color: #fff;
+  color: #1a1a1a;
 }
 
 .mapboxgl-popup-tip {
-  border-top-color: #171717 !important;
+  border-top-color: #ffffff !important;
 }
 
 /* Mapbox control styling */

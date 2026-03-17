@@ -110,7 +110,7 @@ export default function MapShell({
   const [cursor, setCursor]       = useState('grab');
 
   // Map display state
-  const [mapStyle, setMapStyle]   = useState<MapStyleKey>('dark');
+  const [mapStyle, setMapStyle]   = useState<MapStyleKey>('light');
   const [showHeatmap, setShowHeatmap] = useState(true);
   const [showLegend, setShowLegend]   = useState(false);
 
@@ -439,7 +439,7 @@ export default function MapShell({
         {/* Map style toggle */}
         <div
           className="flex items-center gap-0.5 rounded-lg p-0.5"
-          style={{ background: 'rgba(10,10,15,0.75)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)' }}
+          style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(0,0,0,0.1)', backdropFilter: 'blur(12px)' }}
         >
           {(['dark', 'satellite', 'light'] as MapStyleKey[]).map(s => (
             <button
@@ -447,8 +447,8 @@ export default function MapShell({
               onClick={() => setMapStyle(s)}
               className={`px-2.5 py-1.5 rounded-md text-[10px] font-medium transition-all duration-200 ${
                 mapStyle === s
-                  ? 'bg-white/[0.18] text-white'
-                  : 'text-neutral-500 hover:text-neutral-300'
+                  ? 'bg-[#1e5a96] text-white'
+                  : 'text-neutral-600 hover:text-neutral-900'
               }`}
             >
               {s === 'dark' ? 'Dark' : s === 'satellite' ? 'Sat.' : 'Light'}
@@ -461,8 +461,8 @@ export default function MapShell({
           onClick={() => setShowHeatmap(h => !h)}
           className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all duration-200 ${
             showHeatmap
-              ? 'bg-amber-500/20 border border-amber-500/30 text-amber-400'
-              : 'bg-black/60 border border-white/[0.1] text-neutral-500 hover:text-neutral-300'
+              ? 'bg-amber-500/20 border border-amber-500/30 text-amber-600'
+              : 'bg-white/80 border border-gray-200 text-neutral-600 hover:text-neutral-900'
           }`}
           style={{ backdropFilter: 'blur(12px)' }}
         >
@@ -477,8 +477,8 @@ export default function MapShell({
           onClick={() => setShowLegend(l => !l)}
           className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all duration-200 ${
             showLegend
-              ? 'bg-white/[0.12] border border-white/[0.2] text-white'
-              : 'bg-black/60 border border-white/[0.1] text-neutral-500 hover:text-neutral-300'
+              ? 'bg-[#1e5a96] border border-[#1e5a96] text-white'
+              : 'bg-white/80 border border-gray-200 text-neutral-600 hover:text-neutral-900'
           }`}
           style={{ backdropFilter: 'blur(12px)' }}
         >
@@ -498,8 +498,8 @@ export default function MapShell({
           <div
             className="rounded-xl px-3.5 py-3 space-y-1.5"
             style={{
-              background: 'rgba(8,8,14,0.88)',
-              border: '1px solid rgba(255,255,255,0.09)',
+              background: 'rgba(255,255,255,0.95)',
+              border: '1px solid rgba(0,0,0,0.1)',
               backdropFilter: 'blur(16px)',
             }}
           >
@@ -507,8 +507,8 @@ export default function MapShell({
             {ERA_LEGEND.map(e => (
               <div key={e.label} className="flex items-center gap-2.5">
                 <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: e.color, boxShadow: `0 0 6px ${e.color}80` }} />
-                <span className="text-[10px] text-neutral-300 w-[76px]">{e.label}</span>
-                <span className="text-[9px] text-neutral-600">{e.years}</span>
+                <span className="text-[10px] text-neutral-800 w-[76px]">{e.label}</span>
+                <span className="text-[9px] text-neutral-500">{e.years}</span>
               </div>
             ))}
           </div>

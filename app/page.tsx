@@ -460,27 +460,27 @@ export default function Home() {
 
   // ── Main layout ────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-screen w-full bg-[#0a0a0f] overflow-hidden select-none">
+    <div className="flex h-screen w-full bg-white overflow-hidden select-none">
 
       {/* ── LEFT SIDEBAR ──────────────────────────────────────────────────────── */}
-      <aside className="hidden lg:flex w-[220px] shrink-0 flex-col bg-gradient-to-b from-[#111215] to-[#0d0d11] border-r border-white/[0.08] overflow-hidden z-20">
+      <aside className="hidden lg:flex w-[220px] shrink-0 flex-col bg-[#1e5a96] border-r border-white/20 overflow-hidden z-20">
 
         {/* Brand */}
         <div className="px-5 pt-6 pb-5">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg border border-white/15 flex items-center justify-center bg-gradient-to-br from-white/8 to-white/4 shrink-0">
+            <div className="w-8 h-8 rounded-lg border border-white/25 flex items-center justify-center bg-white/15 shrink-0">
               <GlobeIcon />
             </div>
             <h1 className="text-[14px] font-light text-white tracking-tight leading-none">
-              Atlas <span className="font-extralight text-neutral-500">of Art</span>
+              Atlas <span className="font-extralight text-white/70">of Art</span>
             </h1>
           </div>
-          <p className="mt-3 text-[11px] text-neutral-600 leading-relaxed">
+          <p className="mt-3 text-[11px] text-white/70 leading-relaxed">
             Explore global artworks by place and era.
           </p>
         </div>
 
-        <div className="border-t border-white/[0.04] mx-4" />
+        <div className="border-t border-white/[0.15] mx-4" />
 
         {/* Navigation */}
         <nav className="px-2.5 py-2.5 space-y-0.5">
@@ -650,11 +650,11 @@ export default function Home() {
           </div>
           <div className="border-t border-white/[0.04] px-4 py-3.5 mt-auto">
             <div className="mb-3"><AuthButton /></div>
-            <span className="text-[10px] text-neutral-600 flex items-center justify-between">
+            <span className="text-[10px] text-white/70 flex items-center justify-between">
               <span>
-                <span className="text-amber-400 font-semibold">{filteredArtworks.length}</span>
-                <span className="text-neutral-700"> of </span>
-                <span className="text-neutral-600">{allArtworks.length}</span>
+                <span className="text-amber-300 font-semibold">{filteredArtworks.length}</span>
+                <span className="text-white/60"> of </span>
+                <span className="text-white/70">{allArtworks.length}</span>
               </span>
             </span>
           </div>
