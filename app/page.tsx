@@ -33,7 +33,7 @@ const MapShell = dynamic(() => import('@/components/map/MapShell'), {
 
 function GlobeIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-300">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b7280]">
       <circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" />
       <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
     </svg>
@@ -41,7 +41,7 @@ function GlobeIcon() {
 }
 function MapIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#2e5bff]">
       <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
       <line x1="8" y1="2" x2="8" y2="18" /><line x1="16" y1="6" x2="16" y2="22" />
     </svg>
@@ -49,7 +49,7 @@ function MapIcon() {
 }
 function GridIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b7280]">
       <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
       <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
     </svg>
@@ -57,14 +57,14 @@ function GridIcon() {
 }
 function SearchIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b7280]">
       <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
   );
 }
 function XIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b7280]">
       <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   );
@@ -114,14 +114,14 @@ function NavItem({ icon, label, active, onClick }: { icon: React.ReactNode; labe
     <button
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
-      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/30 focus:ring-offset-2 focus:ring-offset-transparent ${
+      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#2e5bff]/30 focus:ring-offset-2 focus:ring-offset-transparent ${
         active
-          ? 'bg-white/20 border border-white/30 text-white'
-          : 'text-white/60 hover:text-white hover:bg-white/[0.12] border border-transparent'
+          ? 'bg-[#eff2ff] border border-[#2e5bff]/20 text-[#2e5bff]'
+          : 'text-[#9ca3af] hover:text-[#6b7280] hover:bg-[#f9fafb] border border-transparent'
       }`}
     >
-      <span className={`transition-colors ${active ? 'text-white' : 'text-white/50'}`}>{icon}</span>
-      <span className={active ? 'font-medium text-white' : 'font-normal'}>{label}</span>
+      <span className={`transition-colors ${active ? 'text-[#2e5bff]' : 'text-[#9ca3af]'}`}>{icon}</span>
+      <span className={active ? 'font-medium text-[#2e5bff]' : 'font-normal text-[#6b7280]'}>{label}</span>
     </button>
   );
 }
@@ -415,10 +415,10 @@ export default function Home() {
   // ── Loading ────────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="h-screen w-full bg-[#2e53ff] flex items-center justify-center">
+      <div className="h-screen w-full bg-[#f5f6f7] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-10 h-10 border-2 border-white/60 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-white/70 text-sm tracking-wide">Loading collection…</p>
+          <div className="w-10 h-10 border-2 border-[#2e5bff]/60 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-[#6b7280] text-sm tracking-wide">Loading collection…</p>
         </div>
       </div>
     );
@@ -426,18 +426,18 @@ export default function Home() {
 
   if (dbError) {
     return (
-      <div className="h-screen w-full bg-[#0a0a0f] flex items-center justify-center p-8">
+      <div className="h-screen w-full bg-[#f5f6f7] flex items-center justify-center p-8">
         <div className="max-w-md text-center">
           <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-4">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-red-400">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-red-500">
               <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
           </div>
-          <h2 className="text-lg font-semibold text-white mb-2">Database Connection Error</h2>
-          <p className="text-neutral-500 text-sm mb-4">{dbError}</p>
+          <h2 className="text-lg font-semibold text-[#111111] mb-2">Database Connection Error</h2>
+          <p className="text-[#6b7280] text-sm mb-4">{dbError}</p>
           <div className="flex gap-3 justify-center">
-            <a href="/admin" className="px-4 py-2 bg-amber-500 text-neutral-900 rounded-lg font-medium text-sm hover:bg-amber-400">Admin Panel</a>
-            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-300 hover:bg-neutral-700">Retry</button>
+            <a href="/admin" className="px-4 py-2 bg-[#2e5bff] text-white rounded-lg font-medium text-sm hover:bg-[#2e5bff]/90">Admin Panel</a>
+            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-white border border-[#e5e7eb] rounded-lg text-sm text-[#6b7280] hover:bg-[#f9fafb]">Retry</button>
           </div>
         </div>
       </div>
@@ -446,18 +446,21 @@ export default function Home() {
 
   if (isEmpty) {
     return (
-      <div className="h-screen w-full bg-[#0a0a0f] flex items-center justify-center p-8">
+      <div className="h-screen w-full bg-[#f5f6f7] flex items-center justify-center p-8">
         <div className="max-w-md text-center">
-          <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-5">
-            <GlobeIcon />
+          <div className="w-14 h-14 rounded-full bg-[#fef3c7] border border-[#fcd34d] flex items-center justify-center mx-auto mb-5">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" />
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
           </div>
-          <h2 className="text-lg font-semibold text-white mb-2">Collection is Empty</h2>
-          <p className="text-neutral-500 text-sm mb-6 leading-relaxed">
+          <h2 className="text-lg font-semibold text-[#111111] mb-2">Collection is Empty</h2>
+          <p className="text-[#6b7280] text-sm mb-6 leading-relaxed">
             The database has no artworks yet. Run Getty ingestion from the admin panel to populate the collection.
           </p>
           <div className="flex gap-3 justify-center">
-            <a href="/admin" className="px-5 py-2.5 bg-amber-500 text-neutral-900 rounded-lg font-medium text-sm hover:bg-amber-400 transition-colors">Go to Admin</a>
-            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-300 hover:bg-neutral-700 transition-colors">Refresh</button>
+            <a href="/admin" className="px-5 py-2.5 bg-[#2e5bff] text-white rounded-lg font-medium text-sm hover:bg-[#2e5bff]/90 transition-colors">Go to Admin</a>
+            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-white border border-[#e5e7eb] rounded-lg text-sm text-[#6b7280] hover:bg-[#f9fafb] transition-colors">Refresh</button>
           </div>
         </div>
       </div>
@@ -466,27 +469,30 @@ export default function Home() {
 
   // ── Main layout ────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-screen w-full bg-white overflow-hidden select-none">
+    <div className="flex h-screen w-full bg-[#f5f6f7] overflow-hidden select-none">
 
       {/* ── LEFT SIDEBAR ──────────────────────────────────────────────────────── */}
-      <aside className="hidden lg:flex w-[220px] shrink-0 flex-col bg-[#2e53ff] border-r border-white/20 overflow-hidden z-20">
+      <aside className="hidden lg:flex w-[220px] shrink-0 flex-col bg-white border-r border-[#e5e7eb] overflow-hidden z-20">
 
         {/* Brand */}
         <div className="px-5 pt-6 pb-5">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg border border-white/25 flex items-center justify-center bg-white/15 shrink-0">
-              <GlobeIcon />
+            <div className="w-8 h-8 rounded-lg border border-[#2e5bff]/20 flex items-center justify-center bg-[#eff2ff] shrink-0">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2e5bff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+              </svg>
             </div>
-            <h1 className="text-[14px] font-light text-white tracking-tight leading-none">
-              Atlas <span className="font-extralight text-white/70">of Art</span>
+            <h1 className="text-[14px] font-light text-[#111111] tracking-tight leading-none">
+              Atlas <span className="font-extralight text-[#6b7280]">of Art</span>
             </h1>
           </div>
-          <p className="mt-3 text-[11px] text-white/70 leading-relaxed">
+          <p className="mt-3 text-[11px] text-[#6b7280] leading-relaxed">
             Explore global artworks by place and era.
           </p>
         </div>
 
-        <div className="border-t border-white/[0.15] mx-4" />
+        <div className="border-t border-[#e5e7eb] mx-4" />
 
         {/* Navigation */}
         <nav className="px-2.5 py-2.5 space-y-0.5">
@@ -498,7 +504,7 @@ export default function Home() {
         {/* Search */}
         <div className="px-3.5 py-3 space-y-2">
           <div className="relative">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9ca3af] pointer-events-none">
               <SearchIcon />
             </span>
             <input
@@ -506,14 +512,14 @@ export default function Home() {
               placeholder="Search artworks…"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-white/[0.12] border border-white/[0.2] rounded-lg pl-9 pr-16 py-2.5 text-[12px] text-white placeholder-white/40 focus:outline-none focus:bg-white/[0.18] focus:border-white/[0.4] focus:ring-1 focus:ring-white/20 transition-all duration-200"
+              className="w-full bg-white border border-[#e5e7eb] rounded-lg pl-9 pr-16 py-2.5 text-[12px] text-[#111111] placeholder-[#9ca3af] focus:outline-none focus:border-[#2e5bff] focus:ring-1 focus:ring-[#2e5bff]/10 transition-all duration-200"
             />
             {/* Inline count badge */}
-            <span className="absolute right-8 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-white/40 pointer-events-none">
+            <span className="absolute right-8 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[#9ca3af] pointer-events-none">
               {filteredArtworks.length.toLocaleString()}
             </span>
             {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/80">
+              <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#9ca3af] hover:text-[#6b7280]">
                 <XIcon />
               </button>
             )}
@@ -524,8 +530,8 @@ export default function Home() {
             onClick={() => setShowFilters(f => !f)}
             className={`w-full flex items-center gap-1.5 text-[11px] font-medium transition-all duration-200 px-2.5 py-2 rounded-lg border ${
               showFilters || selectedRegion || selectedMedium
-                ? 'text-white bg-white/20 border-white/30'
-                : 'text-white/60 hover:text-white hover:bg-white/[0.12] border-white/[0.2]'
+                ? 'text-[#2e5bff] bg-[#eff2ff] border-[#2e5bff]/20'
+                : 'text-[#9ca3af] hover:text-[#6b7280] hover:bg-[#f9fafb] border-[#e5e7eb]'
             }`}
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -533,7 +539,7 @@ export default function Home() {
             </svg>
             <span>Filters</span>
             {(selectedRegion || selectedMedium) && (
-              <span className="ml-auto bg-white/20 text-white px-2 py-0.5 rounded text-[9px] font-semibold">
+              <span className="ml-auto bg-[#2e5bff]/10 text-[#2e5bff] px-2 py-0.5 rounded text-[9px] font-semibold">
                 {[selectedRegion, selectedMedium].filter(Boolean).length}
               </span>
             )}
@@ -543,7 +549,7 @@ export default function Home() {
             <div className="space-y-3 pb-1 max-h-56 overflow-y-auto">
               {regions.length > 0 && (
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest text-white/50 mb-1.5 px-0.5">Region</p>
+                  <p className="text-[10px] uppercase tracking-widest text-[#9ca3af] mb-1.5 px-0.5">Region</p>
                   <div className="flex flex-wrap gap-1.5">
                     {regions.slice(0, 10).map(r => (
                       <button
@@ -551,8 +557,8 @@ export default function Home() {
                         onClick={() => setSelectedRegion(prev => prev === r ? null : r)}
                         className={`px-2 py-1 text-[10px] rounded-full transition-all border ${
                           selectedRegion === r
-                            ? 'bg-white/20 border-white/30 text-white'
-                            : 'border-white/[0.2] text-white/60 hover:text-white hover:border-white/[0.35]'
+                            ? 'bg-[#eff2ff] border-[#2e5bff]/20 text-[#2e5bff]'
+                            : 'border-[#e5e7eb] text-[#9ca3af] hover:text-[#6b7280] hover:bg-[#f9fafb]'
                         }`}
                       >
                         {r}
@@ -563,7 +569,7 @@ export default function Home() {
               )}
               {mediums.length > 0 && (
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest text-white/50 mb-1.5 px-0.5">Medium</p>
+                  <p className="text-[10px] uppercase tracking-widest text-[#9ca3af] mb-1.5 px-0.5">Medium</p>
                   <div className="flex flex-wrap gap-1.5">
                     {mediums.slice(0, 8).map(m => (
                       <button
@@ -571,8 +577,8 @@ export default function Home() {
                         onClick={() => setSelectedMedium(prev => prev === m ? null : m)}
                         className={`px-2 py-1 text-[10px] rounded-full transition-all border ${
                           selectedMedium === m
-                            ? 'bg-white/20 border-white/30 text-white'
-                            : 'border-white/[0.2] text-white/60 hover:text-white hover:border-white/[0.35]'
+                            ? 'bg-[#eff2ff] border-[#2e5bff]/20 text-[#2e5bff]'
+                            : 'border-[#e5e7eb] text-[#9ca3af] hover:text-[#6b7280] hover:bg-[#f9fafb]'
                         }`}
                       >
                         {m.length > 22 ? m.slice(0, 20) + '…' : m}
@@ -582,7 +588,7 @@ export default function Home() {
                 </div>
               )}
               {hasFilters && (
-                <button onClick={clearFilters} className="text-[10px] text-white/50 hover:text-white/80 transition-colors px-0.5">
+                <button onClick={clearFilters} className="text-[10px] text-[#9ca3af] hover:text-[#6b7280] transition-colors px-0.5">
                   ✕ Clear all filters
                 </button>
               )}
@@ -590,28 +596,28 @@ export default function Home() {
           )}
         </div>
 
-        <div className="border-t border-white/[0.05] mx-4 my-1" />
+        <div className="border-t border-[#e5e7eb] mx-4 my-1" />
 
         {/* Actions */}
         <div className="px-3.5 py-3 space-y-1.5">
           {/* Surprise Me — primary CTA */}
           <button
             onClick={handleSurpriseMe}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-white text-[#2e53ff] text-[12px] font-semibold hover:bg-white/90 transition-all shadow-sm"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-[#2e5bff] text-white text-[12px] font-semibold hover:bg-[#2e5bff]/90 transition-all shadow-sm"
           >
             <DiceIcon />
             <span>Surprise Me</span>
           </button>
           <button
             onClick={() => setBrowserOpen(true)}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.12] text-[11px] text-white/80 hover:bg-white/[0.14] hover:text-white transition-all"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-[#f9fafb] border border-[#e5e7eb] text-[11px] text-[#6b7280] hover:bg-white hover:text-[#111111] transition-all"
           >
             <GridIcon />
             <span>Browse Artworks</span>
           </button>
           <button
             onClick={handleFitToResults}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.12] text-[11px] text-white/80 hover:bg-white/[0.14] hover:text-white transition-all"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-[#f9fafb] border border-[#e5e7eb] text-[11px] text-[#6b7280] hover:bg-white hover:text-[#111111] transition-all"
           >
             <FitIcon />
             <span>Fit to Results</span>
@@ -620,8 +626,8 @@ export default function Home() {
             onClick={handleShare}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border text-[11px] transition-all ${
               showCopied
-                ? 'bg-white/25 border-white/40 text-white'
-                : 'bg-white/[0.08] border-white/[0.12] text-white/80 hover:bg-white/[0.14] hover:text-white'
+                ? 'bg-[#eff2ff] border-[#2e5bff]/20 text-[#2e5bff]'
+                : 'bg-[#f9fafb] border-[#e5e7eb] text-[#6b7280] hover:bg-white hover:text-[#111111]'
             }`}
           >
             <ShareIcon />
@@ -629,7 +635,7 @@ export default function Home() {
           </button>
         </div>
 
-        <div className="border-t border-white/[0.05] mx-4 my-1" />
+        <div className="border-t border-[#e5e7eb] mx-4 my-1" />
 
         {/* Era Legend — collapsible */}
         <div className="px-3.5 py-2">
@@ -637,8 +643,8 @@ export default function Home() {
             onClick={() => setEraLegendOpen(o => !o)}
             className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-[11px] font-medium transition-all border ${
               eraLegendOpen
-                ? 'bg-white/20 border-white/30 text-white'
-                : 'bg-white/[0.06] border-white/[0.12] text-white/60 hover:text-white hover:bg-white/[0.12]'
+                ? 'bg-[#eff2ff] border-[#2e5bff]/20 text-[#2e5bff]'
+                : 'bg-[#f9fafb] border-[#e5e7eb] text-[#9ca3af] hover:text-[#6b7280] hover:bg-white'
             }`}
           >
             <div className="flex items-center gap-1.5">
@@ -657,15 +663,15 @@ export default function Home() {
               {ERA_LEGEND.map(e => (
                 <div key={e.label} className="flex items-center gap-2.5">
                   <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: e.color }} />
-                  <span className="text-[10px] text-white/80 w-[72px]">{e.label}</span>
-                  <span className="text-[9px] text-white/40">{e.years}</span>
+                  <span className="text-[10px] text-[#6b7280] w-[72px]">{e.label}</span>
+                  <span className="text-[9px] text-[#9ca3af]">{e.years}</span>
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        <div className="border-t border-white/[0.05] mx-4 my-1" />
+        <div className="border-t border-[#e5e7eb] mx-4 my-1" />
 
         {/* Account / Library / Admin */}
         <UserProfileSection />
@@ -674,8 +680,8 @@ export default function Home() {
 
         {/* Recently Viewed */}
         {historyArtworks.length > 0 && (
-          <div className="border-t border-white/[0.1] mx-3.5 pt-2.5 mt-auto">
-            <p className="text-[9px] uppercase tracking-widest text-white/50 mb-2 px-0.5">Recently Viewed</p>
+          <div className="border-t border-[#e5e7eb] mx-3.5 pt-2.5 mt-auto">
+            <p className="text-[9px] uppercase tracking-widest text-[#9ca3af] mb-2 px-0.5">Recently Viewed</p>
             <div className="flex items-center gap-1.5 px-0.5">
               {historyArtworks.map(a => (
                 <button
@@ -684,15 +690,15 @@ export default function Home() {
                   title={a.title}
                   className={`w-8 h-8 rounded-lg overflow-hidden border shrink-0 transition-all duration-200 ${
                     a.id === selectedArtworkId
-                      ? 'border-white/60 ring-1 ring-white/20'
-                      : 'border-white/[0.15] hover:border-white/[0.35]'
+                      ? 'border-[#2e5bff] ring-1 ring-[#2e5bff]/20'
+                      : 'border-[#e5e7eb] hover:border-[#2e5bff]/30'
                   }`}
                 >
                   {a.image_url ? (
                     <img src={a.image_url} alt={a.title} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full bg-white/10 flex items-center justify-center">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/30">
+                    <div className="w-full h-full bg-[#f9fafb] flex items-center justify-center">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#d1d5db]">
                         <rect x="3" y="3" width="18" height="18" rx="2" />
                       </svg>
                     </div>
@@ -704,7 +710,7 @@ export default function Home() {
         )}
 
         {/* Bottom auth */}
-        <div className="border-t border-white/[0.08] mx-3.5 pt-2.5 mt-2 mb-3">
+        <div className="border-t border-[#e5e7eb] mx-3.5 pt-2.5 mt-2 mb-3">
           <AuthButton />
         </div>
       </aside>
@@ -775,8 +781,8 @@ export default function Home() {
                   {selectedRegion && (
                     <button
                       onClick={() => setSelectedRegion(null)}
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] text-[#2e53ff] hover:bg-blue-50 transition-colors"
-                      style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(46,83,255,0.3)', backdropFilter: 'blur(12px)' }}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] text-[#2e5bff] hover:bg-[#eff2ff] transition-colors font-medium"
+                      style={{ background: 'rgba(255,255,255,0.95)', border: '1px solid rgba(46,91,255,0.2)', backdropFilter: 'blur(12px)' }}
                     >
                       {selectedRegion} <XIcon />
                     </button>
@@ -784,8 +790,8 @@ export default function Home() {
                   {selectedMedium && (
                     <button
                       onClick={() => setSelectedMedium(null)}
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] text-[#2e53ff] hover:bg-blue-50 transition-colors"
-                      style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(46,83,255,0.3)', backdropFilter: 'blur(12px)' }}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] text-[#2e5bff] hover:bg-[#eff2ff] transition-colors font-medium"
+                      style={{ background: 'rgba(255,255,255,0.95)', border: '1px solid rgba(46,91,255,0.2)', backdropFilter: 'blur(12px)' }}
                     >
                       {selectedMedium.length > 22 ? selectedMedium.slice(0, 20) + '…' : selectedMedium} <XIcon />
                     </button>
@@ -796,8 +802,8 @@ export default function Home() {
               {/* Mobile search FAB */}
               <button
                 onClick={() => setMobileSheetOpen(true)}
-                className="lg:hidden absolute bottom-4 right-4 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 active:scale-95"
-                style={{ background: '#2e53ff', color: '#ffffff' }}
+                className="lg:hidden absolute bottom-4 right-4 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 active:scale-95 text-white"
+                style={{ background: '#2e5bff' }}
                 aria-label="Open search"
               >
                 <SearchIcon />
@@ -808,15 +814,15 @@ export default function Home() {
             {/* End of left section */}
 
             {/* Right section: Timeline (collapsible) */}
-            <div className={`shrink-0 overflow-hidden hidden lg:flex flex-col border-l border-white/[0.15] transition-all duration-300 ${timelineCollapsed ? 'w-10' : 'w-60'}`}
-              style={{ background: '#2e53ff' }}
+            <div className={`shrink-0 overflow-hidden hidden lg:flex flex-col border-l border-[#e5e7eb] transition-all duration-300 ${timelineCollapsed ? 'w-10' : 'w-60'}`}
+              style={{ background: 'white' }}
             >
               {timelineCollapsed ? (
                 /* Collapsed strip */
                 <div className="flex flex-col items-center py-4 gap-3 h-full">
                   <button
                     onClick={() => setTimelineCollapsed(false)}
-                    className="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white/80 hover:text-white transition-all"
+                    className="p-1.5 rounded-lg bg-[#f9fafb] hover:bg-[#eff2ff] text-[#9ca3af] hover:text-[#2e5bff] transition-all border border-[#e5e7eb]"
                     title="Expand timeline"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -824,7 +830,7 @@ export default function Home() {
                     </svg>
                   </button>
                   <div className="flex-1 flex items-center justify-center">
-                    <p className="text-[9px] uppercase tracking-widest text-white/50 font-medium"
+                    <p className="text-[9px] uppercase tracking-widest text-[#9ca3af] font-medium"
                       style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
                       Timeline
                     </p>

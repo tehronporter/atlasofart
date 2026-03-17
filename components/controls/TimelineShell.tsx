@@ -72,20 +72,20 @@ export default function TimelineShell({
     : `To ${formatYear(currentMax)}`;
 
   return (
-    <div className="h-full w-full flex flex-col" style={{ background: '#2e53ff' }}>
+    <div className="h-full w-full flex flex-col bg-white border-l border-[#e5e7eb]">
 
       {/* ── Header ── */}
-      <div className="px-4 pt-4 pb-3 flex items-start justify-between shrink-0">
+      <div className="px-4 pt-4 pb-3 flex items-start justify-between shrink-0 border-b border-[#e5e7eb]">
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-white/50 mb-0.5">Timeline</p>
-          <p className="text-base font-light text-white leading-tight">{viewingLabel}</p>
-          <p className="text-[11px] text-white/60 mt-0.5">
-            <span className="text-white font-semibold">{visibleCount.toLocaleString()}</span> shown
+          <p className="text-[10px] uppercase tracking-widest text-[#9ca3af] mb-0.5">Timeline</p>
+          <p className="text-base font-light text-[#111111] leading-tight">{viewingLabel}</p>
+          <p className="text-[11px] text-[#6b7280] mt-0.5">
+            <span className="text-[#111111] font-semibold">{visibleCount.toLocaleString()}</span> shown
           </p>
         </div>
         <button
           onClick={onCollapse}
-          className="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white/70 hover:text-white transition-all mt-0.5"
+          className="p-1.5 rounded-lg bg-[#f9fafb] hover:bg-[#eff2ff] text-[#9ca3af] hover:text-[#2e5bff] transition-all mt-0.5 border border-[#e5e7eb]"
           title="Collapse timeline"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -100,18 +100,18 @@ export default function TimelineShell({
         {/* Vertical slider column — oldest (minYear) at TOP, newest at BOTTOM */}
         <div className="flex flex-col items-center gap-1 shrink-0" style={{ width: 30 }}>
           {/* Top label = OLDEST */}
-          <span className="text-[8px] text-white/50 font-mono text-center leading-tight whitespace-pre-line">
+          <span className="text-[8px] text-[#9ca3af] font-mono text-center leading-tight whitespace-pre-line">
             {formatYear(minYear).replace(' ', '\n')}
           </span>
 
           {/* Slider track area */}
           <div className="flex-1 relative flex justify-center" style={{ minHeight: 60 }}>
             {/* Track background */}
-            <div className="absolute left-1/2 -translate-x-1/2 w-1.5 rounded-full bg-white/20"
+            <div className="absolute left-1/2 -translate-x-1/2 w-1.5 rounded-full bg-[#e5e7eb]"
               style={{ top: 0, bottom: 0 }} />
 
             {/* Active track: top → thumb (eras being shown) */}
-            <div className="absolute left-1/2 -translate-x-1/2 w-1.5 rounded-full bg-white/70"
+            <div className="absolute left-1/2 -translate-x-1/2 w-1.5 rounded-full bg-[#2e5bff]"
               style={{ top: 0, height: `${pct}%` }} />
 
             {/* Invisible native vertical range — min at top, max at bottom */}
@@ -139,9 +139,9 @@ export default function TimelineShell({
               className="absolute left-1/2 pointer-events-none z-20"
               style={{ top: `${pct}%`, transform: 'translate(-50%, -50%)' }}
             >
-              <div className="w-4 h-4 rounded-full bg-white border-2 border-white/40 shadow-lg shadow-black/30" />
+              <div className="w-4 h-4 rounded-full bg-white border-2 border-[#2e5bff] shadow-lg shadow-[#2e5bff]/20" />
               {isDragging && (
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 bg-black/80 px-2 py-1 rounded-lg whitespace-nowrap z-30">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 bg-[#111111]/90 px-2 py-1 rounded-lg whitespace-nowrap z-30">
                   <p className="text-[10px] font-semibold text-white">{formatYear(currentMax)}</p>
                 </div>
               )}
@@ -149,7 +149,7 @@ export default function TimelineShell({
           </div>
 
           {/* Bottom label = NEWEST */}
-          <span className="text-[8px] text-white/50 font-mono text-center leading-tight whitespace-pre-line">
+          <span className="text-[8px] text-[#9ca3af] font-mono text-center leading-tight whitespace-pre-line">
             {formatYear(absoluteMaxYear).replace(' ', '\n')}
           </span>
         </div>
@@ -167,7 +167,7 @@ export default function TimelineShell({
               >
                 <div
                   className={`h-full rounded-r transition-all duration-150 ${
-                    active ? 'bg-white/70 group-hover:bg-white/85' : 'bg-white/15 group-hover:bg-white/25'
+                    active ? 'bg-[#2e5bff] group-hover:bg-[#2e5bff]/90' : 'bg-[#e5e7eb] group-hover:bg-[#d1d5db]'
                   }`}
                   style={{ width: `${Math.max(2, bin.percentage)}%`, minHeight: 1 }}
                 />
@@ -178,22 +178,22 @@ export default function TimelineShell({
       </div>
 
       {/* ── Quick jump buttons ── */}
-      <div className="px-3 pb-4 flex gap-1.5 shrink-0">
+      <div className="px-3 pb-4 flex gap-1.5 shrink-0 border-t border-[#e5e7eb] pt-3">
         <button
           onClick={() => onMaxYearChange?.(minYear)}
-          className="flex-1 py-1.5 text-[9px] rounded-lg bg-white/15 border border-white/25 text-white/80 hover:bg-white/25 hover:text-white transition-all"
+          className="flex-1 py-1.5 text-[9px] rounded-lg bg-[#f9fafb] border border-[#e5e7eb] text-[#6b7280] hover:bg-white hover:text-[#111111] transition-all"
         >
           Start
         </button>
         <button
           onClick={() => onMaxYearChange?.(Math.floor((minYear + absoluteMaxYear) / 2))}
-          className="flex-1 py-1.5 text-[9px] rounded-lg bg-white/15 border border-white/25 text-white/80 hover:bg-white/25 hover:text-white transition-all"
+          className="flex-1 py-1.5 text-[9px] rounded-lg bg-[#f9fafb] border border-[#e5e7eb] text-[#6b7280] hover:bg-white hover:text-[#111111] transition-all"
         >
           Midpoint
         </button>
         <button
           onClick={() => onMaxYearChange?.(absoluteMaxYear)}
-          className="flex-1 py-1.5 text-[9px] rounded-lg bg-white/30 border border-white/40 text-white hover:bg-white/40 transition-all font-medium"
+          className="flex-1 py-1.5 text-[9px] rounded-lg bg-[#eff2ff] border border-[#2e5bff]/20 text-[#2e5bff] hover:bg-[#eff2ff]/70 transition-all font-medium"
         >
           All Time
         </button>

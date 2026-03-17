@@ -1,11 +1,22 @@
 @import "tailwindcss";
 
 :root {
+  /* Light Editorial Palette */
+  --app-bg: #f5f6f7;
+  --panel-bg: #ffffff;
+  --border-color: #e5e7eb;
+  --primary-text: #111111;
+  --secondary-text: #6b7280;
+  --muted-text: #9ca3af;
+  --accent-blue: #2e5bff;
+  --accent-blue-light: #eff2ff;
+
+  /* Legacy tokens for compatibility */
   --background: #ffffff;
   --foreground: #1a1a1a;
-  --getty-blue: #2e53ff;
-  --light-border: #e0e0e0;
-  --light-hover: #f0f0f0;
+  --getty-blue: #2e5bff;
+  --light-border: #e5e7eb;
+  --light-hover: #f9fafb;
 }
 
 @theme inline {
@@ -16,8 +27,8 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--app-bg);
+  color: var(--primary-text);
   font-family: Arial, Helvetica, sans-serif;
 }
 
