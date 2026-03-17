@@ -29,14 +29,14 @@ export default function NearbyArtworksTray({
       className="flex-none flex items-center gap-3 px-4 border-t"
       style={{
         height: 76,
-        background: 'linear-gradient(90deg, rgba(10,10,15,0.97) 0%, rgba(14,14,20,0.97) 100%)',
-        borderColor: 'rgba(255,255,255,0.06)',
+        background: 'linear-gradient(90deg, rgba(255,255,255,0.97) 0%, rgba(248,249,250,0.97) 100%)',
+        borderColor: '#e0e0e0',
       }}
     >
       {/* Label */}
-      <div className="flex-none flex flex-col items-start justify-center pr-3 border-r border-white/[0.06]" style={{ minWidth: 64 }}>
+      <div className="flex-none flex flex-col items-start justify-center pr-3 border-r border-gray-300" style={{ minWidth: 64 }}>
         <p className="text-[9px] uppercase tracking-widest text-neutral-600 leading-none mb-1">Nearby</p>
-        <p className="text-[10px] text-neutral-500"><span className="text-amber-400 font-medium">{displayIndex}</span><span className="text-neutral-700"> of </span>{artworks.length}</p>
+        <p className="text-[10px] text-neutral-500"><span className="text-amber-400 font-medium">{displayIndex}</span><span className="text-gray-600"> of </span>{artworks.length}</p>
       </div>
 
       {/* Scrollable thumbnail strip */}
@@ -78,7 +78,7 @@ export default function NearbyArtworksTray({
                   className="w-full h-full flex items-center justify-center"
                   style={{ background: 'rgba(30,30,38,0.8)' }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-neutral-700">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-600">
                     <rect x="3" y="3" width="18" height="18" rx="2" />
                     <circle cx="8.5" cy="8.5" r="1.5" />
                     <polyline points="21 15 16 10 5 21" />
@@ -99,7 +99,7 @@ export default function NearbyArtworksTray({
       </div>
 
       {/* Keyboard hint */}
-      <div className="flex-none hidden md:flex items-center gap-1.5 text-[9px] text-neutral-700">
+      <div className="flex-none hidden md:flex items-center gap-1.5 text-[9px] text-gray-600">
         <span className="px-1.5 py-0.5 rounded border border-white/[0.08] text-neutral-600 font-mono">←</span>
         <span className="px-1.5 py-0.5 rounded border border-white/[0.08] text-neutral-600 font-mono">→</span>
         <span>navigate</span>

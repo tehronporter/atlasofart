@@ -102,14 +102,14 @@ export default function FloatingArtworkCard({
         }}
       />
 
-      <div className="rounded-xl overflow-hidden border border-white/[0.12] bg-gradient-to-b from-[#16161c]/96 to-[#0f0f14]/96 backdrop-blur-md shadow-2xl hover:border-white/[0.18] transition-all duration-300">
+      <div className="rounded-xl overflow-hidden border border-gray-300 bg-gradient-to-b from-white/98 to-gray-50/98 backdrop-blur-md shadow-lg hover:border-gray-400 transition-all duration-300">
         {/* Image */}
         <div
-          className="relative bg-neutral-950/80 overflow-hidden group flex items-center justify-center"
+          className="relative bg-gray-100 overflow-hidden group flex items-center justify-center"
           style={{ height: `${imageHeight}px` }}
         >
           {isImageLoading && !imageLoadError && (
-            <div className="absolute inset-0 bg-neutral-800/50 animate-pulse" />
+            <div className="absolute inset-0 bg-gray-200/50 animate-pulse" />
           )}
 
           {artwork.image_url && !imageLoadError ? (
@@ -140,7 +140,7 @@ export default function FloatingArtworkCard({
           {/* Close */}
           <button
             onClick={e => { e.stopPropagation(); onClose?.(); }}
-            className="absolute top-2.5 right-2.5 w-6 h-6 rounded-lg bg-black/50 hover:bg-black/70 border border-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all duration-200 backdrop-blur"
+            className="absolute top-2.5 right-2.5 w-6 h-6 rounded-lg bg-black/50 hover:bg-black/70 border border-white/20 flex items-center justify-center text-neutral-900/60 hover:text-neutral-900 transition-all duration-200 backdrop-blur"
             aria-label="Close"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -151,12 +151,12 @@ export default function FloatingArtworkCard({
 
         {/* Content */}
         <div className="p-3.5 space-y-2">
-          <h3 className="text-[13px] font-semibold text-white leading-tight line-clamp-2">
+          <h3 className="text-[13px] font-semibold text-neutral-900 leading-tight line-clamp-2">
             {artwork.title}
           </h3>
 
           {artwork.artist_display && (
-            <p className="text-[11px] text-neutral-400 leading-snug line-clamp-1">
+            <p className="text-[11px] text-neutral-600 leading-snug line-clamp-1">
               {artwork.artist_display}
             </p>
           )}
@@ -171,7 +171,7 @@ export default function FloatingArtworkCard({
           </div>
 
           {artwork.place_created && (
-            <div className="flex items-start gap-1.5 text-neutral-500 pt-1.5 border-t border-white/[0.06]">
+            <div className="flex items-start gap-1.5 text-neutral-500 pt-1.5 border-t border-gray-200">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mt-0.5 shrink-0 text-amber-500/50">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />

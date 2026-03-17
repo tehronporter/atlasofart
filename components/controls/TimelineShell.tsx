@@ -77,12 +77,12 @@ export default function TimelineShell({
     : `Up to ${formatYear(currentMax)}`;
 
   return (
-    <div className="h-full w-full bg-[#0e0f12]/95 backdrop-blur-sm border-t border-white/[0.05] flex flex-col p-4 md:p-6 gap-4">
+    <div className="h-full w-full bg-white/95 backdrop-blur-sm border-t border-gray-200 flex flex-col p-4 md:p-6 gap-4">
       {/* Header */}
       <div className="flex items-baseline justify-between">
         <div>
           <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-1">Timeline</p>
-          <p className="text-lg md:text-2xl font-light text-white">{viewingLabel}</p>
+          <p className="text-lg md:text-2xl font-light text-neutral-900">{viewingLabel}</p>
         </div>
         <div className="text-right">
           <p className="text-[11px] text-neutral-500 mb-1">Artworks shown</p>
@@ -105,13 +105,13 @@ export default function TimelineShell({
                 className={`w-full rounded-t transition-all duration-150 ${
                   bin.year <= currentMax
                     ? 'bg-gradient-to-t from-amber-500 to-amber-400'
-                    : 'bg-white/[0.08] group-hover:bg-white/[0.12]'
+                    : 'bg-gray-300 group-hover:bg-gray-400'
                 }`}
                 style={{ height: `${Math.max(2, bin.percentage)}%` }}
               />
 
               {/* Tooltip on hover */}
-              <div className="absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 backdrop-blur px-2 py-1 rounded text-[9px] text-white whitespace-nowrap pointer-events-none">
+              <div className="absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 backdrop-blur px-2 py-1 rounded text-[9px] text-neutral-900 whitespace-nowrap pointer-events-none">
                 {bin.count} artworks
               </div>
             </div>
@@ -127,7 +127,7 @@ export default function TimelineShell({
           </span>
           <div className="flex-1 relative flex items-center h-8">
             {/* Track background */}
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 bg-white/[0.08] rounded-full w-full pointer-events-none" />
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 bg-gray-300 rounded-full w-full pointer-events-none" />
 
             {/* Active track */}
             <div
@@ -200,13 +200,13 @@ export default function TimelineShell({
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => onMaxYearChange?.(minYear)}
-            className="px-2.5 py-1.5 text-[10px] rounded-lg bg-white/[0.04] border border-white/[0.08] text-neutral-400 hover:bg-white/[0.08] hover:text-neutral-200 transition-all"
+            className="px-2.5 py-1.5 text-[10px] rounded-lg bg-white/[0.04] border border-white/[0.08] text-neutral-400 hover:bg-gray-300 hover:text-neutral-200 transition-all"
           >
             Start
           </button>
           <button
             onClick={() => onMaxYearChange?.(Math.floor((minYear + absoluteMaxYear) / 2))}
-            className="px-2.5 py-1.5 text-[10px] rounded-lg bg-white/[0.04] border border-white/[0.08] text-neutral-400 hover:bg-white/[0.08] hover:text-neutral-200 transition-all"
+            className="px-2.5 py-1.5 text-[10px] rounded-lg bg-white/[0.04] border border-white/[0.08] text-neutral-400 hover:bg-gray-300 hover:text-neutral-200 transition-all"
           >
             Midpoint
           </button>

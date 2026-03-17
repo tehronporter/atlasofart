@@ -30,14 +30,14 @@ export default function ClusterListCard({
       className="flex-none flex flex-col border-t pointer-events-auto"
       style={{
         height: 176, // h-44
-        background: 'linear-gradient(180deg, rgba(18,18,24,0.97) 0%, rgba(13,13,18,0.97) 100%)',
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,249,250,0.98) 100%)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        borderColor: 'rgba(255,255,255,0.06)',
+        borderColor: '#e0e0e0',
       }}
     >
       {/* ── Header ──────────────────────────────────────────────────── */}
-      <div className="flex-none flex items-center justify-between gap-3 px-4 py-3 border-b border-white/[0.06]">
+      <div className="flex-none flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-200">
         <div className="flex items-center gap-2.5 min-w-0">
           {/* Count badge */}
           <span
@@ -54,7 +54,7 @@ export default function ClusterListCard({
             {artworks.length}
           </span>
           <div className="min-w-0">
-            <p className="text-[12px] font-semibold text-white truncate">
+            <p className="text-[12px] font-semibold text-neutral-900 truncate">
               {artworks.length === 1 ? 'Artwork' : 'Artworks'}
             </p>
             <p className="text-[10px] text-neutral-500 truncate leading-tight">{location}</p>
@@ -124,7 +124,7 @@ export default function ClusterListCard({
             />
 
             {/* Title tooltip on hover */}
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 backdrop-blur px-2 py-1 rounded text-[9px] text-white whitespace-nowrap pointer-events-none z-10">
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 backdrop-blur px-2 py-1 rounded text-[9px] text-neutral-900 whitespace-nowrap pointer-events-none z-10">
               {artwork.title.length > 20 ? artwork.title.slice(0, 18) + '…' : artwork.title}
             </div>
           </button>
