@@ -69,17 +69,71 @@ export default function FloatingArtworkCard({
   const CARD_W = getCardWidth();
   const imageHeight = getImageHeight(artwork.image_width, artwork.image_height, CARD_W);
   const CARD_H = 360;
+  const MARKER_SIZE = 12; // Estimated marker size to avoid blocking
 
-  const rawLeft = markerX - CARD_W / 2;
-  const rawTop  = markerY - CARD_H - GAP;
+  // Smart positioning: prefer right side to avoid blocking nearby markers
   const padding = 12;
-  const left = Math.max(padding, Math.min(rawLeft, containerWidth - CARD_W - padding));
-  const top  = Math.max(padding, Math.min(rawTop,  containerHeight - CARD_H - padding));
+  const markerOffset = 24; // Distance from marker
+
+  // Try positioning to the right first
+  const rightX = markerX + markerOffset;
+  const canFitRight = rightX + CARD_W + padding <= containerWidth;
+
+  // Try positioning above
+  const aboveY = markerY - CARD_H - GAP - MARKER_SIZE;
+  const canFitAbove = aboveY >= padding;
+
+  // Determine final position
+  const left = canFitRight
+    ? rightX
+    : Math.max(padding, markerX - CARD_W - markerOffset);
+
+  const top = canFitAbove
+    ? aboveY
+    : Math.max(padding, Math.min(markerY + MARKER_SIZE + GAP, containerHeight - CARD_H - padding));
 
   const handleExpand = () => {
     onExpand?.();
     onDoubleClick?.();
   };
+
+  // Calculate connector stem position based on card placement
+  const stemConfig = (() => {
+    if (canFitAbove) {
+      // Card is above marker — stem points down from bottom center
+      return {
+        position: 'absolute' as const,
+        left: '50%',
+        bottom: -GAP,
+        transform: 'translateX(-50%)',
+        width: 2,
+        height: GAP,
+        background: 'linear-gradient(to bottom, rgba(46,83,255,0.4), rgba(46,83,255,0))',
+      };
+    } else if (canFitRight) {
+      // Card is to the right — stem points left from center-left edge
+      return {
+        position: 'absolute' as const,
+        left: -GAP,
+        top: '50%',
+        transform: 'translateY(-50%)',
+        width: GAP,
+        height: 2,
+        background: 'linear-gradient(to left, rgba(46,83,255,0.4), rgba(46,83,255,0))',
+      };
+    } else {
+      // Card is to the left — stem points right from center-right edge
+      return {
+        position: 'absolute' as const,
+        right: -GAP,
+        top: '50%',
+        transform: 'translateY(-50%)',
+        width: GAP,
+        height: 2,
+        background: 'linear-gradient(to right, rgba(46,83,255,0.4), rgba(46,83,255,0))',
+      };
+    }
+  })();
 
   return (
     <div
@@ -88,19 +142,8 @@ export default function FloatingArtworkCard({
       className="pointer-events-auto animate-in fade-in zoom-in-95 duration-200"
       onDoubleClick={handleExpand}
     >
-      {/* Connector stem */}
-      <div
-        style={{
-          position: 'absolute',
-          left: '50%',
-          bottom: -GAP,
-          transform: 'translateX(-50%)',
-          width: 2,
-          height: GAP,
-          background: 'linear-gradient(to bottom, rgba(251,191,36,0.4), rgba(251,191,36,0))',
-          pointerEvents: 'none',
-        }}
-      />
+      {/* Connector stem — dynamically positioned */}
+      <div style={{ ...stemConfig, pointerEvents: 'none' }} />
 
       <div className="rounded-xl overflow-hidden border border-gray-300 bg-gradient-to-b from-white/98 to-gray-50/98 backdrop-blur-md shadow-lg hover:border-gray-400 transition-all duration-300">
         {/* Image */}
