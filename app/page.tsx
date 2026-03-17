@@ -741,7 +741,7 @@ export default function Home() {
                 <ArtworkDetailPanel
                   artwork={selectedArtwork}
                   clusterArtworks={clusterArtworks}
-                  nearbyArtworks={nearbyArtworks}
+                  nearbyArtworks={nearbyArtworks as ArtworkCardData[]}
                   selectedId={selectedArtworkId}
                   onSelect={artwork => {
                     handleArtworkClick(artwork);
@@ -760,7 +760,7 @@ export default function Home() {
                 <ExpandedArtworkDetail
                   artwork={selectedArtwork}
                   onClose={() => setIsExpandedDetailOpen(false)}
-                  nearbyArtworks={nearbyArtworks}
+                  nearbyArtworks={nearbyArtworks as ArtworkCardData[]}
                   onNavigate={artwork => {
                     setSelectedArtworkId(artwork.id);
                     setMapCommand({ type: 'flyTo', lat: artwork.lat, lng: artwork.lng });
