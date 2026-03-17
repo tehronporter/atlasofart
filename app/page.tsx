@@ -17,6 +17,7 @@ import UserProfileSection from '@/components/dashboard/UserProfileSection';
 import UserQuickLinks from '@/components/dashboard/UserQuickLinks';
 import AdminSection from '@/components/dashboard/AdminSection';
 import FloatingArtworksBrowser from '@/components/map/FloatingArtworksBrowser';
+import ArtworkDetailPanel from '@/components/map/ArtworkDetailPanel';
 import { trackArtworkView } from '@/lib/auth';
 import type { MapCommand } from '@/components/map/MapShell';
 
@@ -700,7 +701,7 @@ export default function Home() {
               <MapShell
                 artworks={filteredArtworks}
                 selectedArtworkId={selectedArtworkId}
-                selectedArtwork={!isExpandedDetailOpen ? selectedArtwork : null}
+                selectedArtwork={null}
                 onArtworkClick={handleArtworkClick}
                 onExpand={() => setIsExpandedDetailOpen(true)}
                 onDoubleClick={() => setIsExpandedDetailOpen(true)}
@@ -713,6 +714,20 @@ export default function Home() {
                   setClusterCenter(center);
                 }}
               />
+
+              {/* Right-side detail panel */}
+              {selectedArtwork && !isExpandedDetailOpen && (
+                <ArtworkDetailPanel
+                  artwork={selectedArtwork}
+                  clusterArtworks={clusterArtworks}
+                  selectedId={selectedArtworkId}
+                  onSelect={artwork => {
+                    handleArtworkClick(artwork);
+                    setMapCommand({ type: 'flyTo', lat: artwork.lat, lng: artwork.lng });
+                  }}
+                  onClose={() => setSelectedArtworkId(null)}
+                />
+              )}
 
               {/* Expanded detail modal */}
               {selectedArtwork && isExpandedDetailOpen && (
