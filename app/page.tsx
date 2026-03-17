@@ -8,8 +8,6 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import TimelineShell from '@/components/controls/TimelineShell';
 import ExpandedArtworkDetail from '@/components/map/ExpandedArtworkDetail';
-import NearbyArtworksTray from '@/components/map/NearbyArtworksTray';
-import ClusterListCard from '@/components/map/ClusterListCard';
 import MobileSearchSheet from '@/components/mobile/MobileSearchSheet';
 import Toast from '@/components/common/Toast';
 import AuthButton from '@/components/auth/AuthButton';
@@ -18,6 +16,7 @@ import UserQuickLinks from '@/components/dashboard/UserQuickLinks';
 import AdminSection from '@/components/dashboard/AdminSection';
 import FloatingArtworksBrowser from '@/components/map/FloatingArtworksBrowser';
 import ArtworkDetailPanel, { type ArtworkCardData } from '@/components/map/ArtworkDetailPanel';
+import { ERA_LEGEND } from '@/components/map/MapShell';
 import { trackArtworkView } from '@/lib/auth';
 import type { MapCommand } from '@/components/map/MapShell';
 
@@ -174,6 +173,7 @@ export default function Home() {
   const [browserOpen, setBrowserOpen]                   = useState(false);
   const [mobileSheetOpen, setMobileSheetOpen]           = useState(false);
   const [timelineCollapsed, setTimelineCollapsed]       = useState(false);
+  const [eraLegendOpen, setEraLegendOpen]               = useState(false);
 
   // ── Map command (fit / flyTo) ────────────────────────────────────────────────
   const [mapCommand, setMapCommand] = useState<MapCommand | null>(null);
@@ -495,8 +495,8 @@ export default function Home() {
 
         <div className="border-t border-white/[0.05] mx-4 my-1" />
 
-        {/* Search + Filters */}
-        <div className="px-3.5 py-3 space-y-2.5">
+        {/* Search */}
+        <div className="px-3.5 py-3 space-y-2">
           <div className="relative">
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none">
               <SearchIcon />
@@ -506,8 +506,12 @@ export default function Home() {
               placeholder="Search artworks…"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-white/[0.12] border border-white/[0.2] rounded-lg pl-9 pr-8 py-2.5 text-[12px] text-white placeholder-white/40 focus:outline-none focus:bg-white/[0.18] focus:border-white/[0.4] focus:ring-1 focus:ring-white/20 transition-all duration-200"
+              className="w-full bg-white/[0.12] border border-white/[0.2] rounded-lg pl-9 pr-16 py-2.5 text-[12px] text-white placeholder-white/40 focus:outline-none focus:bg-white/[0.18] focus:border-white/[0.4] focus:ring-1 focus:ring-white/20 transition-all duration-200"
             />
+            {/* Inline count badge */}
+            <span className="absolute right-8 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-white/40 pointer-events-none">
+              {filteredArtworks.length.toLocaleString()}
+            </span>
             {searchQuery && (
               <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/80">
                 <XIcon />
@@ -515,6 +519,7 @@ export default function Home() {
             )}
           </div>
 
+          {/* Filters toggle */}
           <button
             onClick={() => setShowFilters(f => !f)}
             className={`w-full flex items-center gap-1.5 text-[11px] font-medium transition-all duration-200 px-2.5 py-2 rounded-lg border ${
@@ -535,7 +540,7 @@ export default function Home() {
           </button>
 
           {showFilters && (
-            <div className="mt-2 space-y-3 pb-2 max-h-64 overflow-y-auto">
+            <div className="space-y-3 pb-1 max-h-56 overflow-y-auto">
               {regions.length > 0 && (
                 <div>
                   <p className="text-[10px] uppercase tracking-widest text-white/50 mb-1.5 px-0.5">Region</p>
@@ -587,71 +592,89 @@ export default function Home() {
 
         <div className="border-t border-white/[0.05] mx-4 my-1" />
 
-        {/* Stats + Actions panel */}
-        <div className="px-3.5 py-3 space-y-3">
-          {/* Artwork count stats */}
-          <div className="rounded-lg bg-white/[0.08] border border-white/[0.12] px-3 py-2.5 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-white/50 uppercase tracking-widest">Showing</span>
-              <span className="text-[11px] font-semibold text-white">{filteredArtworks.length.toLocaleString()}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-white/50 uppercase tracking-widest">Total</span>
-              <span className="text-[11px] text-white/70">{allArtworks.length.toLocaleString()}</span>
-            </div>
-            {hasFilters && filteredArtworks.length === 0 && (
-              <button onClick={clearFilters} className="w-full text-[10px] text-white/70 hover:text-white transition-colors pt-1 border-t border-white/[0.08]">
-                ✕ Clear filters
-              </button>
-            )}
-          </div>
-
-          {/* Map action buttons */}
-          <div className="space-y-1.5">
-            <p className="text-[10px] uppercase tracking-widest text-white/50 px-0.5">Map Actions</p>
-            <button
-              onClick={() => setBrowserOpen(true)}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.12] text-[11px] text-white/80 hover:bg-white/[0.14] hover:text-white transition-all"
-            >
-              <GridIcon />
-              <span>Browse Artworks</span>
-            </button>
-            <button
-              onClick={handleFitToResults}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.12] text-[11px] text-white/80 hover:bg-white/[0.14] hover:text-white transition-all"
-            >
-              <FitIcon />
-              <span>Fit to Results</span>
-            </button>
-            <button
-              onClick={handleSurpriseMe}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.12] text-[11px] text-white/80 hover:bg-white/[0.18] hover:text-white transition-all"
-            >
-              <DiceIcon />
-              <span>Surprise Me</span>
-            </button>
-            <button
-              onClick={handleShare}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border text-[11px] transition-all ${
-                showCopied
-                  ? 'bg-white/25 border-white/40 text-white'
-                  : 'bg-white/[0.08] border-white/[0.12] text-white/80 hover:bg-white/[0.14] hover:text-white'
-              }`}
-            >
-              <ShareIcon />
-              <span>{showCopied ? '✓ Copied!' : 'Share Link'}</span>
-            </button>
-          </div>
+        {/* Actions */}
+        <div className="px-3.5 py-3 space-y-1.5">
+          {/* Surprise Me — primary CTA */}
+          <button
+            onClick={handleSurpriseMe}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-white text-[#2e53ff] text-[12px] font-semibold hover:bg-white/90 transition-all shadow-sm"
+          >
+            <DiceIcon />
+            <span>Surprise Me</span>
+          </button>
+          <button
+            onClick={() => setBrowserOpen(true)}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.12] text-[11px] text-white/80 hover:bg-white/[0.14] hover:text-white transition-all"
+          >
+            <GridIcon />
+            <span>Browse Artworks</span>
+          </button>
+          <button
+            onClick={handleFitToResults}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.12] text-[11px] text-white/80 hover:bg-white/[0.14] hover:text-white transition-all"
+          >
+            <FitIcon />
+            <span>Fit to Results</span>
+          </button>
+          <button
+            onClick={handleShare}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border text-[11px] transition-all ${
+              showCopied
+                ? 'bg-white/25 border-white/40 text-white'
+                : 'bg-white/[0.08] border-white/[0.12] text-white/80 hover:bg-white/[0.14] hover:text-white'
+            }`}
+          >
+            <ShareIcon />
+            <span>{showCopied ? '✓ Copied!' : 'Share Link'}</span>
+          </button>
         </div>
 
-        {/* Account / Library / Admin — no scroll, fits inline */}
+        <div className="border-t border-white/[0.05] mx-4 my-1" />
+
+        {/* Era Legend — collapsible */}
+        <div className="px-3.5 py-2">
+          <button
+            onClick={() => setEraLegendOpen(o => !o)}
+            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-[11px] font-medium transition-all border ${
+              eraLegendOpen
+                ? 'bg-white/20 border-white/30 text-white'
+                : 'bg-white/[0.06] border-white/[0.12] text-white/60 hover:text-white hover:bg-white/[0.12]'
+            }`}
+          >
+            <div className="flex items-center gap-1.5">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span>Era Legend</span>
+            </div>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+              className={`transition-transform ${eraLegendOpen ? 'rotate-180' : ''}`}>
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {eraLegendOpen && (
+            <div className="mt-2 px-1 space-y-1.5">
+              {ERA_LEGEND.map(e => (
+                <div key={e.label} className="flex items-center gap-2.5">
+                  <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: e.color }} />
+                  <span className="text-[10px] text-white/80 w-[72px]">{e.label}</span>
+                  <span className="text-[9px] text-white/40">{e.years}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-white/[0.05] mx-4 my-1" />
+
+        {/* Account / Library / Admin */}
         <UserProfileSection />
         <UserQuickLinks />
         <AdminSection />
 
         {/* Recently Viewed */}
         {historyArtworks.length > 0 && (
-          <div className="border-t border-white/[0.1] mx-3.5 pt-2.5 mt-2">
+          <div className="border-t border-white/[0.1] mx-3.5 pt-2.5 mt-auto">
             <p className="text-[9px] uppercase tracking-widest text-white/50 mb-2 px-0.5">Recently Viewed</p>
             <div className="flex items-center gap-1.5 px-0.5">
               {historyArtworks.map(a => (
@@ -680,15 +703,9 @@ export default function Home() {
           </div>
         )}
 
-        {/* Bottom auth + count */}
+        {/* Bottom auth */}
         <div className="border-t border-white/[0.08] mx-3.5 pt-2.5 mt-2 mb-3">
-          <div className="mb-2"><AuthButton /></div>
-          <p className="text-[10px] text-white/50 px-0.5">
-            <span className="text-white font-medium">{filteredArtworks.length.toLocaleString()}</span>
-            <span className="text-white/40"> of </span>
-            <span className="text-white/60">{allArtworks.length.toLocaleString()}</span>
-            <span className="text-white/40"> artworks</span>
-          </p>
+          <AuthButton />
         </div>
       </aside>
 
@@ -716,19 +733,25 @@ export default function Home() {
                   setClusterArtworks(artworks);
                   setClusterCenter(center);
                 }}
+                eraLegendOpen={eraLegendOpen}
               />
 
               {/* Right-side detail panel */}
-              {selectedArtwork && !isExpandedDetailOpen && (
+              {(selectedArtwork || clusterArtworks.length > 0) && !isExpandedDetailOpen && (
                 <ArtworkDetailPanel
                   artwork={selectedArtwork}
                   clusterArtworks={clusterArtworks}
+                  nearbyArtworks={nearbyArtworks}
                   selectedId={selectedArtworkId}
                   onSelect={artwork => {
                     handleArtworkClick(artwork);
                     setMapCommand({ type: 'flyTo', lat: artwork.lat, lng: artwork.lng });
                   }}
-                  onClose={() => setSelectedArtworkId(null)}
+                  onClose={() => {
+                    setSelectedArtworkId(null);
+                    setClusterArtworks([]);
+                    setClusterCenter(null);
+                  }}
                 />
               )}
 
@@ -752,8 +775,8 @@ export default function Home() {
                   {selectedRegion && (
                     <button
                       onClick={() => setSelectedRegion(null)}
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] text-amber-400 hover:bg-amber-500/10 transition-colors"
-                      style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(245,158,11,0.3)', backdropFilter: 'blur(12px)' }}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] text-[#2e53ff] hover:bg-blue-50 transition-colors"
+                      style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(46,83,255,0.3)', backdropFilter: 'blur(12px)' }}
                     >
                       {selectedRegion} <XIcon />
                     </button>
@@ -761,8 +784,8 @@ export default function Home() {
                   {selectedMedium && (
                     <button
                       onClick={() => setSelectedMedium(null)}
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] text-amber-400 hover:bg-amber-500/10 transition-colors"
-                      style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(245,158,11,0.3)', backdropFilter: 'blur(12px)' }}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] text-[#2e53ff] hover:bg-blue-50 transition-colors"
+                      style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(46,83,255,0.3)', backdropFilter: 'blur(12px)' }}
                     >
                       {selectedMedium.length > 22 ? selectedMedium.slice(0, 20) + '…' : selectedMedium} <XIcon />
                     </button>
@@ -774,40 +797,13 @@ export default function Home() {
               <button
                 onClick={() => setMobileSheetOpen(true)}
                 className="lg:hidden absolute bottom-4 right-4 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 active:scale-95"
-                style={{ background: 'linear-gradient(135deg, #f59e0b, #fb923c)', color: '#1a1000' }}
+                style={{ background: '#2e53ff', color: '#ffffff' }}
                 aria-label="Open search"
               >
                 <SearchIcon />
               </button>
             </div>
 
-              {/* Nearby artworks tray — shown when artwork is selected */}
-              {selectedArtwork && nearbyArtworks.length > 0 && !isExpandedDetailOpen && (
-                <NearbyArtworksTray
-                  artworks={nearbyArtworks}
-                  selectedId={selectedArtworkId!}
-                  onSelect={a => {
-                    handleArtworkClick(a);
-                    setMapCommand({ type: 'flyTo', lat: a.lat, lng: a.lng });
-                  }}
-                />
-              )}
-
-              {/* Cluster list — shown at bottom when cluster is selected */}
-              {clusterArtworks.length > 0 && (
-                <ClusterListCard
-                  artworks={clusterArtworks}
-                  center={clusterCenter}
-                  onSelect={a => {
-                    handleArtworkClick(a);
-                    setMapCommand({ type: 'flyTo', lat: a.lat, lng: a.lng });
-                  }}
-                  onClose={() => {
-                    setClusterArtworks([]);
-                    setClusterCenter(null);
-                  }}
-                />
-              )}
             </div>
             {/* End of left section */}
 
