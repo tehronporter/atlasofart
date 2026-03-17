@@ -25,7 +25,7 @@ export default function UserMenu() {
     return (
       <a
         href="/login"
-        className="px-4 py-2 bg-amber-500 text-neutral-900 rounded font-medium hover:bg-amber-400 transition-colors text-sm"
+        className="px-4 py-2 bg-[#1e5a96] text-white rounded font-medium hover:bg-[#164071] transition-colors text-sm"
       >
         Sign In
       </a>
@@ -36,12 +36,12 @@ export default function UserMenu() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 bg-neutral-800 rounded hover:bg-neutral-700 transition-colors"
+        className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
       >
-        <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center text-neutral-900 text-xs font-bold">
+        <div className="w-6 h-6 bg-[#1e5a96] rounded-full flex items-center justify-center text-white text-xs font-bold">
           {user.email?.[0].toUpperCase()}
         </div>
-        <span className="text-sm text-neutral-300 hidden sm:block">
+        <span className="text-sm text-neutral-700 hidden sm:block">
           {user.email?.split('@')[0]}
         </span>
       </button>
@@ -49,28 +49,28 @@ export default function UserMenu() {
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 mt-2 w-48 bg-neutral-900 border border-neutral-800 rounded-lg shadow-lg z-50 overflow-hidden">
-            <div className="px-4 py-3 border-b border-neutral-800">
-              <p className="text-sm text-white truncate">{user.email}</p>
+          <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-200">
+              <p className="text-sm text-neutral-900 truncate">{user.email}</p>
             </div>
-            
+
             <a
               href="/collections"
-              className="block px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white"
+              className="block px-4 py-2 text-sm text-neutral-700 hover:bg-gray-100 hover:text-neutral-900"
             >
               My Collections
             </a>
-            
+
             <a
               href="/favorites"
-              className="block px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white"
+              className="block px-4 py-2 text-sm text-neutral-700 hover:bg-gray-100 hover:text-neutral-900"
             >
               Favorites
             </a>
 
             <button
               onClick={handleSignOut}
-              className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-neutral-800 hover:text-red-300"
+              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 hover:text-red-700"
             >
               Sign Out
             </button>

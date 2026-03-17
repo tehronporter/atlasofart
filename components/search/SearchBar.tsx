@@ -72,21 +72,21 @@ export default function SearchBar({
 
   return (
     <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 w-full max-w-2xl px-4">
-      <div className="flex items-center gap-2 bg-neutral-900/90 backdrop-blur-sm border border-neutral-800 rounded-lg px-4 py-2.5">
-        <svg className="w-4 h-4 text-neutral-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg px-4 py-2.5">
+        <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
-        
+
         <input
           type="text"
           placeholder="Search artworks, cultures, tags..."
           value={searchQuery}
           onChange={(e) => handleSearchChange(e.target.value)}
-          className="flex-1 bg-transparent text-neutral-200 placeholder-neutral-500 text-sm focus:outline-none"
+          className="flex-1 bg-transparent text-neutral-900 placeholder-gray-400 text-sm focus:outline-none"
         />
-        
+
         {hasActiveFilters && (
-          <button onClick={clearFilters} className="text-neutral-500 hover:text-neutral-300 transition-colors">
+          <button onClick={clearFilters} className="text-gray-400 hover:text-gray-600 transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -96,7 +96,7 @@ export default function SearchBar({
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className={`p-1.5 rounded transition-colors ${
-            isExpanded ? 'bg-neutral-800 text-amber-500' : 'text-neutral-500 hover:text-neutral-300'
+            isExpanded ? 'bg-gray-100 text-amber-600' : 'text-gray-400 hover:text-gray-600'
           }`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,9 +106,9 @@ export default function SearchBar({
       </div>
 
       {isExpanded && (
-        <div className="mt-3 bg-neutral-900/90 backdrop-blur-sm border border-neutral-800 rounded-lg p-4 space-y-4">
+        <div className="mt-3 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg p-4 space-y-4">
           <div>
-            <h3 className="text-xs font-medium text-neutral-400 mb-2">Region</h3>
+            <h3 className="text-xs font-medium text-neutral-700 mb-2">Region</h3>
             <div className="flex flex-wrap gap-2">
               {regions.map((region) => (
                 <button
@@ -116,8 +116,8 @@ export default function SearchBar({
                   onClick={() => handleRegionSelect(region)}
                   className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
                     selectedRegion === region
-                      ? 'bg-amber-500 text-neutral-900 font-medium'
-                      : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
+                      ? 'bg-amber-500 text-white font-medium'
+                      : 'bg-gray-100 text-neutral-700 hover:bg-gray-200'
                   }`}
                 >
                   {region}
@@ -127,7 +127,7 @@ export default function SearchBar({
           </div>
 
           <div>
-            <h3 className="text-xs font-medium text-neutral-400 mb-2">Medium</h3>
+            <h3 className="text-xs font-medium text-neutral-700 mb-2">Medium</h3>
             <div className="flex flex-wrap gap-2">
               {mediums.map((medium) => (
                 <button
@@ -135,8 +135,8 @@ export default function SearchBar({
                   onClick={() => handleMediumSelect(medium)}
                   className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
                     selectedMedium === medium
-                      ? 'bg-amber-500 text-neutral-900 font-medium'
-                      : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
+                      ? 'bg-amber-500 text-white font-medium'
+                      : 'bg-gray-100 text-neutral-700 hover:bg-gray-200'
                   }`}
                 >
                   {medium}
@@ -146,14 +146,14 @@ export default function SearchBar({
           </div>
 
           {hasActiveFilters && (
-            <div className="pt-3 border-t border-neutral-800">
+            <div className="pt-3 border-t border-gray-200">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-neutral-500">Active:</span>
+                <span className="text-xs text-neutral-700">Active:</span>
                 {selectedRegion && (
-                  <span className="text-xs bg-amber-500/20 text-amber-500 px-2 py-0.5 rounded">{selectedRegion}</span>
+                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">{selectedRegion}</span>
                 )}
                 {selectedMedium && (
-                  <span className="text-xs bg-amber-500/20 text-amber-500 px-2 py-0.5 rounded">{selectedMedium}</span>
+                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">{selectedMedium}</span>
                 )}
               </div>
             </div>

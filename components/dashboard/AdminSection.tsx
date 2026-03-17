@@ -27,8 +27,8 @@ export default function AdminSection() {
   if (isLoading || !hasAdminAccess) return null;
 
   return (
-    <div className="border-t border-white/[0.05] mx-4 my-3 pt-3">
-      <p className="text-[10px] uppercase tracking-widest text-neutral-600 px-1 mb-2">Administration</p>
+    <div className="border-t border-gray-300 mx-4 my-3 pt-3">
+      <p className="text-[10px] uppercase tracking-widest text-neutral-700 px-1 mb-2">Administration</p>
       <Link
         href="/admin"
         className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/15 transition-all"

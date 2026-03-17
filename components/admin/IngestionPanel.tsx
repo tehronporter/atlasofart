@@ -53,9 +53,9 @@ function StatusBadge({ status }: { status: string }) {
 
 function StatCard({ label, value, sub, accent }: { label: string; value: number | string; sub?: string; accent?: boolean }) {
   return (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5">
-      <p className="text-xs text-neutral-500 font-medium uppercase tracking-wider mb-2">{label}</p>
-      <p className={`text-3xl font-bold tabular-nums ${accent ? 'text-amber-400' : 'text-white'}`}>{value}</p>
+    <div className="bg-white border border-gray-200 rounded-xl p-5">
+      <p className="text-xs text-neutral-700 font-medium uppercase tracking-wider mb-2">{label}</p>
+      <p className={`text-3xl font-bold tabular-nums ${accent ? 'text-amber-600' : 'text-neutral-900'}`}>{value}</p>
       {sub && <p className="text-xs text-neutral-600 mt-1">{sub}</p>}
     </div>
   );

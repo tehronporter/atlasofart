@@ -35,26 +35,26 @@ export default function UserQuickLinks() {
   if (isLoading || !user) return null;
 
   return (
-    <div className="border-t border-white/[0.05] mx-4 my-3 pt-3">
-      <p className="text-[10px] uppercase tracking-widest text-neutral-600 px-1 mb-2">Your Library</p>
+    <div className="border-t border-gray-300 mx-4 my-3 pt-3">
+      <p className="text-[10px] uppercase tracking-widest text-neutral-700 px-1 mb-2">Your Library</p>
       <div className="space-y-1.5 px-1">
         <Link
           href="/favorites"
-          className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] transition-all"
+          className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-gray-100 border border-gray-200 hover:bg-gray-150 transition-all"
         >
-          <span className="text-amber-400">⭐</span>
-          <span className="flex-1 text-[11px] text-neutral-300">Favorites</span>
-          <span className="text-[9px] text-neutral-600 bg-white/[0.05] px-1.5 py-0.5 rounded">
+          <span className="text-amber-500">⭐</span>
+          <span className="flex-1 text-[11px] text-neutral-800">Favorites</span>
+          <span className="text-[9px] text-neutral-700 bg-gray-200 px-1.5 py-0.5 rounded">
             {favCount}
           </span>
         </Link>
         <Link
           href="/collections"
-          className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] transition-all"
+          className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-gray-100 border border-gray-200 hover:bg-gray-150 transition-all"
         >
-          <span className="text-blue-400">📚</span>
-          <span className="flex-1 text-[11px] text-neutral-300">Collections</span>
-          <span className="text-[9px] text-neutral-600 bg-white/[0.05] px-1.5 py-0.5 rounded">
+          <span className="text-blue-600">📚</span>
+          <span className="flex-1 text-[11px] text-neutral-800">Collections</span>
+          <span className="text-[9px] text-neutral-700 bg-gray-200 px-1.5 py-0.5 rounded">
             {collCount}
           </span>
         </Link>

@@ -75,30 +75,30 @@ export default function MobileSearchSheet({
         <div
           className="rounded-t-2xl overflow-hidden"
           style={{
-            background: 'linear-gradient(180deg, #151519 0%, #0f0f14 100%)',
-            border: '1px solid rgba(255,255,255,0.09)',
+            background: 'linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%)',
+            border: '1px solid #e0e0e0',
             borderBottom: 'none',
             maxHeight: '80vh',
           }}
         >
           {/* Drag handle */}
           <div className="flex justify-center pt-3 pb-1">
-            <div className="w-10 h-1 rounded-full bg-white/20" />
+            <div className="w-10 h-1 rounded-full bg-gray-300" />
           </div>
 
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-3 border-b border-white/[0.06]">
-            <p className="text-[13px] font-medium text-white">Search & Filter</p>
+          <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200">
+            <p className="text-[13px] font-medium text-neutral-900">Search & Filter</p>
             <div className="flex items-center gap-3">
-              <span className="text-[11px] text-neutral-500">
-                <span className="text-amber-400 font-semibold">{filteredCount}</span>
+              <span className="text-[11px] text-neutral-700">
+                <span className="text-amber-500 font-semibold">{filteredCount}</span>
                 {' of '}
                 <span>{totalCount}</span>
               </span>
               <button
                 onClick={onClose}
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-neutral-500 hover:text-neutral-300 transition-colors"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-neutral-600 hover:text-neutral-800 transition-colors"
+                style={{ background: '#f0f0f0', border: '1px solid #e0e0e0' }}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -111,7 +111,7 @@ export default function MobileSearchSheet({
           <div className="overflow-y-auto px-5 py-4 space-y-5" style={{ maxHeight: 'calc(80vh - 80px)' }}>
             {/* Search input */}
             <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-600 pointer-events-none">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
@@ -122,18 +122,18 @@ export default function MobileSearchSheet({
                 placeholder="Search artworks…"
                 value={searchQuery}
                 onChange={e => onSearchChange(e.target.value)}
-                className="w-full pl-10 pr-9 py-3 rounded-xl text-[14px] text-neutral-200 placeholder-neutral-600 focus:outline-none transition-all duration-200"
+                className="w-full pl-10 pr-9 py-3 rounded-xl text-[14px] text-neutral-900 placeholder-gray-400 focus:outline-none transition-all duration-200"
                 style={{
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: '#f8f9fa',
+                  border: '1px solid #e0e0e0',
                 }}
-                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(245,158,11,0.5)'; }}
-                onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+                onFocus={e => { e.currentTarget.style.borderColor = '#1e5a96'; }}
+                onBlur={e => { e.currentTarget.style.borderColor = '#e0e0e0'; }}
               />
               {searchQuery && (
                 <button
                   onClick={() => onSearchChange('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-neutral-400"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -145,7 +145,7 @@ export default function MobileSearchSheet({
             {/* Region filter */}
             {regions.length > 0 && (
               <div>
-                <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-2.5">Region</p>
+                <p className="text-[10px] uppercase tracking-widest text-neutral-700 mb-2.5">Region</p>
                 <div className="flex flex-wrap gap-2">
                   {regions.slice(0, 12).map(r => (
                     <button
@@ -153,8 +153,8 @@ export default function MobileSearchSheet({
                       onClick={() => onRegionChange(selectedRegion === r ? null : r)}
                       className={`px-3 py-1.5 text-[12px] rounded-full transition-all border ${
                         selectedRegion === r
-                          ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
-                          : 'border-white/[0.08] text-neutral-500 hover:text-neutral-300 hover:border-white/[0.15]'
+                          ? 'bg-amber-100 border-amber-300 text-amber-700'
+                          : 'border-gray-300 text-neutral-700 hover:text-neutral-900 hover:border-gray-400'
                       }`}
                     >
                       {r}
@@ -167,7 +167,7 @@ export default function MobileSearchSheet({
             {/* Medium filter */}
             {mediums.length > 0 && (
               <div>
-                <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-2.5">Medium</p>
+                <p className="text-[10px] uppercase tracking-widest text-neutral-700 mb-2.5">Medium</p>
                 <div className="flex flex-wrap gap-2">
                   {mediums.slice(0, 10).map(m => (
                     <button
@@ -175,8 +175,8 @@ export default function MobileSearchSheet({
                       onClick={() => onMediumChange(selectedMedium === m ? null : m)}
                       className={`px-3 py-1.5 text-[12px] rounded-full transition-all border ${
                         selectedMedium === m
-                          ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
-                          : 'border-white/[0.08] text-neutral-500 hover:text-neutral-300 hover:border-white/[0.15]'
+                          ? 'bg-amber-100 border-amber-300 text-amber-700'
+                          : 'border-gray-300 text-neutral-700 hover:text-neutral-900 hover:border-gray-400'
                       }`}
                     >
                       {m.length > 24 ? m.slice(0, 22) + '…' : m}
@@ -191,7 +191,7 @@ export default function MobileSearchSheet({
               {hasFilters && (
                 <button
                   onClick={onClearFilters}
-                  className="flex-1 py-3 rounded-xl text-[13px] text-neutral-500 hover:text-neutral-300 transition-colors border border-white/[0.08] hover:border-white/[0.15]"
+                  className="flex-1 py-3 rounded-xl text-[13px] text-neutral-700 hover:text-neutral-900 transition-colors border border-gray-300 hover:border-gray-400"
                 >
                   Clear all
                 </button>
@@ -200,8 +200,8 @@ export default function MobileSearchSheet({
                 onClick={onClose}
                 className="flex-1 py-3 rounded-xl text-[13px] font-medium transition-all"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(245,158,11,0.85), rgba(251,146,60,0.85))',
-                  color: '#1a1000',
+                  background: '#1e5a96',
+                  color: '#ffffff',
                 }}
               >
                 Show {filteredCount} results
