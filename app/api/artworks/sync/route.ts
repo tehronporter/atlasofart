@@ -1,12 +1,12 @@
 // app/api/artworks/sync/route.ts
 // Incremental artwork sync endpoint — returns only new artworks since lastSyncTime
 
-import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin, supabase } from '@/lib/supabase';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const client = supabaseAdmin ?? supabase;
     const lastSyncTime = request.nextUrl.searchParams.get('lastSyncTime');
 
     // Default to 1 hour ago if no sync time provided
@@ -16,11 +16,11 @@ export async function GET(request: NextRequest) {
 
     // Query for artworks created/updated since lastSyncTime
     // Note: assumes database has created_at or updated_at columns
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('artworks')
       .select('*')
       .gte('created_at', syncTime)
-      .is('image_url_primary', null as any, { not: true })
+      .not('image_url_primary', 'is', null)
       .not('latitude', 'is', null)
       .not('longitude', 'is', null)
       .limit(5000)

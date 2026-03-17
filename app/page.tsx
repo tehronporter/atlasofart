@@ -13,6 +13,8 @@ import MobileTabBar, { type TabType } from '@/components/mobile/MobileTabBar';
 import MobileSearchBar from '@/components/mobile/MobileSearchBar';
 import BottomSheet from '@/components/mobile/BottomSheet';
 import ArtworkDetailSheet from '@/components/mobile/ArtworkDetailSheet';
+import SavedScreen from '@/components/mobile/SavedScreen';
+import ProfileScreen from '@/components/mobile/ProfileScreen';
 import Toast from '@/components/common/Toast';
 import AuthButton from '@/components/auth/AuthButton';
 import UserProfileSection from '@/components/dashboard/UserProfileSection';
@@ -200,6 +202,25 @@ export default function Home() {
   const [clusterArtworks, setClusterArtworks] = useState<ArtworkCardData[]>([]);
   const [clusterCenter, setClusterCenter] = useState<[number, number] | null>(null);
 
+  // ── Saved artworks (localStorage-backed) ────────────────────────────────────
+  const [savedIds, setSavedIds] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      const stored = localStorage.getItem('savedArtworkIds');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch { return new Set(); }
+  });
+
+  const handleToggleSave = useCallback((artwork: ArtworkCardData) => {
+    setSavedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(artwork.id)) next.delete(artwork.id);
+      else next.add(artwork.id);
+      localStorage.setItem('savedArtworkIds', JSON.stringify(Array.from(next)));
+      return next;
+    });
+  }, []);
+
   // ── Sync state ───────────────────────────────────────────────────────────────
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(
     typeof window !== 'undefined' ? localStorage.getItem('lastArtworkSyncTime') : null
@@ -260,7 +281,7 @@ export default function Home() {
           // Merge new artworks, avoiding duplicates
           setAllArtworks(prev => {
             const prevIds = new Set(prev.map(a => a.id));
-            const uniqueNew = newArtworks.filter(a => !prevIds.has(a.id));
+            const uniqueNew = newArtworks.filter((a: Artwork) => !prevIds.has(a.id));
             return [...prev, ...uniqueNew];
           });
 
@@ -965,12 +986,33 @@ export default function Home() {
             clusterArtworks={clusterArtworks}
             nearbyArtworks={nearbyArtworks}
             selectedId={selectedArtworkId}
+            savedIds={savedIds}
+            onToggleSave={handleToggleSave}
             onSelect={(artwork) => {
               setSelectedArtworkId(artwork.id);
               setMapCommand({ type: 'flyTo', lat: artwork.lat, lng: artwork.lng });
             }}
           />
         </BottomSheet>
+      )}
+
+      {/* Mobile Saved Screen */}
+      {activeTab === 'saved' && (
+        <SavedScreen
+          artworks={allArtworks}
+          savedIds={savedIds}
+          onSelectArtwork={(artwork) => {
+            setSelectedArtworkId(artwork.id);
+            setMapCommand({ type: 'flyTo', lat: artwork.lat, lng: artwork.lng });
+            setActiveTab('map');
+          }}
+          onToggleSave={handleToggleSave}
+        />
+      )}
+
+      {/* Mobile Profile Screen */}
+      {activeTab === 'profile' && (
+        <ProfileScreen savedCount={savedIds.size} />
       )}
 
       {/* Mobile Tab Bar - Bottom */}
