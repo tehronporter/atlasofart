@@ -6,6 +6,7 @@
 import MapGL, { MapRef, Source, Layer } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import FloatingArtworkCard, { ArtworkCardData } from './FloatingArtworkCard';
+import MapControls from './MapControls';
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import { ERA_LEGEND } from './eraLegend';
 
@@ -52,6 +53,7 @@ interface MapShellProps {
   onMapCommandDone?: () => void;
   onVisibleCountChange?: (count: number) => void;
   onClusterChange?: (artworks: ArtworkCardData[], center: [number, number] | null) => void;
+  onFitToResults?: () => void;
   eraLegendOpen?: boolean;
 }
 
@@ -94,6 +96,7 @@ export default function MapShell({
   onMapCommandDone,
   onVisibleCountChange,
   onClusterChange,
+  onFitToResults,
 }: MapShellProps) {
   const mapRef       = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -421,6 +424,20 @@ export default function MapShell({
         </Source>
       </MapGL>
 
+      {/* Map controls */}
+      <MapControls
+        mapRef={mapRef}
+        onFullSize={() => {
+          if (mapRef.current) {
+            mapRef.current.fitBounds(
+              [[-180, -85], [180, 85]],
+              { padding: 40, duration: 1200 }
+            );
+          }
+        }}
+        onFitToResults={onFitToResults}
+        showFitToResults={artworks.length > 0}
+      />
 
       {/* Era legend panel */}
       {showLegend && (

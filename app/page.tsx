@@ -199,6 +199,11 @@ export default function Home() {
   const [clusterArtworks, setClusterArtworks] = useState<ArtworkCardData[]>([]);
   const [clusterCenter, setClusterCenter] = useState<[number, number] | null>(null);
 
+  // ── Sync state ───────────────────────────────────────────────────────────────
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(
+    typeof window !== 'undefined' ? localStorage.getItem('lastArtworkSyncTime') : null
+  );
+
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // ── Fetch all artworks ───────────────────────────────────────────────────────
@@ -235,6 +240,50 @@ export default function Home() {
     load();
     return () => { cancelled = true; };
   }, []);
+
+  // ── Sync artworks every 30 minutes for new additions ────────────────────────
+  useEffect(() => {
+    const SYNC_INTERVAL = 30 * 60 * 1000; // 30 minutes
+
+    const syncArtworks = async () => {
+      try {
+        const syncTime = lastSyncTime || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const res = await fetch(`/api/artworks/sync?lastSyncTime=${encodeURIComponent(syncTime)}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const json = await res.json();
+        if (json.newCount > 0 && json.artworks?.length > 0) {
+          // Transform new artworks
+          const newArtworks = json.artworks.map(transformRow);
+
+          // Merge new artworks, avoiding duplicates
+          setAllArtworks(prev => {
+            const prevIds = new Set(prev.map(a => a.id));
+            const uniqueNew = newArtworks.filter(a => !prevIds.has(a.id));
+            return [...prev, ...uniqueNew];
+          });
+
+          // Show toast notification
+          setToast({
+            message: `${json.newCount} new artwork${json.newCount === 1 ? '' : 's'} added!`,
+            type: 'success',
+          });
+
+          // Update last sync time
+          const now = new Date().toISOString();
+          setLastSyncTime(now);
+          localStorage.setItem('lastArtworkSyncTime', now);
+        }
+      } catch (err) {
+        console.error('Sync error:', err);
+      }
+    };
+
+    // Set up polling interval (starts after initial load)
+    const timer = setInterval(syncArtworks, SYNC_INTERVAL);
+
+    return () => clearInterval(timer);
+  }, [lastSyncTime]);
 
   // ── Read URL params on mount ────────────────────────────────────────────────
   useEffect(() => {
@@ -744,6 +793,7 @@ export default function Home() {
                   setClusterArtworks(artworks);
                   setClusterCenter(center);
                 }}
+                onFitToResults={handleFitToResults}
                 eraLegendOpen={eraLegendOpen}
               />
 

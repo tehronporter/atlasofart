@@ -5,6 +5,7 @@
 
 import { memo, useState, useEffect } from 'react';
 import { type ArtworkCardData } from './FloatingArtworkCard';
+import ArtworkClusterFeed from './ArtworkClusterFeed';
 
 type Tab = 'details' | 'nearby' | 'cluster';
 
@@ -301,34 +302,24 @@ const ArtworkDetailPanel = memo(function ArtworkDetailPanel({
               )}
             </div>
 
-            {/* Thumbnail strip */}
-            <div className="px-6 py-4">
-              <p className="text-[11px] uppercase tracking-widest text-[#9ca3af] mb-3 font-medium">
+            {/* Artwork feed grid */}
+            <div className="flex-1 flex flex-col min-h-0 px-6 py-4">
+              <p className="text-[11px] uppercase tracking-widest text-[#9ca3af] mb-3 font-medium shrink-0">
                 All {clusterArtworks.length} artworks
               </p>
-              <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                {clusterArtworks.map((a, idx) => (
-                  <button
-                    key={a.id}
-                    onClick={() => { setClusterIndex(idx); onSelect?.(a); }}
-                    title={a.title}
-                    className={`shrink-0 w-14 h-14 rounded-lg overflow-hidden transition-all border ${
-                      idx === clusterIndex
-                        ? 'ring-2 ring-[#2e5bff] border-[#2e5bff]'
-                        : 'opacity-60 hover:opacity-90 border-[#e5e7eb]'
-                    }`}
-                  >
-                    {a.image_url ? (
-                      <img src={a.image_url} alt={a.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-[#f9fafb] flex items-center justify-center">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#d1d5db]">
-                          <rect x="3" y="3" width="18" height="18" rx="2" />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
-                ))}
+              <div className="flex-1 min-h-0">
+                <ArtworkClusterFeed
+                  artworks={clusterArtworks}
+                  onArtworkClick={(artwork) => {
+                    const idx = clusterArtworks.findIndex(a => a.id === artwork.id);
+                    if (idx !== -1) {
+                      setClusterIndex(idx);
+                      onSelect?.(artwork);
+                    }
+                  }}
+                  containerWidth={384 - 48} // w-96 (384px) - px-6 x2 (48px)
+                  containerHeight={400} // Approximate, will be dynamic
+                />
               </div>
             </div>
           </div>
