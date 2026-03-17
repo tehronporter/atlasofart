@@ -57,7 +57,7 @@ const ArtworkDetailPanel = memo(function ArtworkDetailPanel({
   const headerArtwork = activeTab === 'cluster' ? clusterArtwork : displayArtwork;
 
   return (
-    <div className="fixed right-0 top-0 bottom-0 w-96 bg-white shadow-lg border-l border-[#e5e7eb] z-30 flex flex-col animate-in slide-in-from-right-full duration-300">
+    <div className="hidden lg:flex fixed right-0 top-0 bottom-0 w-96 bg-white shadow-lg border-l border-[#e5e7eb] z-30 flex-col animate-in slide-in-from-right-full duration-300">
 
       {/* ── Header: title + meta + tabs ──────────────────────────────────── */}
       <div className="bg-white border-b border-[#e5e7eb] px-6 pt-5 pb-4 shrink-0">
