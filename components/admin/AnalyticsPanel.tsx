@@ -66,26 +66,26 @@ export function AnalyticsPanel() {
     <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
       {/* Error banner */}
       {error && (
-        <div className="p-4 bg-red-900/20 border border-red-800/50 rounded-xl text-sm">
-          <p className="text-red-400 font-semibold">{error}</p>
+        <div className="p-4 bg-red-100 border border-red-300 rounded-xl text-sm">
+          <p className="text-red-700 font-semibold">{error}</p>
         </div>
       )}
 
       {/* KPI Cards */}
       {isLoading ? (
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-amber-500/60 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-neutral-500 text-sm">Loading analytics...</p>
+          <div className="w-8 h-8 border-2 border-[#1e5a96]/60 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-neutral-700 text-sm">Loading analytics...</p>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {kpis.map(kpi => (
-              <div key={kpi.label} className={`rounded-xl border border-neutral-800 p-5 ${kpi.color.replace('text-', 'border-').replace('/15', '/30')}`}>
+              <div key={kpi.label} className={`rounded-xl border p-5 bg-white ${kpi.color.replace('text-', 'border-').replace('/15', '/30').replace('bg-', 'border-')}`}>
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-xs text-neutral-400 uppercase tracking-wider mb-2">{kpi.label}</p>
-                    <p className="text-2xl font-bold text-white tabular-nums">{kpi.value}</p>
+                    <p className="text-xs text-neutral-700 uppercase tracking-wider mb-2">{kpi.label}</p>
+                    <p className="text-2xl font-bold text-neutral-900 tabular-nums">{kpi.value}</p>
                   </div>
                   <span className="text-2xl">{kpi.icon}</span>
                 </div>
@@ -95,20 +95,20 @@ export function AnalyticsPanel() {
 
           {/* Charts Placeholder */}
           <div className="space-y-6">
-            <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-8 text-center">
-              <p className="text-neutral-500 text-sm">📊 View Analytics Charts</p>
+            <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
+              <p className="text-neutral-700 text-sm">📊 View Analytics Charts</p>
               <p className="text-xs text-neutral-600 mt-2">Bar charts, line graphs, and heatmaps coming soon</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
-                <h3 className="text-sm font-semibold text-white mb-4">Most Viewed Artworks</h3>
-                <p className="text-xs text-neutral-500">Top 10 artworks by view count — data visualization coming soon</p>
+              <div className="bg-white border border-gray-200 rounded-xl p-6">
+                <h3 className="text-sm font-semibold text-neutral-900 mb-4">Most Viewed Artworks</h3>
+                <p className="text-xs text-neutral-700">Top 10 artworks by view count — data visualization coming soon</p>
               </div>
 
-              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
-                <h3 className="text-sm font-semibold text-white mb-4">Views by Region</h3>
-                <p className="text-xs text-neutral-500">Geographic distribution of artwork views — map coming soon</p>
+              <div className="bg-white border border-gray-200 rounded-xl p-6">
+                <h3 className="text-sm font-semibold text-neutral-900 mb-4">Views by Region</h3>
+                <p className="text-xs text-neutral-700">Geographic distribution of artwork views — map coming soon</p>
               </div>
             </div>
           </div>

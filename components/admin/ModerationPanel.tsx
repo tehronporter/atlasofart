@@ -55,8 +55,8 @@ export function ModerationPanel() {
     <div className="max-w-5xl mx-auto px-6 py-8 space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-lg font-semibold text-white">Content Moderation</h2>
-        <p className="text-xs text-neutral-500 mt-1">Review and resolve content quality issues</p>
+        <h2 className="text-lg font-semibold text-neutral-900">Content Moderation</h2>
+        <p className="text-xs text-neutral-700 mt-1">Review and resolve content quality issues</p>
       </div>
 
       {/* Filters */}
@@ -67,8 +67,8 @@ export function ModerationPanel() {
             onClick={() => setSelectedFilter(filter)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               selectedFilter === filter
-                ? 'bg-amber-500 text-neutral-900'
-                : 'bg-neutral-800 text-neutral-400 hover:text-neutral-300'
+                ? 'bg-[#1e5a96] text-white'
+                : 'bg-gray-100 text-neutral-700 hover:text-neutral-900'
             }`}
           >
             {filter.charAt(0).toUpperCase() + filter.slice(1)}
@@ -78,8 +78,8 @@ export function ModerationPanel() {
 
       {/* Error banner */}
       {error && (
-        <div className="p-4 bg-red-900/20 border border-red-800/50 rounded-xl text-sm">
-          <p className="text-red-400 font-semibold">{error}</p>
+        <div className="p-4 bg-red-100 border border-red-300 rounded-xl text-sm">
+          <p className="text-red-700 font-semibold">{error}</p>
         </div>
       )}
 
@@ -87,13 +87,13 @@ export function ModerationPanel() {
       <div className="space-y-4">
         {isLoading ? (
           <div className="text-center py-12">
-            <div className="w-8 h-8 border-2 border-amber-500/60 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-neutral-500 text-sm">Loading issues...</p>
+            <div className="w-8 h-8 border-2 border-[#1e5a96]/60 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-neutral-700 text-sm">Loading issues...</p>
           </div>
         ) : items.length === 0 ? (
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-8 text-center">
-            <p className="text-emerald-400 font-semibold">✓ All Clear</p>
-            <p className="text-xs text-neutral-500 mt-1">No content issues detected</p>
+          <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
+            <p className="text-emerald-600 font-semibold">✓ All Clear</p>
+            <p className="text-xs text-neutral-700 mt-1">No content issues detected</p>
           </div>
         ) : (
           items.map(item => (
