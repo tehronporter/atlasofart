@@ -191,7 +191,7 @@ export default function Home() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'warning' | 'error' } | null>(null);
 
   // ── Cluster data (from MapShell) ──────────────────────────────────────────────
-  const [clusterArtworks, setClusterArtworks] = useState<Artwork[]>([]);
+  const [clusterArtworks, setClusterArtworks] = useState<ArtworkCardData[]>([]);
   const [clusterCenter, setClusterCenter] = useState<[number, number] | null>(null);
 
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
