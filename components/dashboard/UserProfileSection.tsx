@@ -39,8 +39,8 @@ export default function UserProfileSection() {
   if (isLoading) {
     return (
       <div className="px-3.5 py-2 space-y-1.5">
-        <div className="h-4 bg-white/15 rounded animate-pulse" />
-        <div className="h-3 bg-white/10 rounded animate-pulse w-2/3" />
+        <div className="h-4 bg-[#f3f4f6] rounded animate-pulse" />
+        <div className="h-3 bg-[#f3f4f6] rounded animate-pulse w-2/3" />
       </div>
     );
   }
@@ -48,24 +48,23 @@ export default function UserProfileSection() {
   if (!user) return null;
 
   return (
-    <div className="border-t border-white/[0.1] mx-3.5 pt-2.5 mt-1">
-      <p className="text-[10px] uppercase tracking-widest text-white/50 mb-2 px-0.5">Account</p>
-      <div className="bg-white/[0.1] border border-white/[0.15] rounded-lg px-2.5 py-2 mb-2">
+    <div className="border-t border-[#e5e7eb] mx-3.5 pt-2.5 mt-1">
+      <p className="text-[10px] uppercase tracking-widest text-[#9ca3af] mb-2 px-0.5">Account</p>
+      <div className="bg-[#f9fafb] border border-[#e5e7eb] rounded-lg px-2.5 py-2 mb-2">
         <div className="flex items-center gap-2">
-          {/* User icon */}
-          <div className="w-6 h-6 rounded-full bg-white/20 border border-white/25 flex items-center justify-center shrink-0">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/80">
+          <div className="w-6 h-6 rounded-full bg-[#eff2ff] border border-[#2e5bff]/20 flex items-center justify-center shrink-0">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#2e5bff]">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] text-white font-medium truncate">{profile?.full_name || user.email}</p>
-            <p className="text-[9px] text-white/50 truncate">{user.email}</p>
+            <p className="text-[11px] text-[#111111] font-medium truncate">{profile?.full_name || user.email}</p>
+            <p className="text-[9px] text-[#9ca3af] truncate">{user.email}</p>
           </div>
           {profile?.role === 'admin' && (
             <div className="ml-auto shrink-0" title="Admin">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/60">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#2e5bff]">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
               </svg>
             </div>
@@ -74,7 +73,7 @@ export default function UserProfileSection() {
       </div>
       <button
         onClick={handleSignOut}
-        className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[10px] rounded-lg bg-white/[0.08] border border-white/[0.12] text-white/70 hover:bg-white/[0.15] hover:text-white transition-all"
+        className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[10px] rounded-lg bg-[#f9fafb] border border-[#e5e7eb] text-[#6b7280] hover:bg-white hover:text-[#111111] transition-all"
       >
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />

@@ -34,32 +34,30 @@ export default function UserQuickLinks() {
   if (isLoading || !user) return null;
 
   return (
-    <div className="border-t border-white/[0.1] mx-3.5 pt-2.5 mt-2">
-      <p className="text-[10px] uppercase tracking-widest text-white/50 mb-2 px-0.5">Your Library</p>
+    <div className="border-t border-[#e5e7eb] mx-3.5 pt-2.5 mt-2">
+      <p className="text-[10px] uppercase tracking-widest text-[#9ca3af] mb-2 px-0.5">Your Library</p>
       <div className="space-y-1">
         <Link
           href="/favorites"
-          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/[0.08] border border-white/[0.12] hover:bg-white/[0.15] hover:text-white transition-all"
+          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#f9fafb] border border-[#e5e7eb] hover:bg-white hover:text-[#111111] transition-all"
         >
-          {/* Star icon */}
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/60 shrink-0">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#6b7280] shrink-0">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
           </svg>
-          <span className="flex-1 text-[11px] text-white/80">Favorites</span>
-          <span className="text-[9px] text-white/50 bg-white/[0.1] px-1.5 py-0.5 rounded">{favCount}</span>
+          <span className="flex-1 text-[11px] text-[#6b7280]">Favorites</span>
+          <span className="text-[9px] text-[#9ca3af] bg-[#e5e7eb] px-1.5 py-0.5 rounded">{favCount}</span>
         </Link>
         <Link
           href="/collections"
-          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/[0.08] border border-white/[0.12] hover:bg-white/[0.15] hover:text-white transition-all"
+          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#f9fafb] border border-[#e5e7eb] hover:bg-white hover:text-[#111111] transition-all"
         >
-          {/* Layers/collection icon */}
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/60 shrink-0">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#6b7280] shrink-0">
             <polygon points="12 2 2 7 12 12 22 7 12 2" />
             <polyline points="2 17 12 22 22 17" />
             <polyline points="2 12 12 17 22 12" />
           </svg>
-          <span className="flex-1 text-[11px] text-white/80">Collections</span>
-          <span className="text-[9px] text-white/50 bg-white/[0.1] px-1.5 py-0.5 rounded">{collCount}</span>
+          <span className="flex-1 text-[11px] text-[#6b7280]">Collections</span>
+          <span className="text-[9px] text-[#9ca3af] bg-[#e5e7eb] px-1.5 py-0.5 rounded">{collCount}</span>
         </Link>
       </div>
     </div>
