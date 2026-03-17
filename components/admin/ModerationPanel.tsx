@@ -105,17 +105,17 @@ export function ModerationPanel() {
                       {item.type.replace(/_/g, ' ')}
                     </span>
                   </div>
-                  <p className="text-sm font-medium text-white">{item.title}</p>
-                  <p className="text-xs text-neutral-300 mt-1">{item.message}</p>
-                  <p className="text-[10px] text-neutral-600 mt-2">
+                  <p className="text-sm font-medium text-neutral-900">{item.title}</p>
+                  <p className="text-xs text-neutral-700 mt-1">{item.message}</p>
+                  <p className="text-[10px] text-neutral-700 mt-2">
                     {new Date(item.createdAt).toLocaleDateString()}
                   </p>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <button className="px-3 py-1.5 text-xs bg-black/30 hover:bg-black/50 rounded transition-colors">
+                  <button className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded transition-colors">
                     Review
                   </button>
-                  <button className="px-3 py-1.5 text-xs bg-black/30 hover:bg-black/50 rounded transition-colors">
+                  <button className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded transition-colors">
                     Fix
                   </button>
                 </div>
@@ -126,9 +126,9 @@ export function ModerationPanel() {
       </div>
 
       {/* Info section */}
-      <div className="bg-blue-950/20 border border-blue-900/30 rounded-xl p-4">
-        <p className="text-xs text-blue-400 font-semibold mb-2">Moderation Features</p>
-        <ul className="text-xs text-blue-400/60 space-y-1">
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <p className="text-xs text-blue-700 font-semibold mb-2">Moderation Features</p>
+        <ul className="text-xs text-blue-700 space-y-1">
           <li>✓ Artworks with missing coordinates</li>
           <li>✓ Artworks with missing images</li>
           <li>✓ Incomplete metadata checks</li>

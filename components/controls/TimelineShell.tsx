@@ -200,13 +200,13 @@ export default function TimelineShell({
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => onMaxYearChange?.(minYear)}
-            className="px-2.5 py-1.5 text-[10px] rounded-lg bg-white/[0.04] border border-white/[0.08] text-neutral-400 hover:bg-gray-300 hover:text-neutral-200 transition-all"
+            className="px-2.5 py-1.5 text-[10px] rounded-lg bg-gray-100 border border-gray-200 text-neutral-700 hover:bg-gray-200 hover:text-neutral-900 transition-all"
           >
             Start
           </button>
           <button
             onClick={() => onMaxYearChange?.(Math.floor((minYear + absoluteMaxYear) / 2))}
-            className="px-2.5 py-1.5 text-[10px] rounded-lg bg-white/[0.04] border border-white/[0.08] text-neutral-400 hover:bg-gray-300 hover:text-neutral-200 transition-all"
+            className="px-2.5 py-1.5 text-[10px] rounded-lg bg-gray-100 border border-gray-200 text-neutral-700 hover:bg-gray-200 hover:text-neutral-900 transition-all"
           >
             Midpoint
           </button>

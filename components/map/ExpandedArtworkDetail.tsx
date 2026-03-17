@@ -117,11 +117,11 @@ export default function ExpandedArtworkDetail({
 
           {/* Hero image */}
           <div
-            className="relative w-full bg-neutral-950/90 overflow-hidden shrink-0 flex items-center justify-center"
+            className="relative w-full bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center"
             style={{ height: `${heroImageHeight}px` }}
           >
             {isImageLoading && !imageLoadError && (
-              <div className="absolute inset-0 bg-neutral-800/50 animate-pulse" />
+              <div className="absolute inset-0 bg-gray-200/50 animate-pulse" />
             )}
 
             {artwork.image_url && !imageLoadError ? (
@@ -161,7 +161,7 @@ export default function ExpandedArtworkDetail({
               </h1>
 
               {/* Artist + Date */}
-              <div className="space-y-4 pb-6 border-b border-white/[0.07]">
+              <div className="space-y-4 pb-6 border-b border-gray-200">
                 {artwork.artist_display && (
                   <div>
                     <p className="text-xs uppercase tracking-widest text-neutral-500 mb-1.5">Artist</p>
@@ -171,7 +171,7 @@ export default function ExpandedArtworkDetail({
                 {artwork.year && (
                   <div>
                     <p className="text-xs uppercase tracking-widest text-neutral-500 mb-1.5">Date</p>
-                    <p className="text-lg text-amber-400/95 font-light">{artwork.year}</p>
+                    <p className="text-lg text-amber-600 font-light">{artwork.year}</p>
                   </div>
                 )}
               </div>
