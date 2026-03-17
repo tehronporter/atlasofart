@@ -1,5 +1,5 @@
 // components/controls/TimelineShell.tsx
-// Vertical timeline — histogram as horizontal bars, vertical slider
+// Vertical timeline — oldest at top, newest at bottom, white-only accents
 
 'use client';
 
@@ -20,48 +20,45 @@ export default function TimelineShell({
 }: TimelineShellProps) {
   const [isDragging, setIsDragging] = useState(false);
 
-  const { minYear, absoluteMaxYear, histogram, maxCount } = useMemo(() => {
-    if (artworks.length === 0) return { minYear: -3000, absoluteMaxYear: 2000, histogram: [], maxCount: 0 };
+  const { minYear, absoluteMaxYear, histogram } = useMemo(() => {
+    if (artworks.length === 0) return { minYear: -3000, absoluteMaxYear: 2000, histogram: [] };
 
     const starts = artworks.map(a => a.year_start ?? 0).filter(y => typeof y === 'number' && !isNaN(y));
-    const ends = artworks.map(a => a.year_end ?? 0).filter(y => typeof y === 'number' && !isNaN(y));
-    if (starts.length === 0) return { minYear: -3000, absoluteMaxYear: 2000, histogram: [], maxCount: 0 };
+    const ends   = artworks.map(a => a.year_end   ?? 0).filter(y => typeof y === 'number' && !isNaN(y));
+    if (starts.length === 0) return { minYear: -3000, absoluteMaxYear: 2000, histogram: [] };
 
     const min = Math.min(...starts);
     const max = Math.max(...ends);
 
-    // Create 50-year bins
-    const binSize = 50;
+    const binSize  = 50;
     const binCount = Math.ceil((max - min) / binSize) + 1;
     const bins: number[] = new Array(binCount).fill(0);
 
     artworks.forEach(artwork => {
       const start = artwork.year_start ?? min;
-      const end = artwork.year_end ?? max;
+      const end   = artwork.year_end   ?? max;
       for (let year = Math.max(start, min); year <= Math.min(end, max); year += binSize) {
-        const binIndex = Math.floor((year - min) / binSize);
-        if (binIndex >= 0 && binIndex < bins.length) bins[binIndex]++;
+        const idx = Math.floor((year - min) / binSize);
+        if (idx >= 0 && idx < bins.length) bins[idx]++;
       }
     });
 
-    const maxBinCount = Math.max(...bins, 1);
+    const maxBin = Math.max(...bins, 1);
     const histogram = bins.map((count, idx) => ({
-      year: min + idx * binSize,
+      year:       min + idx * binSize,
       count,
-      percentage: (count / maxBinCount) * 100,
+      percentage: (count / maxBin) * 100,
     }));
 
-    return { minYear: min, absoluteMaxYear: max, histogram, maxCount: maxBinCount };
+    return { minYear: min, absoluteMaxYear: max, histogram };
   }, [artworks]);
 
   const currentMax = maxYear ?? absoluteMaxYear;
 
-  const formatYear = (year: number) => {
-    if (year < 0) return `${Math.abs(year)} BCE`;
-    if (year === 0) return 'Year 0';
-    return `${year} CE`;
-  };
+  const formatYear = (y: number) =>
+    y < 0 ? `${Math.abs(y)} BCE` : y === 0 ? 'Year 0' : `${y} CE`;
 
+  // pct: 0% = oldest (top), 100% = newest (bottom)
   const pct = absoluteMaxYear === minYear
     ? 100
     : Math.max(0, Math.min(100, Math.round(((currentMax - minYear) / (absoluteMaxYear - minYear)) * 100)));
@@ -83,7 +80,7 @@ export default function TimelineShell({
           <p className="text-[10px] uppercase tracking-widest text-white/50 mb-0.5">Timeline</p>
           <p className="text-base font-light text-white leading-tight">{viewingLabel}</p>
           <p className="text-[11px] text-white/60 mt-0.5">
-            <span className="text-amber-300 font-semibold">{visibleCount.toLocaleString()}</span> shown
+            <span className="text-white font-semibold">{visibleCount.toLocaleString()}</span> shown
           </p>
         </div>
         <button
@@ -100,23 +97,24 @@ export default function TimelineShell({
       {/* ── Vertical scrubber + horizontal bar histogram ── */}
       <div className="flex-1 flex flex-row min-h-0 px-3 pb-3 gap-2">
 
-        {/* Vertical slider column */}
-        <div className="flex flex-col items-center gap-1.5 shrink-0" style={{ width: 32 }}>
-          {/* Max label (top = newest since we drag down) */}
-          <span className="text-[8px] text-white/50 font-mono text-center leading-tight">
-            {formatYear(absoluteMaxYear).replace(' ', '\n')}
+        {/* Vertical slider column — oldest (minYear) at TOP, newest at BOTTOM */}
+        <div className="flex flex-col items-center gap-1 shrink-0" style={{ width: 30 }}>
+          {/* Top label = OLDEST */}
+          <span className="text-[8px] text-white/50 font-mono text-center leading-tight whitespace-pre-line">
+            {formatYear(minYear).replace(' ', '\n')}
           </span>
 
-          {/* Slider wrapper */}
-          <div className="flex-1 relative flex justify-center items-stretch" style={{ minHeight: 60 }}>
+          {/* Slider track area */}
+          <div className="flex-1 relative flex justify-center" style={{ minHeight: 60 }}>
             {/* Track background */}
             <div className="absolute left-1/2 -translate-x-1/2 w-1.5 rounded-full bg-white/20"
               style={{ top: 0, bottom: 0 }} />
-            {/* Active track — from top to thumb */}
-            <div className="absolute left-1/2 -translate-x-1/2 w-1.5 rounded-full bg-gradient-to-b from-amber-400 to-amber-500"
+
+            {/* Active track: top → thumb (eras being shown) */}
+            <div className="absolute left-1/2 -translate-x-1/2 w-1.5 rounded-full bg-white/70"
               style={{ top: 0, height: `${pct}%` }} />
 
-            {/* Vertical range input */}
+            {/* Invisible native vertical range — min at top, max at bottom */}
             <input
               type="range"
               min={minYear}
@@ -127,39 +125,36 @@ export default function TimelineShell({
               onMouseUp={() => setIsDragging(false)}
               onTouchStart={() => setIsDragging(true)}
               onTouchEnd={() => setIsDragging(false)}
-              className="
-                absolute inset-0 opacity-0 cursor-pointer z-10
-              "
+              className="absolute inset-0 opacity-0 cursor-pointer z-10"
               style={{
                 writingMode: 'vertical-lr',
-                direction: 'rtl',
                 width: '100%',
                 height: '100%',
                 WebkitAppearance: 'slider-vertical',
               } as any}
             />
 
-            {/* Custom thumb indicator */}
+            {/* Custom thumb */}
             <div
-              className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+              className="absolute left-1/2 pointer-events-none z-20"
               style={{ top: `${pct}%`, transform: 'translate(-50%, -50%)' }}
             >
-              <div className="w-4 h-4 rounded-full bg-amber-400 border-2 border-white shadow-lg shadow-amber-500/40" />
+              <div className="w-4 h-4 rounded-full bg-white border-2 border-white/40 shadow-lg shadow-black/30" />
               {isDragging && (
-                <div className="absolute left-6 top-1/2 -translate-y-1/2 bg-black/90 px-2 py-1 rounded-lg whitespace-nowrap z-20">
-                  <p className="text-[10px] font-semibold text-amber-400">{formatYear(currentMax)}</p>
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 bg-black/80 px-2 py-1 rounded-lg whitespace-nowrap z-30">
+                  <p className="text-[10px] font-semibold text-white">{formatYear(currentMax)}</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Min label (bottom = oldest) */}
-          <span className="text-[8px] text-white/50 font-mono text-center leading-tight">
-            {formatYear(minYear).replace(' ', '\n')}
+          {/* Bottom label = NEWEST */}
+          <span className="text-[8px] text-white/50 font-mono text-center leading-tight whitespace-pre-line">
+            {formatYear(absoluteMaxYear).replace(' ', '\n')}
           </span>
         </div>
 
-        {/* Horizontal bar chart */}
+        {/* Horizontal bar chart — top row = oldest bin, bottom = newest */}
         <div className="flex-1 flex flex-col justify-between gap-px min-h-0">
           {histogram.map((bin, idx) => {
             const active = bin.year <= currentMax;
@@ -172,9 +167,7 @@ export default function TimelineShell({
               >
                 <div
                   className={`h-full rounded-r transition-all duration-150 ${
-                    active
-                      ? 'bg-gradient-to-r from-amber-400 to-amber-300'
-                      : 'bg-white/15 group-hover:bg-white/28'
+                    active ? 'bg-white/70 group-hover:bg-white/85' : 'bg-white/15 group-hover:bg-white/25'
                   }`}
                   style={{ width: `${Math.max(2, bin.percentage)}%`, minHeight: 1 }}
                 />
@@ -200,7 +193,7 @@ export default function TimelineShell({
         </button>
         <button
           onClick={() => onMaxYearChange?.(absoluteMaxYear)}
-          className="flex-1 py-1.5 text-[9px] rounded-lg bg-amber-400/20 border border-amber-400/40 text-amber-300 hover:bg-amber-400/30 transition-all"
+          className="flex-1 py-1.5 text-[9px] rounded-lg bg-white/30 border border-white/40 text-white hover:bg-white/40 transition-all font-medium"
         >
           All Time
         </button>

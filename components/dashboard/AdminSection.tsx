@@ -20,22 +20,27 @@ export default function AdminSection() {
         setIsLoading(false);
       }
     };
-
     checkAdmin();
   }, []);
 
   if (isLoading || !hasAdminAccess) return null;
 
   return (
-    <div className="border-t border-gray-300 mx-4 my-3 pt-3">
-      <p className="text-[10px] uppercase tracking-widest text-neutral-700 px-1 mb-2">Administration</p>
+    <div className="border-t border-white/[0.1] mx-3.5 pt-2.5 mt-2">
+      <p className="text-[10px] uppercase tracking-widest text-white/50 mb-2 px-0.5">Administration</p>
       <Link
         href="/admin"
-        className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/15 transition-all"
+        className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/[0.08] border border-white/[0.12] hover:bg-white/[0.15] transition-all"
       >
-        <span>🛠️</span>
-        <span className="text-[11px] text-amber-300">Admin Panel</span>
-        <span className="ml-auto text-[9px] text-amber-400 font-medium">→</span>
+        {/* Settings/wrench icon */}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/60 shrink-0">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+        <span className="text-[11px] text-white/80">Admin Panel</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-auto text-white/40">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
       </Link>
     </div>
   );

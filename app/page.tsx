@@ -113,13 +113,13 @@ function NavItem({ icon, label, active, onClick }: { icon: React.ReactNode; labe
     <button
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
-      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-2 focus:ring-offset-[#0d0d11] ${
+      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/30 focus:ring-offset-2 focus:ring-offset-transparent ${
         active
-          ? 'bg-gradient-to-r from-amber-500/15 to-amber-500/5 border border-amber-500/20 text-white'
-          : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.05] border border-transparent'
+          ? 'bg-white/20 border border-white/30 text-white'
+          : 'text-white/60 hover:text-white hover:bg-white/[0.12] border border-transparent'
       }`}
     >
-      <span className={`transition-colors ${active ? 'text-amber-400' : 'text-neutral-600'}`}>{icon}</span>
+      <span className={`transition-colors ${active ? 'text-white' : 'text-white/50'}`}>{icon}</span>
       <span className={active ? 'font-medium text-white' : 'font-normal'}>{label}</span>
     </button>
   );
@@ -515,8 +515,8 @@ export default function Home() {
             onClick={() => setShowFilters(f => !f)}
             className={`w-full flex items-center gap-1.5 text-[11px] font-medium transition-all duration-200 px-2.5 py-2 rounded-lg border ${
               showFilters || selectedRegion || selectedMedium
-                ? 'text-amber-300 bg-amber-500/15 border-amber-400/30'
-                : 'text-white/70 hover:text-white hover:bg-white/[0.12] border-white/[0.2]'
+                ? 'text-white bg-white/20 border-white/30'
+                : 'text-white/60 hover:text-white hover:bg-white/[0.12] border-white/[0.2]'
             }`}
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -524,7 +524,7 @@ export default function Home() {
             </svg>
             <span>Filters</span>
             {(selectedRegion || selectedMedium) && (
-              <span className="ml-auto bg-amber-500/30 text-amber-300 px-2 py-0.5 rounded text-[9px] font-semibold">
+              <span className="ml-auto bg-white/20 text-white px-2 py-0.5 rounded text-[9px] font-semibold">
                 {[selectedRegion, selectedMedium].filter(Boolean).length}
               </span>
             )}
@@ -542,8 +542,8 @@ export default function Home() {
                         onClick={() => setSelectedRegion(prev => prev === r ? null : r)}
                         className={`px-2 py-1 text-[10px] rounded-full transition-all border ${
                           selectedRegion === r
-                            ? 'bg-amber-500/20 border-amber-400/40 text-amber-300'
-                            : 'border-white/[0.2] text-white/70 hover:text-white hover:border-white/[0.35]'
+                            ? 'bg-white/20 border-white/30 text-white'
+                            : 'border-white/[0.2] text-white/60 hover:text-white hover:border-white/[0.35]'
                         }`}
                       >
                         {r}
@@ -562,8 +562,8 @@ export default function Home() {
                         onClick={() => setSelectedMedium(prev => prev === m ? null : m)}
                         className={`px-2 py-1 text-[10px] rounded-full transition-all border ${
                           selectedMedium === m
-                            ? 'bg-amber-500/20 border-amber-400/40 text-amber-300'
-                            : 'border-white/[0.2] text-white/70 hover:text-white hover:border-white/[0.35]'
+                            ? 'bg-white/20 border-white/30 text-white'
+                            : 'border-white/[0.2] text-white/60 hover:text-white hover:border-white/[0.35]'
                         }`}
                       >
                         {m.length > 22 ? m.slice(0, 20) + '…' : m}
@@ -589,14 +589,14 @@ export default function Home() {
           <div className="rounded-lg bg-white/[0.08] border border-white/[0.12] px-3 py-2.5 space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-white/50 uppercase tracking-widest">Showing</span>
-              <span className="text-[11px] font-semibold text-amber-300">{filteredArtworks.length.toLocaleString()}</span>
+              <span className="text-[11px] font-semibold text-white">{filteredArtworks.length.toLocaleString()}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-white/50 uppercase tracking-widest">Total</span>
               <span className="text-[11px] text-white/70">{allArtworks.length.toLocaleString()}</span>
             </div>
             {hasFilters && filteredArtworks.length === 0 && (
-              <button onClick={clearFilters} className="w-full text-[10px] text-amber-300 hover:text-amber-200 transition-colors pt-1 border-t border-white/[0.08]">
+              <button onClick={clearFilters} className="w-full text-[10px] text-white/70 hover:text-white transition-colors pt-1 border-t border-white/[0.08]">
                 ✕ Clear filters
               </button>
             )}
@@ -614,7 +614,7 @@ export default function Home() {
             </button>
             <button
               onClick={handleSurpriseMe}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.12] text-[11px] text-white/80 hover:bg-amber-500/20 hover:text-amber-300 hover:border-amber-500/30 transition-all"
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.12] text-[11px] text-white/80 hover:bg-white/[0.18] hover:text-white transition-all"
             >
               <DiceIcon />
               <span>Surprise Me</span>
@@ -623,7 +623,7 @@ export default function Home() {
               onClick={handleShare}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border text-[11px] transition-all ${
                 showCopied
-                  ? 'bg-green-500/15 border-green-500/30 text-green-300'
+                  ? 'bg-white/25 border-white/40 text-white'
                   : 'bg-white/[0.08] border-white/[0.12] text-white/80 hover:bg-white/[0.14] hover:text-white'
               }`}
             >
@@ -633,28 +633,31 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="flex-1" />
+        {/* Account / Library / Admin — no scroll, fits inline */}
+        <UserProfileSection />
+        <UserQuickLinks />
+        <AdminSection />
 
-        {/* Viewed history breadcrumb */}
+        {/* Recently Viewed */}
         {historyArtworks.length > 0 && (
-          <div className="px-3.5 py-3 border-t border-white/[0.04]">
-            <p className="text-[9px] uppercase tracking-widest text-white/50 mb-2">Recently Viewed</p>
-            <div className="flex items-center gap-1.5">
+          <div className="border-t border-white/[0.1] mx-3.5 pt-2.5 mt-2">
+            <p className="text-[9px] uppercase tracking-widest text-white/50 mb-2 px-0.5">Recently Viewed</p>
+            <div className="flex items-center gap-1.5 px-0.5">
               {historyArtworks.map(a => (
                 <button
                   key={a.id}
                   onClick={() => handleArtworkClick(a)}
                   title={a.title}
-                  className={`w-9 h-9 rounded-lg overflow-hidden border shrink-0 transition-all duration-200 ${
+                  className={`w-8 h-8 rounded-lg overflow-hidden border shrink-0 transition-all duration-200 ${
                     a.id === selectedArtworkId
-                      ? 'border-amber-500/60 ring-1 ring-amber-500/30'
-                      : 'border-white/[0.06] hover:border-white/[0.15]'
+                      ? 'border-white/60 ring-1 ring-white/20'
+                      : 'border-white/[0.15] hover:border-white/[0.35]'
                   }`}
                 >
                   {a.image_url ? (
                     <img src={a.image_url} alt={a.title} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full bg-neutral-800/60 flex items-center justify-center">
+                    <div className="w-full h-full bg-white/10 flex items-center justify-center">
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/30">
                         <rect x="3" y="3" width="18" height="18" rx="2" />
                       </svg>
@@ -666,23 +669,15 @@ export default function Home() {
           </div>
         )}
 
-        {/* Footer */}
-        <div className="border-t border-white/[0.04] bg-gradient-to-b from-transparent to-black/10 flex-1 overflow-y-auto flex flex-col">
-          <div className="flex-1 overflow-y-auto">
-            <UserProfileSection />
-            <UserQuickLinks />
-            <AdminSection />
-          </div>
-          <div className="border-t border-white/[0.04] px-4 py-3.5 mt-auto">
-            <div className="mb-3"><AuthButton /></div>
-            <span className="text-[10px] text-white/70 flex items-center justify-between">
-              <span>
-                <span className="text-amber-300 font-semibold">{filteredArtworks.length}</span>
-                <span className="text-white/60"> of </span>
-                <span className="text-white/70">{allArtworks.length}</span>
-              </span>
-            </span>
-          </div>
+        {/* Bottom auth + count */}
+        <div className="border-t border-white/[0.08] mx-3.5 pt-2.5 mt-2 mb-3">
+          <div className="mb-2"><AuthButton /></div>
+          <p className="text-[10px] text-white/50 px-0.5">
+            <span className="text-white font-medium">{filteredArtworks.length.toLocaleString()}</span>
+            <span className="text-white/40"> of </span>
+            <span className="text-white/60">{allArtworks.length.toLocaleString()}</span>
+            <span className="text-white/40"> artworks</span>
+          </p>
         </div>
       </aside>
 
