@@ -187,21 +187,21 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
     <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
       {/* Stats error banner */}
       {statsError && (
-        <div className="p-4 bg-red-900/20 border border-red-800/50 rounded-xl text-sm">
-          <p className="text-red-400 font-semibold mb-1">Supabase Connection Error</p>
-          <p className="text-red-500/70 text-xs font-mono mb-3">{statsError}</p>
-          <div className="text-xs text-red-500/60 space-y-1">
-            <p>1. Check <code className="bg-red-900/30 px-1 rounded">NEXT_PUBLIC_SUPABASE_URL</code> in <code className="bg-red-900/30 px-1 rounded">.env.local</code></p>
-            <p>2. Check <code className="bg-red-900/30 px-1 rounded">NEXT_PUBLIC_SUPABASE_ANON_KEY</code></p>
-            <p>3. Check <code className="bg-red-900/30 px-1 rounded">SUPABASE_SERVICE_ROLE_KEY</code> (required for ingestion)</p>
-            <p>4. Run <code className="bg-red-900/30 px-1 rounded">supabase/schema.sql</code> in Supabase SQL Editor</p>
+        <div className="p-4 bg-red-100 border border-red-300 rounded-xl text-sm">
+          <p className="text-red-700 font-semibold mb-1">Supabase Connection Error</p>
+          <p className="text-red-600 text-xs font-mono mb-3">{statsError}</p>
+          <div className="text-xs text-red-700 space-y-1">
+            <p>1. Check <code className="bg-red-200 px-1 rounded">NEXT_PUBLIC_SUPABASE_URL</code> in <code className="bg-red-200 px-1 rounded">.env.local</code></p>
+            <p>2. Check <code className="bg-red-200 px-1 rounded">NEXT_PUBLIC_SUPABASE_ANON_KEY</code></p>
+            <p>3. Check <code className="bg-red-200 px-1 rounded">SUPABASE_SERVICE_ROLE_KEY</code> (required for ingestion)</p>
+            <p>4. Run <code className="bg-red-200 px-1 rounded">supabase/schema.sql</code> in Supabase SQL Editor</p>
           </div>
         </div>
       )}
 
       {/* Stats grid */}
       <div>
-        <h2 className="text-xs uppercase tracking-widest text-neutral-600 font-medium mb-4">Database Overview</h2>
+        <h2 className="text-xs uppercase tracking-widest text-neutral-700 font-medium mb-4">Database Overview</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             label="Total Artworks"
@@ -228,10 +228,10 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
       </div>
 
       {/* Ingestion panel */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
-        <div className="px-6 py-5 border-b border-neutral-800">
-          <h2 className="font-semibold text-white">J. Paul Getty Museum — SPARQL Ingestion</h2>
-          <p className="text-xs text-neutral-500 mt-1.5 leading-relaxed">
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="px-6 py-5 border-b border-gray-200">
+          <h2 className="font-semibold text-neutral-900">J. Paul Getty Museum — SPARQL Ingestion</h2>
+          <p className="text-xs text-neutral-700 mt-1.5 leading-relaxed">
             Queries the Getty SPARQL endpoint to discover all artworks with images (~{totalAvailable > 0 ? totalAvailable.toLocaleString() : '123,500'} objects).
             Each batch fetches unique object URIs, skips already-ingested ones instantly, and fetches only new objects from Getty.
           </p>
@@ -241,7 +241,7 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
           {/* Config row */}
           <div className="flex items-end gap-6 flex-wrap">
             <div>
-              <label className="text-[10px] uppercase tracking-widest text-neutral-600 block mb-1.5">Offset</label>
+              <label className="text-[10px] uppercase tracking-widest text-neutral-700 block mb-1.5">Offset</label>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -250,12 +250,12 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                   value={offset}
                   onChange={e => setOffset(Number(e.target.value))}
                   disabled={isIngesting || autoRunning}
-                  className="w-28 bg-neutral-800 border border-neutral-700 text-sm text-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500/50 tabular-nums"
+                  className="w-28 bg-gray-100 border border-gray-200 text-sm text-neutral-900 rounded-lg px-3 py-2 focus:outline-none focus:border-[#1e5a96]/50 tabular-nums"
                 />
                 {offset !== 0 && (
                   <button
                     onClick={() => setOffset(0)}
-                    className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors"
+                    className="text-xs text-neutral-700 hover:text-neutral-900 transition-colors"
                   >
                     Reset
                   </button>
@@ -269,7 +269,7 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                 value={batchSize}
                 onChange={e => setBatchSize(Number(e.target.value))}
                 disabled={isIngesting || autoRunning}
-                className="bg-neutral-800 border border-neutral-700 text-sm text-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500/50 cursor-pointer"
+                className="bg-gray-100 border border-gray-200 text-sm text-neutral-900 rounded-lg px-3 py-2 focus:outline-none focus:border-[#1e5a96]/50 cursor-pointer"
               >
                 <option value={25}>25</option>
                 <option value={50}>50</option>
@@ -282,9 +282,9 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                 <label className="text-[10px] uppercase tracking-widest text-neutral-600 block mb-1.5">
                   Collection progress
                 </label>
-                <div className="w-full bg-neutral-800 rounded-full h-2">
+                <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
-                    className="bg-amber-500 h-2 rounded-full transition-all"
+                    className="bg-[#1e5a96] h-2 rounded-full transition-all"
                     style={{ width: `${Math.min(progressPct, 100)}%` }}
                   />
                 </div>
@@ -305,12 +305,12 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                   ? 'bg-neutral-700 text-neutral-400 cursor-not-allowed'
                   : !dbConnected
                   ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed'
-                  : 'bg-amber-500 text-neutral-900 hover:bg-amber-400 active:scale-[0.98] shadow-[0_0_20px_rgba(251,191,36,0.15)]'
+                  : 'bg-amber-500 text-neutral-900 hover:bg-amber-400 active:scale-[0.98] shadow-[0_0_20px_rgba(30,90,150,0.15)]'
               }`}
             >
               {isIngesting ? (
                 <span className="flex items-center gap-2">
-                  <span className="w-3.5 h-3.5 border-[1.5px] border-neutral-400 border-t-transparent rounded-full animate-spin" />
+                  <span className="w-3.5 h-3.5 border-[1.5px] border-gray-600 border-t-transparent rounded-full animate-spin" />
                   Ingesting…
                 </span>
               ) : (
@@ -321,17 +321,17 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
             <button
               onClick={onRefreshStats}
               disabled={isLoadingStats}
-              className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
+              className="text-xs text-neutral-700 hover:text-neutral-900 transition-colors"
             >
               Refresh stats
             </button>
           </div>
 
           {/* Auto-run */}
-          <div className="bg-neutral-800/50 border border-neutral-700/50 rounded-xl p-4 space-y-3">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-neutral-300">Auto-Run Mode</p>
+                <p className="text-xs font-semibold text-neutral-900">Auto-Run Mode</p>
                 <p className="text-[10px] text-neutral-600 mt-0.5">
                   Chain multiple batches — offset advances after each batch
                 </p>
@@ -366,7 +366,7 @@ export function IngestionPanel({ stats, logs, isLoadingStats, statsError, onRefr
                   value={autoBatches}
                   onChange={e => setAutoBatches(Number(e.target.value))}
                   disabled={autoRunning || isIngesting}
-                  className="bg-neutral-800 border border-neutral-700 text-sm text-neutral-300 rounded-lg px-3 py-1.5 focus:outline-none focus:border-amber-500/50 cursor-pointer"
+                  className="bg-gray-100 border border-gray-200 text-sm text-neutral-300 rounded-lg px-3 py-1.5 focus:outline-none focus:border-amber-500/50 cursor-pointer"
                 >
                   {[10, 25, 50, 100].map(n => (
                     <option key={n} value={n}>{n}</option>

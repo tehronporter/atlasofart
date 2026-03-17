@@ -14,7 +14,7 @@ interface AdminTabsProps {
 
 export function AdminTabs({ tabs, activeTab, onTabChange }: AdminTabsProps) {
   return (
-    <div className="border-b border-neutral-800 bg-neutral-950/50">
+    <div className="border-b border-gray-200 bg-white">
       <div className="max-w-5xl mx-auto px-6 flex gap-8">
         {tabs.map(tab => (
           <button
@@ -22,8 +22,8 @@ export function AdminTabs({ tabs, activeTab, onTabChange }: AdminTabsProps) {
             onClick={() => onTabChange(tab.id)}
             className={`py-4 px-1 border-b-2 transition-colors text-sm font-medium whitespace-nowrap ${
               activeTab === tab.id
-                ? 'border-amber-500 text-amber-400'
-                : 'border-transparent text-neutral-500 hover:text-neutral-400'
+                ? 'border-[#1e5a96] text-[#1e5a96]'
+                : 'border-transparent text-neutral-700 hover:text-neutral-800'
             }`}
           >
             <span className="mr-2">{tab.icon}</span>
