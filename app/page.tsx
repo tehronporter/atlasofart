@@ -16,6 +16,7 @@ import AuthButton from '@/components/auth/AuthButton';
 import UserProfileSection from '@/components/dashboard/UserProfileSection';
 import UserQuickLinks from '@/components/dashboard/UserQuickLinks';
 import AdminSection from '@/components/dashboard/AdminSection';
+import FloatingArtworksBrowser from '@/components/map/FloatingArtworksBrowser';
 import { trackArtworkView } from '@/lib/auth';
 import type { MapCommand } from '@/components/map/MapShell';
 
@@ -166,7 +167,7 @@ export default function Home() {
   const [selectedRegion, setSelectedRegion]             = useState<string | null>(null);
   const [selectedMedium, setSelectedMedium]             = useState<string | null>(null);
   const [showFilters, setShowFilters]                   = useState(false);
-  const [currentView, setCurrentView]                   = useState<'map' | 'artworks'>('map');
+  const [browserOpen, setBrowserOpen]                   = useState(false);
   const [mobileSheetOpen, setMobileSheetOpen]           = useState(false);
   const [timelineCollapsed, setTimelineCollapsed]       = useState(false);
 
@@ -485,8 +486,7 @@ export default function Home() {
 
         {/* Navigation */}
         <nav className="px-2.5 py-2.5 space-y-0.5">
-          <NavItem icon={<MapIcon />} label="Map" active={currentView === 'map'} onClick={() => setCurrentView('map')} />
-          <NavItem icon={<GridIcon />} label="Artworks" active={currentView === 'artworks'} onClick={() => setCurrentView('artworks')} />
+          <NavItem icon={<MapIcon />} label="Map" active={true} />
         </nav>
 
         <div className="border-t border-white/[0.05] mx-4 my-1" />
@@ -606,6 +606,13 @@ export default function Home() {
           <div className="space-y-1.5">
             <p className="text-[10px] uppercase tracking-widest text-white/50 px-0.5">Map Actions</p>
             <button
+              onClick={() => setBrowserOpen(true)}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.12] text-[11px] text-white/80 hover:bg-white/[0.14] hover:text-white transition-all"
+            >
+              <GridIcon />
+              <span>Browse Artworks</span>
+            </button>
+            <button
               onClick={handleFitToResults}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.12] text-[11px] text-white/80 hover:bg-white/[0.14] hover:text-white transition-all"
             >
@@ -685,8 +692,7 @@ export default function Home() {
       <div className="flex-1 flex flex-col min-w-0 relative">
 
         {/* Map View */}
-        {currentView === 'map' && (
-          <div className="flex-1 flex flex-row min-w-0 relative">
+        <div className="flex-1 flex flex-row min-w-0 relative">
             {/* Left section: Map + Controls + Cluster List */}
             <div className="flex-1 flex flex-col min-w-0 relative">
               {/* Map container */}
@@ -821,58 +827,22 @@ export default function Home() {
               )}
             </div>
             {/* End of right section */}
-          </div>
-        )}
-
-        {/* Artworks Grid View */}
-        {currentView === 'artworks' && (
-          <div className="flex-1 relative min-h-0 overflow-auto">
-            <div className="p-6">
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {filteredArtworks.map(artwork => (
-                  <button
-                    key={artwork.id}
-                    onClick={() => handleArtworkClick(artwork)}
-                    className="group relative overflow-hidden rounded-lg aspect-square bg-neutral-900 border border-neutral-800 hover:border-amber-500/50 transition-all duration-300"
-                  >
-                    {artwork.image_url && (
-                      <img
-                        src={artwork.image_url}
-                        alt={artwork.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="absolute bottom-0 left-0 right-0 p-2">
-                        <p className="text-[11px] text-white font-medium line-clamp-2">{artwork.title}</p>
-                        <p className="text-[9px] text-neutral-300 mt-0.5">{artwork.year}</p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-              {filteredArtworks.length === 0 && (
-                <div className="flex items-center justify-center h-64">
-                  <div className="text-center">
-                    <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-amber-400/60">
-                        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-                      </svg>
-                    </div>
-                    <p className="text-sm text-neutral-600 leading-relaxed font-light mb-3">No artworks match your filters</p>
-                    <p className="text-xs text-neutral-700 mb-4">Try adjusting your search, region, or medium to find artworks</p>
-                    {hasFilters && (
-                      <button onClick={clearFilters} className="text-xs text-amber-400 hover:text-amber-300 transition-colors font-medium">
-                        Clear all filters
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        </div>
       </div>
+
+      {/* Floating artworks browser */}
+      {browserOpen && (
+        <FloatingArtworksBrowser
+          artworks={filteredArtworks}
+          selectedId={selectedArtworkId}
+          onSelect={artwork => {
+            handleArtworkClick(artwork);
+            setMapCommand({ type: 'flyTo', lat: artwork.lat, lng: artwork.lng });
+            setBrowserOpen(false);
+          }}
+          onClose={() => setBrowserOpen(false)}
+        />
+      )}
 
       {/* Mobile search & filter sheet */}
       <MobileSearchSheet
