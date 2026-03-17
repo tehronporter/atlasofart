@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { ArtworkCardData } from './FloatingArtworkCard';
+import ArtworkLightboxModal from './ArtworkLightboxModal';
 
 function getHeroImageHeight(imageWidth: number | null | undefined, imageHeight: number | null | undefined): number {
   if (!imageWidth || !imageHeight) return 400;
@@ -29,8 +30,9 @@ export default function ExpandedArtworkDetail({
   nearbyArtworks = [],
   onNavigate,
 }: ExpandedArtworkDetailProps) {
-  const [isImageLoading, setIsImageLoading] = useState(!!artwork.image_url);
-  const [imageLoadError, setImageLoadError] = useState(false);
+  const [isImageLoading, setIsImageLoading]   = useState(!!artwork.image_url);
+  const [imageLoadError, setImageLoadError]   = useState(false);
+  const [showSaveModal, setShowSaveModal]     = useState(false);
   const heroImageHeight = getHeroImageHeight(artwork.image_width, artwork.image_height);
 
   // Reset image state when artwork changes
@@ -87,12 +89,24 @@ export default function ExpandedArtworkDetail({
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 border border-gray-300 flex items-center justify-center text-neutral-600 hover:text-neutral-600 transition-all duration-200"
+            className="absolute top-4 right-4 z-10 w-9 h-9 rounded-xl bg-[#f9fafb] hover:bg-[#eff2ff] border border-[#e5e7eb] flex items-center justify-center text-[#6b7280] hover:text-[#2e5bff] transition-all duration-200"
             aria-label="Close"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
+          </button>
+
+          {/* Save button */}
+          <button
+            onClick={() => setShowSaveModal(true)}
+            className="absolute top-4 right-16 z-10 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#f9fafb] hover:bg-[#eff2ff] border border-[#e5e7eb] text-[#6b7280] hover:text-[#2e5bff] text-[12px] font-medium transition-all duration-200"
+            aria-label="Save artwork"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+            Save
           </button>
 
           {/* Keyboard hints */}
@@ -171,7 +185,7 @@ export default function ExpandedArtworkDetail({
                 {artwork.year && (
                   <div>
                     <p className="text-xs uppercase tracking-widest text-neutral-500 mb-1.5">Date</p>
-                    <p className="text-lg text-amber-600 font-light">{artwork.year}</p>
+                    <p className="text-lg text-[#2e5bff] font-light">{artwork.year}</p>
                   </div>
                 )}
               </div>
@@ -227,12 +241,12 @@ export default function ExpandedArtworkDetail({
 
               {/* Getty link */}
               {artwork.getty_url && (
-                <div className="pt-4 border-t border-white/[0.07]">
+                <div className="pt-4 border-t border-gray-200">
                   <a
                     href={artwork.getty_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2.5 px-5 py-3 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-neutral-900 font-medium rounded-lg transition-all duration-200 hover:shadow-lg text-sm"
+                    className="inline-flex items-center gap-2.5 px-5 py-3 bg-[#2e5bff] hover:bg-[#1a3acc] text-white font-medium rounded-xl transition-all duration-200 hover:shadow-md text-sm"
                     onClick={e => e.stopPropagation()}
                   >
                     <span>View on Getty Museum</span>
@@ -247,35 +261,32 @@ export default function ExpandedArtworkDetail({
 
           {/* ── Prev / Next navigation bar ─────────────────────────────────────── */}
           {nearbyArtworks.length > 0 && (
-            <div
-              className="flex-none flex items-stretch border-t"
-              style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(5,5,10,0.9)' }}
-            >
+            <div className="flex-none flex items-stretch border-t border-[#e5e7eb] bg-white">
               {/* Prev */}
               <button
                 onClick={() => prevArtwork && onNavigate?.(prevArtwork)}
                 disabled={!prevArtwork}
-                className="flex-1 flex items-center gap-3 px-5 py-3.5 text-left hover:bg-white/[0.04] transition-colors disabled:opacity-30 border-r border-white/[0.05]"
+                className="flex-1 flex items-center gap-3 px-5 py-3.5 text-left hover:bg-[#f9fafb] transition-colors disabled:opacity-30 border-r border-[#e5e7eb]"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-neutral-500 shrink-0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#9ca3af] shrink-0">
                   <polyline points="15 18 9 12 15 6" />
                 </svg>
                 {prevArtwork && (
                   <div className="flex items-center gap-2.5 min-w-0">
                     {prevArtwork.image_url && (
-                      <img src={prevArtwork.image_url} alt="" className="w-8 h-8 rounded object-cover shrink-0 opacity-70" />
+                      <img src={prevArtwork.image_url} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0 border border-[#e5e7eb]" />
                     )}
                     <div className="min-w-0">
-                      <p className="text-[9px] text-neutral-600 uppercase tracking-widest mb-0.5">Previous</p>
-                      <p className="text-[11px] text-neutral-600 truncate">{prevArtwork.title}</p>
+                      <p className="text-[9px] text-[#9ca3af] uppercase tracking-widest mb-0.5">Previous</p>
+                      <p className="text-[11px] text-[#6b7280] truncate">{prevArtwork.title}</p>
                     </div>
                   </div>
                 )}
               </button>
 
-              {/* Nearby count */}
+              {/* Count */}
               <div className="flex items-center justify-center px-4">
-                <span className="text-[9px] text-neutral-600 whitespace-nowrap">
+                <span className="text-[9px] text-[#9ca3af] whitespace-nowrap">
                   {nearbyArtworks.length} nearby
                 </span>
               </div>
@@ -284,20 +295,20 @@ export default function ExpandedArtworkDetail({
               <button
                 onClick={() => nextArtwork && onNavigate?.(nextArtwork)}
                 disabled={!nextArtwork}
-                className="flex-1 flex items-center justify-end gap-3 px-5 py-3.5 text-right hover:bg-white/[0.04] transition-colors disabled:opacity-30 border-l border-white/[0.05]"
+                className="flex-1 flex items-center justify-end gap-3 px-5 py-3.5 text-right hover:bg-[#f9fafb] transition-colors disabled:opacity-30 border-l border-[#e5e7eb]"
               >
                 {nextArtwork && (
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="min-w-0">
-                      <p className="text-[9px] text-neutral-600 uppercase tracking-widest mb-0.5 text-right">Next</p>
-                      <p className="text-[11px] text-neutral-600 truncate">{nextArtwork.title}</p>
+                      <p className="text-[9px] text-[#9ca3af] uppercase tracking-widest mb-0.5 text-right">Next</p>
+                      <p className="text-[11px] text-[#6b7280] truncate">{nextArtwork.title}</p>
                     </div>
                     {nextArtwork.image_url && (
-                      <img src={nextArtwork.image_url} alt="" className="w-8 h-8 rounded object-cover shrink-0 opacity-70" />
+                      <img src={nextArtwork.image_url} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0 border border-[#e5e7eb]" />
                     )}
                   </div>
                 )}
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-neutral-500 shrink-0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#9ca3af] shrink-0">
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
               </button>
@@ -305,6 +316,14 @@ export default function ExpandedArtworkDetail({
           )}
         </div>
       </div>
+
+      {/* Save / lightbox modal */}
+      {showSaveModal && (
+        <ArtworkLightboxModal
+          artwork={artwork}
+          onClose={() => setShowSaveModal(false)}
+        />
+      )}
     </>
   );
 }
